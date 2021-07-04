@@ -19,16 +19,16 @@ class Switch;
 
 class Job {
 public:
-    int id{};
+    unsigned id{};
     int gpu{3};
-    float submit_time;
-    float submitted_time{};
-    float start_time{-1.};
-    float finish_time{-1.};
+    double submit_time;
+    double submitted_time{};
+    double start_time{-1.};
+    double finish_time{-1.};
 
-    explicit Job(float t) : submit_time(t), id(t) {}
+    explicit Job(double t) : submit_time(t), id(unsigned(t)) {}
 
-    simcpp20::event<> run(simcpp20::simulation<> &sim, std::unordered_map<int, int> run_config) {
+    simcpp20::event<> run(simcpp20::simulation<> &sim, std::unordered_map<unsigned, unsigned> run_config) {
         start_time = sim.now();
         co_await sim.timeout(10);
         finish_time = sim.now();
@@ -37,13 +37,13 @@ public:
 
 class Machine {
 private:
-    static int get_id() {
-        static int ID = 0;
+    static unsigned get_id() {
+        static unsigned ID = 0;
         return ID++;
     }
 
 public:
-    int id;
+    unsigned id;
     int gpu{4};
     int gpu_capacity{};
     std::vector<Job> jobs;
@@ -70,13 +70,13 @@ public:
 
 class Switch {
 private:
-    static int get_id() {
-        static int ID = 0;
+    static unsigned get_id() {
+        static unsigned ID = 0;
         return ID++;
     }
 
 public:
-    int id;
+    unsigned id;
     std::vector<Machine> machines;
 
     Switch() : id(get_id()) {}
@@ -148,11 +148,13 @@ void Machine::finish_job(Job job) {
 class SchedulingAlgo {
 public:
     virtual Job *choose_job_to_execute_in(Cluster &) = 0;
+    virtual ~SchedulingAlgo() = default;
 };
 
 class PlacementAlgo {
 public:
-    virtual std::unordered_map<int, int> place_job_in(Cluster &, Job *) = 0;
+    virtual std::unordered_map<unsigned, unsigned> place_job_in(Cluster &, Job *) = 0;
+    virtual ~PlacementAlgo() = default;
 };
 
 class FirstComeFirstServed : public SchedulingAlgo {
@@ -174,14 +176,14 @@ public:
     std::random_device rd{};
     std::mt19937 gen{rd()};
 
-    std::unordered_map<int, int> place_job_in(Cluster &cluster, Job *job) override {
-        std::vector<int> candidates;
-        std::unordered_map<int, int> counter;
+    std::unordered_map<unsigned, unsigned> place_job_in(Cluster &cluster, Job *job) override {
+        std::vector<unsigned> candidates;
+        std::unordered_map<unsigned, unsigned> counter;
         for (auto &machine:cluster.machines) {
             for (int i = 0; i < machine.gpu; i++) candidates.push_back(machine.id);
         }
         if (job->gpu > candidates.size()) return counter;
-        std::vector<int> selected;
+        std::vector<unsigned> selected;
         std::ranges::sample(candidates, std::back_inserter(selected), job->gpu, gen);
         for (auto machine_id:selected) {
             if (counter.find(machine_id) == counter.end()) {
@@ -217,10 +219,10 @@ simcpp20::event<> scheduler(simcpp20::simulation<> &sim, Cluster &cluster, Sched
             if (run_config.empty()) {
                 printf("[%.0f]\tplacement failed for task %d requiring %d GPUs\n", sim.now(), job->id, job->gpu);
             } else {
-                for (auto pair:run_config) {
+                for (const auto &pair: run_config) {
                     printf("mid %d -> %d gpu, ", pair.first, pair.second);
                 }
-                std::cout << std::endl;
+                printf("\n");
                 job->run(sim, run_config);
             }
         }
@@ -244,8 +246,8 @@ int main() {
     cluster.setup(conf);
     PlacementAlgo *placement_algo;
     SchedulingAlgo *scheduling_algo;
-    placement_algo = new RandomPlacement;
-    scheduling_algo = new FirstComeFirstServed;
+    placement_algo = new RandomPlacement();
+    scheduling_algo = new FirstComeFirstServed();
 
 
     broker(sim, jobs, cluster);
@@ -253,4 +255,5 @@ int main() {
     sim.run_until(100);
     delete placement_algo;
     delete scheduling_algo;
+    return 0;
 }
