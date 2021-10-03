@@ -67,6 +67,7 @@ list(APPEND HTSIM_SRCS
 
 set(SRCS)
 list(APPEND SRCS
+        "src/common.cpp"
         "src/cluster.cpp"
         "src/topology/hierarchical_topology.cpp"
         "src/job.cpp"
@@ -75,8 +76,10 @@ list(APPEND SRCS
         "src/packet.cpp"
         "src/switch.cpp"
         "src/worker.cpp"
+        "src/collective_scheduler.cpp"
         "src/job_placement/random.cpp"
         "src/job_scheduling/first_come_first_served.cpp"
+        "src/collective_scheduling/first_in_first_out_one_by_one.cpp"
         )
 
 include_directories(htsim)

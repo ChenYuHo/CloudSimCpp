@@ -5,10 +5,16 @@
 
 class FirstComeFirstServed : public SchedulingAlgo {
 public:
-    std::shared_ptr<Job> choose_job_to_execute_in(
-            std::vector<std::shared_ptr<Job>>,
-            std::shared_ptr<Cluster>) override;
+    std::shared_ptr<Job> choose_job_to_execute_in(Cluster &cluster) override;
 };
+
+
+//class FirstComeFirstServed : public SchedulingAlgo {
+//public:
+//    std::shared_ptr<Job> choose_job_to_execute_in(
+//            std::vector<std::shared_ptr<Job>>,
+//            std::shared_ptr<Cluster>) override;
+//};
 
 
 #endif //CLOUDSIMCPP_FIRST_COME_FIRST_SERVED_H
