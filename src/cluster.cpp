@@ -4,21 +4,22 @@
 #include "job.h"
 #include "worker.h"
 #include "switch.h"
+#include "topology/hierarchical_topology.h"
 
 class Worker;
 class Switch;
 
 void Cluster::setup(config conf) {
-    for (int i = 0; i < conf.n_tor; i++) {
-        std::shared_ptr<Switch> s = std::make_shared<Switch>();
-        for (int j = 0; j < conf.m_per_tor; j++) {
-            std::shared_ptr<Worker> m = std::make_shared<Worker>(this, s);
-            machines.push_back(m);
-            machine_map[m->id] = machines.back();
-            s->machines.push_back(m);
-        }
-        tors.push_back(s);
-    }
+//    for (int i = 0; i < conf.n_tor; i++) {
+//        auto s = std::make_shared<Switch>(eventlist());
+//        for (int j = 0; j < conf.m_per_tor; j++) {
+//            auto m = std::make_shared<Worker>(eventlist(), this, s);
+//            workers.push_back(m);
+//            worker_map[m->id] = workers.back();
+//            s->machines.push_back(m);
+//        }
+//        switches.push_back(s);
+//    }
 }
 
 
@@ -38,6 +39,20 @@ void Cluster::check_if_all_jobs_finished() {
     }
     all_jobs_finished = true;
 }
+
+void Cluster::init_topo() {
+    _topo = (Topology *) new HierarchicalTopology(this,
+                                                  12,
+                                                  memFromPkt(8),
+                                                  nullptr,
+                                                  &_eventlist);
+    workers = _topo->workers();
+    for (const auto& w : workers) worker_map[w->id] = w;
+//    machine_map[m->id] = machines.back();
+    switches = _topo->switches();
+}
+
+void Cluster::doNextEvent() {}
 
 //#include "cluster.h"
 //#include "topology/hierarchical_topology.h"

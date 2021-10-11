@@ -1,10 +1,10 @@
 // -*- c-basic-offset: 4; tab-width: 8; indent-tabs-mode: t -*-        
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 using namespace std;
 
 #ifdef __clang__

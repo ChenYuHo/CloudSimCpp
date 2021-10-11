@@ -47,7 +47,7 @@ Packet::sendOn() {
 	    nextsink = _route->reverse()->at(_nexthop);
 	    _nexthop++;
 	} else {
-	    printf("nexthop %d route size %zu\n", _nexthop, _route->size());
+//	    printf("nexthop %d route size %zu\n", _nexthop, _route->size());
 	    assert(_nexthop<_route->size());
 	    nextsink = _route->at(_nexthop);
 	    _nexthop++;
@@ -183,7 +183,7 @@ PacketFlow::logTraffic(Packet& pkt, Logged& location, TrafficLogger::TrafficEven
 }
 
 void print_route(const Route& route) {
-    cout<<"print_route"<<endl;
+    cout<<"print_route: ";
     for (int i = 0; i < route.size(); i++) {
 	PacketSink* sink = route.at(i);
 	if (i > 0) 

@@ -1,5 +1,5 @@
 // -*- c-basic-offset: 4; tab-width: 8; indent-tabs-mode: t -*-        
-#include <math.h>
+#include <cmath>
 #include "config.h"
 #include "tcppacket.h"
 

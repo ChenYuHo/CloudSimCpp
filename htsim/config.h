@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string>
 double drand();
+const static unsigned NUM_SLOTS=512;
+const static unsigned NUM_UPDATES=256;
 
 
 #ifdef _WIN32

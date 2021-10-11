@@ -14,12 +14,12 @@ private:
 
 public:
     unsigned id{};
-    int gpu{4};
+    int gpu{8};
     simtime_picosec submit_time{};
     simtime_picosec submitted_time{};
     simtime_picosec start_time{std::numeric_limits<simtime_picosec>::max()};
     simtime_picosec finish_time{std::numeric_limits<simtime_picosec>::max()};
-    unsigned n_iter{1};
+    unsigned n_iter{3};
     unsigned num_workers_allocated{};
     unsigned tensor_id{0};
     std::vector<uint64_t> model{50, 150405871, 103492470, 9396470, 159038920, 46686320, 134762900, 4176430};
@@ -33,7 +33,7 @@ public:
     explicit Job(simtime_picosec t, simcpp20::simulation<SIM_UNIT> &sim,
                  std::vector<uint64_t> model) : submit_time(
             t), id(get_id()), model(std::move(model)) {
-        printf("Job %d constructor invoked\n", this->id);
+//        printf("Job %d constructor invoked\n", this->id);
     }
 
 //    simcpp20::event<SIM_UNIT> run(simcpp20::simulation<SIM_UNIT> &sim, const std::unordered_map<unsigned, unsigned> &run_config) {

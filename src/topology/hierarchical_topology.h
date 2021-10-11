@@ -50,14 +50,20 @@ public:
 
     int no_of_nodes() const override { return _no_of_nodes; }
 
-    const Route *get_worker_to_tor_path(int src, int dest);
+    const Route *get_worker_to_tor_path(unsigned src) override;
+
     const Route *get_tor_to_worker_path(int src, int dest);
 
-    std::vector<std::shared_ptr<Switch>> switches() override {return tor_switches;};
-    std::vector<std::shared_ptr<Worker>> workers() override {return _workers;};
+    std::vector<std::shared_ptr<Switch>> switches() override { return tor_switches; };
 
+    std::vector<std::shared_ptr<Worker>> workers() override { return _workers; };
+
+    void set_switch_num_updates(
+            unsigned int job_id, unordered_map<unsigned int, unsigned int> run_config) override;
+
+    const Route * get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) override;
 private:
-    Cluster* cluster;
+    Cluster *cluster;
 
     map<Queue *, int> _link_usage;
 

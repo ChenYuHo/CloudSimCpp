@@ -10,6 +10,7 @@ class Cluster;
 
 class CollectiveScheduler {
 public:
+    CollectiveScheduler(simcpp20::simulation<SIM_UNIT> &sim, Cluster &cluster) : sim(sim), cluster(cluster) {};
 //    std::map<unsigned, std::deque<pkt>> queues{}; // each job has a queue
 //    virtual void enqueue(uint64_t size, Worker *machine, unsigned tensor_id, unsigned chunk_id,
 //                         const std::shared_ptr<Job> &job) = 0;
@@ -27,6 +28,9 @@ public:
 
     virtual simcpp20::event<SIM_UNIT> collective_scheduler(simcpp20::simulation<SIM_UNIT> &, Cluster &) = 0;
 
+protected:
+    simcpp20::simulation<SIM_UNIT> &sim;
+    Cluster &cluster;
 };
 
 

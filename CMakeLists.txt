@@ -80,6 +80,7 @@ list(APPEND SRCS
         "src/job_placement/random.cpp"
         "src/job_scheduling/first_come_first_served.cpp"
         "src/collective_scheduling/first_in_first_out_one_by_one.cpp"
+        "src/collective_scheduling/ready_and_go.cpp"
         )
 
 include_directories(htsim)

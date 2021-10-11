@@ -27,6 +27,9 @@
 #include "collective_scheduling/first_in_first_out_one_by_one.h"
 #include "job.h"
 #include "worker.h"
+#include "eventlist.h"
+#include "cluster.h"
+#include "switch.h"
 
 //#define PRINT 1
 //#define CHUNK_SIZE strtoull(std::getenv("CHUNK_SIZE"), nullptr, 10) // in number of elements
@@ -386,30 +389,46 @@
 
 
 
+class TestEventSource : public EventSource {
+public:
+    TestEventSource(EventList &eventlist, const string &name) : EventSource(eventlist, name) {};
 
-//constexpr unsigned int str2int(const char* str, int h = 0)
-//{
-//    return !str[h] ? 5381 : (str2int(str, h+1) * 33) ^ str[h];
-//}
+    void doNextEvent() override {
+        std::cout << "test event source " << eventlist().now() << std::endl;
+    }
+};
 
 int main() {
     simcpp20::simulation<SIM_UNIT> sim;
+    EventList eventlist(sim);
+//    TestEventSource t(eventlist, "test");
+//    eventlist.sourceIsPending(t, 1232575484159);
 
-    config conf{
-            .m_per_tor = 2,
-            .n_tor = 1,
-            .g_per_m = 4,
-    };
 
     std::vector<std::shared_ptr<Job>> jobs = std::vector<std::shared_ptr<Job>>{
-            std::make_shared<Job>(1e12, sim),
-            std::make_shared<Job>(1e12, sim,
-                                  std::vector<uint64_t>{1000}
+            std::make_shared<Job>(1e12, sim, std::vector<uint64_t>{16777216, 2000}),
+//            std::make_shared<Job>(1e12, sim,
+//                                  std::vector<uint64_t>{1000}
 //                                  std::vector<uint64_t>{25393, 23232, 64, 307200, 192, 663552, 384, 884736, 256,
-//                                                        589824, 256, 37748736, 4096, 16777216, 4096, 4096000, 1000}
-            )};
-    Cluster cluster = Cluster();
-    cluster.setup(conf);
+//                                                        589824, 256, 37748736, 4096, 16777216, 4096, 4096000, 1000})
+    };
+    auto cluster = Cluster(eventlist);
+    cluster.setup(config{
+            .m_per_tor = 3,
+            .n_tor = 4,
+            .g_per_m = 4,
+    });
+
+    printf("workers: ");
+    for (const auto& w : cluster.workers)
+        printf("%d ", w->id);
+    printf("\n");
+    printf("switches: ");
+    for (const auto& s : cluster.switches)
+        printf("%d ", s->id);
+    printf("\n");
+
+
     PlacementAlgo *placement_algo;
     SchedulingAlgo *scheduling_algo;
     RandomPlacement r = RandomPlacement();
@@ -417,7 +436,7 @@ int main() {
     FirstComeFirstServed f = FirstComeFirstServed();
     scheduling_algo = &f;
 
-    CollectiveScheduler *cs = new FirstInFirstOutOneByOne();
+    CollectiveScheduler *cs = new FirstInFirstOutOneByOne(sim, cluster);
 //    auto m = METHOD;
 //    switch(str2int(METHOD))
 //    {
@@ -435,7 +454,9 @@ int main() {
     broker(sim, jobs, cluster);
     cluster_scheduler(sim, cluster, scheduling_algo, placement_algo, cs);
     cs->collective_scheduler(sim, cluster);
-    sim.run();
+//    while (eventlist.doNextEvent()) {}
+//    sim.run();
+    sim.run_until(timeFromSec(500));
 //    delete placement_algo;
 //    delete scheduling_algo;
     std::cout << "done" << std::endl;

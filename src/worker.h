@@ -4,9 +4,12 @@
 #include "resource.hpp"
 #include "common.h"
 #include "collective_scheduler.h"
+#include "eventlist.h"
+#include "network.h"
 //#include "switch.h"
 
 class Job;
+
 class Switch;
 
 class Cluster;
@@ -15,7 +18,7 @@ struct pkt;
 struct config;
 
 
-class Worker {
+class Worker : public EventSource, public PacketSink {
 private:
     static unsigned get_id() {
         static unsigned ID = 0;
@@ -30,13 +33,24 @@ public:
     Cluster *cluster;
     std::shared_ptr<Switch> tor;
     std::deque<pkt> buffer;
-    std::unordered_map<unsigned, std::unordered_map<unsigned, std::shared_ptr<resource<SIM_UNIT>>>> allreduce_lock;
+    std::unordered_map<unsigned, // worker id
+            std::unordered_map<unsigned, // job id
+                    std::shared_ptr<resource<SIM_UNIT>>>> allreduce_lock;
 
+    void doNextEvent() override;
 
-    explicit Worker(Cluster *cluster, std::shared_ptr<Switch> tor) :
+    void receivePacket(Packet &) override;
+
+    const string &nodename() override {
+        static string example = "Worker";
+        return example;
+    };
+
+    explicit Worker(EventList &ev, Cluster *cluster, std::shared_ptr<Switch> tor) :
+            EventSource(ev, "worker"),
             id(get_id()), cluster(cluster),
             tor(std::move(tor)) {
-        printf("Worker %d constructor invoked\n", id);
+//        printf("Worker %d constructor invoked\n", id);
     }
 
 //    explicit Worker(config conf, Cluster *cluster, Switch *tor) :
@@ -82,7 +96,15 @@ public:
     simcpp20::event<SIM_UNIT>
     execute_job(simcpp20::simulation<SIM_UNIT> &, std::shared_ptr<Job>, unsigned, CollectiveScheduler *);
 
-    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, uint64_t, std::string, std::shared_ptr<Job>);
+//    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, uint64_t, std::string, std::shared_ptr<Job>);
+
+    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, const shared_ptr<Tensor> &);
+
+    void sendPacket(unsigned, unsigned, unsigned, unsigned, const shared_ptr<Tensor> &);
+
+    std::unordered_map<uint64_t, std::set<unsigned>> received_pkts{}; // tensor_id, set
+
+    std::unordered_map<uint64_t , shared_ptr<resource<SIM_UNIT>>> locks{};
 };
 
 

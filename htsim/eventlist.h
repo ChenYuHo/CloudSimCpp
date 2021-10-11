@@ -14,10 +14,10 @@ public:
 
     void setEndtime(simtime_picosec endtime); // end simulation at endtime (rather than forever)
     bool doNextEvent(); // returns true if it did anything, false if there's nothing to do
-    void sourceIsPending(EventSource &src, simtime_picosec when);
+    simcpp20::event<simtime_picosec> sourceIsPending(EventSource &src, simtime_picosec when);
 
-    void sourceIsPendingRel(EventSource &src, simtime_picosec timefromnow) {
-        sourceIsPending(src, now() + timefromnow);
+    simcpp20::event<simtime_picosec> sourceIsPendingRel(EventSource &src, simtime_picosec timefromnow) {
+        return sourceIsPending(src, now() + timefromnow);
     }
 
     inline simtime_picosec now() const { return _sim.now(); }

@@ -1,5 +1,5 @@
 #include "connection_matrix.h"
-#include <string.h>
+#include <cstring>
 #include <iostream>
 
 ConnectionMatrix::ConnectionMatrix(int n)

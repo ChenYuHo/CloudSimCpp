@@ -1,19 +1,28 @@
 #ifndef CLOUDSIMCPP_CLUSTER_H
 #define CLOUDSIMCPP_CLUSTER_H
 #include "common.h"
+#include "topology.h"
+#include "eventlist.h"
 
 class Switch;
 class Worker;
 
-class Cluster {
+class Cluster : EventSource {
 public:
-    std::vector<std::shared_ptr<Worker>> machines;
-    std::unordered_map<unsigned, std::shared_ptr<Worker>> machine_map;
-    std::vector<std::shared_ptr<Switch>> tors;
+    std::vector<std::shared_ptr<Worker>> workers;
+    std::unordered_map<unsigned, std::shared_ptr<Worker>> worker_map;
+    std::vector<std::shared_ptr<Switch>> switches;
     std::vector<std::shared_ptr<Job>> jobs;
     bool all_jobs_submitted{};
     bool all_jobs_started{};
     bool all_jobs_finished{};
+    Topology *_topo{};
+
+    Cluster(EventList &event_list) : EventSource(event_list, "Cluster") {
+        init_topo();
+    };
+
+    void init_topo();
 
     void add_job(const std::shared_ptr<Job> &job) {
         jobs.push_back(job);
@@ -25,10 +34,12 @@ public:
 
     void check_if_all_jobs_finished();
 
+private:
+    void doNextEvent() override;
 };
 
 //
-//#include "topology.h"
+
 //#include "worker.h"
 //#include "switch.h"
 //#include "job.h"

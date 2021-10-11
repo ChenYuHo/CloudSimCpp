@@ -3,6 +3,8 @@
 #include "job.h"
 #include "cluster.h"
 #include "worker.h"
+#include "config.h"
+#include "topology.h"
 
 
 simcpp20::event<SIM_UNIT>
@@ -20,17 +22,19 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                 printf("[%llu]\tplacement failed for task %d requiring %d GPUs\n", sim.now(), job->id, job->gpu);
             } else {
                 printf("[%llu]\tjob %d placement: ", sim.now(), job->id);
-                job->num_workers_allocated = run_config.size();
+                job->num_workers_allocated = run_config.size(); // multiple GPUs in one machine count as 1
                 for (const auto &pair: run_config) {
                     printf("mid %d -> %d gpu ", pair.first, pair.second);
-                    cluster.machine_map[pair.first]->execute_job(sim, job, pair.second, cs);
+                    cluster.worker_map[pair.first]->execute_job(sim, job, pair.second, cs);
                 }
                 printf("\n");
+                // sets num_updates_for_job and downward_ids_for_job
+                cluster._topo->set_switch_num_updates(job->id, run_config);
             }
             co_await sim.timeout(0);
             continue; // There could be multiple jobs with the same submission timestamp
         }
-        co_await sim.timeout(1e10);
+        co_await sim.timeout(timeFromSec(1));
     }
 }
 

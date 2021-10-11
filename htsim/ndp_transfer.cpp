@@ -1,5 +1,5 @@
 #include "ndp_transfer.h"
-#include "math.h"
+#include <cmath>
 #include <iostream>
 #include "config.h"
 

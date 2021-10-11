@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; tab-width: 8; indent-tabs-mode: t -*-        
 #include "tcp_transfer.h"
 #include "mtcp.h"
-#include "math.h"
+#include <cmath>
 #include <iostream>
 #include "config.h"
 

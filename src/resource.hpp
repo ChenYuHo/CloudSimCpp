@@ -12,7 +12,7 @@
 template<typename T=double>
 class resource {
 public:
-    resource(simcpp20::simulation<T> &sim, uint64_t available)
+    explicit resource(simcpp20::simulation<T> &sim, uint64_t available=1)
             : sim{sim}, available_{available} {}
 
     simcpp20::event<T> request() {

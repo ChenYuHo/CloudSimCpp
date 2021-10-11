@@ -27,7 +27,7 @@ void RandomQueue::set_packet_loss_rate(double l) {
 void
 RandomQueue::receivePacket(Packet &pkt) {
 //    auto *p = (SwitchMLPacket *) &pkt;
-//    printf("[%llu][%llu] randomqueue receivepacket\n", p->ts(), eventlist().now());
+//    printf("[%llu] randomqueue receivepacket\n", eventlist().now());
 
 
     double drop_prob = 0;

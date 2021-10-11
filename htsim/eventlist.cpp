@@ -18,13 +18,14 @@ EventList::doNextEvent()
 }
 
 
-void
+simcpp20::event<simtime_picosec>
 EventList::sourceIsPending(EventSource &src, simtime_picosec when)
 {
     if (_endtime == 0 || when < _endtime) {
         auto ev = _sim.event();
         ev.add_callback([&src](const auto &) { src.doNextEvent(); });
         _sim.schedule(ev, when - now());
+        return ev;
     }
 
 }

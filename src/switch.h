@@ -3,9 +3,18 @@
 
 #include "common.h"
 #include "counter.hpp"
+#include "eventlist.h"
+#include "network.h"
+#include <tuple>
+#include <set>
+
 class Worker;
 
-class Switch {
+class Cluster;
+
+class SwitchMLPacket;
+
+class Switch : public EventSource, public PacketSink {
 private:
     static unsigned get_id() {
         static unsigned ID = 0;
@@ -13,8 +22,13 @@ private:
     }
 
 public:
+    void multicast_downward(SwitchMLPacket *);
+
+    bool top_level = false;
+    unsigned layer = 0;
     unsigned id;
     std::vector<std::shared_ptr<Worker>> machines;
+    Cluster *cluster;
     std::deque<pkt> buffer;
     std::unordered_map<unsigned, unsigned> pkt_counter;
     std::unordered_map<std::string, std::shared_ptr<counter<SIM_UNIT>>> counter_map;
@@ -22,9 +36,45 @@ public:
     std::unordered_map<unsigned, std::shared_ptr<resource<SIM_UNIT>>> pkt_lock_map2;
 //    std::shared_ptr<resource<SIM_UNIT>> pkt_lock;
 
-    explicit Switch() : id(get_id()) {
-        printf("Switch %d constructor invoked\n", id);
+
+    std::unordered_map<unsigned, std::set<unsigned>> downward_ids_for_job{}; // JID, IDs (worker or switch) to send downward
+    std::unordered_map<unsigned, unsigned> num_updates_for_job{}; // JID, num_updates
+    // set when placement is determined, via topology, erase when job is done
+
+    constexpr unsigned str2int(const char *str, int h = 0) {
+        return !str[h] ? 5381 : (str2int(str, h + 1) * 33) ^ str[h];
     }
+
+    unsigned hash(unsigned jid, unsigned tid, unsigned iter, unsigned ver, unsigned slot) {
+        char str[50];
+        sprintf(str, "%da%da%da%da%d", jid, tid, iter, ver, slot);
+        return str2int(str);
+    }
+
+
+    std::unordered_map<unsigned, unsigned> count{};
+    std::unordered_map<unsigned, std::set<unsigned>> seen{};
+//    std::vector<std::unordered_map<unsigned, unsigned>> count{std::unordered_map<unsigned, unsigned>{},
+//                                                              std::unordered_map<unsigned, unsigned>{}};
+//    std::vector<std::unordered_map<unsigned, std::set<unsigned>>> received_pkts{std::unordered_map<unsigned, std::set<unsigned>>{},
+//                                                                                std::unordered_map<unsigned, std::set<unsigned>>{}};
+
+    explicit Switch(EventList &ev, Cluster *cluster) :
+            EventSource(ev, "Switch"),
+            cluster(cluster),
+            id(get_id()) {
+//        printf("Switch %d constructor invoked\n", id);
+    }
+
+    void doNextEvent() override;
+
+    void receivePacket(Packet &) override;
+
+//    unordered_map<unsigned, unsigned> pkt_counter{};
+    const string &nodename() override {
+        static string example = "switch";
+        return example;
+    };
 
 //    int running_jobs() {
 //        int n = 0;
@@ -32,7 +82,7 @@ public:
 //            n += m->running_jobs();
 //        return n;
 //    }
-    simcpp20::event<SIM_UNIT> send_receive(simcpp20::simulation<SIM_UNIT> &, uint64_t, std::string, unsigned, unsigned);
+//    simcpp20::event<SIM_UNIT> send_receive(simcpp20::simulation<SIM_UNIT> &, uint64_t, std::string, unsigned, unsigned);
 };
 
 
