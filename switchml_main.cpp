@@ -12,6 +12,7 @@
 #include "job_submitter.h"
 #include "job_scheduling/first_come_first_served.h"
 #include "job_placement/random.h"
+#include "collective_scheduling/first_in_first_out_one_by_one.h"
 #include "collective_scheduling/ready_and_go.h"
 
 #include "cluster.h"
@@ -58,7 +59,9 @@ int main() {
     scheduling_algo = &f;
 
 //    CollectiveScheduler *cs = nullptr;//new FirstInFirstOutOneByOne(sim, cluster);
-    CollectiveScheduler *cs = new ReadyAndGo(sim, cluster);
+//    CollectiveScheduler *cs = new ReadyAndGo(sim, cluster);
+    CollectiveScheduler *cs = new FirstInFirstOutOneByOne(sim, cluster);
+    cs->collective_scheduler(sim, cluster);
 
     broker(sim, jobs, cluster);
     cluster_scheduler(sim, cluster, scheduling_algo, placement_algo, cs);
