@@ -52,7 +52,7 @@ int main() {
 
     PlacementAlgo *placement_algo;
     SchedulingAlgo *scheduling_algo;
-    RandomPlacement r = RandomPlacement();
+    RandomPlacement r = RandomPlacement(1);
     placement_algo = &r;
     FirstComeFirstServed f = FirstComeFirstServed();
     scheduling_algo = &f;
