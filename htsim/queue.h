@@ -11,6 +11,7 @@
 #include "eventlist.h"
 #include "network.h"
 #include "loggertypes.h"
+#include "common.h"
 
 class Queue : public EventSource, public PacketSink {
  public:
@@ -21,8 +22,9 @@ class Queue : public EventSource, public PacketSink {
     // should really be private, but loggers want to see
     mem_b _maxsize; 
 
-    inline simtime_picosec drainTime(Packet *pkt) { 
-	return (simtime_picosec)(pkt->size() * _ps_per_byte); 
+    inline simtime_picosec drainTime(Packet *pkt) {
+//        myprintf("draintime %d %d\n", pkt->size(), _ps_per_byte);
+        return (simtime_picosec)(pkt->size() * _ps_per_byte);
     }
     inline mem_b serviceCapacity(simtime_picosec t) { 
 	return (mem_b)(timeAsSec(t) * (double)_bitrate); 

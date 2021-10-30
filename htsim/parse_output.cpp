@@ -5,6 +5,7 @@
 #include <cstring>
 #include <iostream>
 #include <cmath>
+#include "common.h"
 using namespace std;
 
 #ifdef __clang__
@@ -29,7 +30,7 @@ struct eqint
 
 int main(int argc, char** argv){
     if (argc < 2){
-	printf("Usage %s filename [-show|-verbose|-ascii]\n", argv[0]);
+	myprintf("Usage %s filename [-show|-verbose|-ascii]\n", argv[0]);
 	return 1;
     }
 
@@ -73,7 +74,7 @@ int main(int argc, char** argv){
 	if (strstr(line, "# TRACE")) {
 	    //we have finished the preamble;
 	    if(numRecords<=0) {
-		printf("Numrecords is %d after preamble, bailing\n", numRecords);
+		myprintf("Numrecords is %d after preamble, bailing\n", numRecords);
 		exit(1);
 	    }
 	    break;
@@ -288,12 +289,12 @@ int main(int argc, char** argv){
 	int id = it->first;
 	//cout << "Flow with ID " << id << " has mean rate " << it->second/flow_count[id] << endl;
 	double r = it->second/flow_count[id];
-	//printf("%f %d\n", r, id);
+	//myprintf("%f %d\n", r, id);
 	mean_rate += r;
 	rates.push_back(r);
 
 	if (show)
-	    printf("%.2f Mbps val %d name %s\n", r*8/1000000,id,object_names[id].c_str());
+	    myprintf("%.2f Mbps val %d name %s\n", r*8/1000000,id,object_names[id].c_str());
 
 	it++;
     }
@@ -312,7 +313,7 @@ int main(int argc, char** argv){
 	if (i>cnt&&!show)
 	    break;
     }
-    printf("Mean of lower 10pc (%d entries) is %f total mean %f  mean2 %f\n", 
+    myprintf("Mean of lower 10pc (%d entries) is %f total mean %f  mean2 %f\n", 
 	   cnt, total/cnt, mean_rate/rates.size(), 
 	   mean_rate2/flow_rates2.size());
   

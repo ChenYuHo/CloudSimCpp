@@ -17,6 +17,7 @@
 
 #include "cluster.h"
 #include "job.h"
+#include "csv.h"
 
 //uint32_t RTT = 1; // this is per link delay in us; identical RTT microseconds = 0.02 ms
 
@@ -42,14 +43,49 @@ int main() {
 
 //    auto cluster = std::make_shared<Cluster>(event_list);
     auto cluster = Cluster(event_list);
+    cout<<"Number of nodes: "<<cluster._topo->no_of_nodes()<<endl;
+    cout<<"Each node has "<< GPUS_PER_NODE << " GPUs"<<endl;
+
+
+//    io::CSVReader<5> in("../HeliosData/data/60_job.csv");
+//    in.read_header(io::ignore_extra_column, "num_gpu", "duration", "submit_time", "iterations", "model");
+//    int num_gpu;
+//    simtime_picosec duration;
+//    simtime_picosec submit_time;
+//    unsigned iterations;
+//    std::string model;
+//    std::vector<std::shared_ptr<Job>> jobs;
+//    while(in.read_row(num_gpu, duration, submit_time, iterations, model)){
+//        jobs.push_back(std::make_shared<Job>(timeFromSec(submit_time), sim, model, iterations, num_gpu));
+//    }
+
 
     std::vector<std::shared_ptr<Job>> jobs = std::vector<std::shared_ptr<Job>>{
-            std::make_shared<Job>(1e12, sim, std::vector<uint64_t>{200}),//16777216, 2000}),
-            std::make_shared<Job>(1e12, sim,std::vector<uint64_t>{200})
+        // layer size in number of elements!
+            std::make_shared<Job>(0, sim, std::vector<uint64_t>{26214400}, 2, 2),
+//            std::make_shared<Job>(1e12, sim, std::vector<uint64_t>{25393, 23232, 64, 307200, 192, 663552, 384, 884736, 256,589824, 256, 37748736, 4096, 16777216, 4096, 4096000, 1000}),
+//            std::make_shared<Job>(1e12, sim, std::vector<uint64_t>{25393, 23232, 64, 307200, 192, 663552, 384, 884736, 256,589824, 256, 37748736, 4096, 16777216, 4096, 4096000, 1000})
+//            std::make_shared<Job>(1e12, sim, std::vector<uint64_t>{200}),//16777216, 2000}),
+//            std::make_shared<Job>(1e12, sim,std::vector<uint64_t>{200})
 //                                  std::vector<uint64_t>{1000}
 //                                  std::vector<uint64_t>{25393, 23232, 64, 307200, 192, 663552, 384, 884736, 256,
 //                                                        589824, 256, 37748736, 4096, 16777216, 4096, 4096000, 1000})
     };
+
+    unsigned cnt = 0;
+    for (auto& job: jobs) {
+        cnt += job->n_iter * job->model.size();
+    }
+    printf("cnt: %u\n", cnt);
+    cpb.init_variable(cnt);
+    cpb.cntSet(0);
+//    for (unsigned i=0; i<10; ++i) {
+//        myprintf("%d\n", i);
+//        cpb.cntIncrement();
+//    }
+//    cpb.finish_progress_bar();
+//    sim.run();
+//    return 0;
 
     PlacementAlgo *placement_algo;
     SchedulingAlgo *scheduling_algo;
@@ -123,6 +159,8 @@ int main() {
 //    sim.run_until(2e12);
 //    delete placement_algo;
 //    delete scheduling_algo;
+    cpb.finish_progress_bar();
     std::cout << "done" << std::endl;
+    cout<<sim.now()<<endl;
     return 0;
 }

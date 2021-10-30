@@ -2,16 +2,13 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <sys/types.h>
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 double drand();
-const static unsigned NUM_SLOTS=512;
-const static unsigned NUM_UPDATES=256;
-
 
 #ifdef _WIN32
 // Ways to refer to integer types

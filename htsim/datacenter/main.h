@@ -3,8 +3,6 @@
 
 #include <string>
 
-
-#define HOST_NIC 10000 // host nic speed in Gbps
 #define CORE_TO_HOST 4
 
 //basic setup!
@@ -97,8 +95,6 @@
 #define HOST_TOR_ID(host) host%NS
 #define TOR_AGG1(tor) tor%NA
 
-
-#define SWITCH_BUFFER 97
 #define RANDOM_BUFFER 3
 #define FEEDER_BUFFER 1000
 

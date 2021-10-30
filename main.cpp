@@ -65,14 +65,14 @@
 //    void enqueue(const std::shared_ptr<Tensor> &tensor) override {
 //        auto key = std::make_pair(tensor->job->id, tensor->tensor_id);
 //        queue[key].push_back(tensor);
-////        printf("queue size %zu %d %d\n", queue[key].size(), tensor->tensor_id, tensor->job->id);
+////        myprintf("queue size %zu %d %d\n", queue[key].size(), tensor->tensor_id, tensor->job->id);
 //        if (queue[key].size() == tensor->job->num_workers_allocated) {
 //            ready_queue.push(std::move(queue[key]));
 //            queue.erase(key);
 //        }
 ////        auto key = std::make_pair(tensor->job->id, tensor->tensor_id);
 ////        queue[key].push_back(tensor);
-////        printf("queue size %zu %d %d\n", queue[key].size(), tensor->tensor_id, tensor->job->id);
+////        myprintf("queue size %zu %d %d\n", queue[key].size(), tensor->tensor_id, tensor->job->id);
 ////        if (queue[key].size() == tensor->job->num_workers_allocated) {
 ////            std::deque<std::shared_ptr<Tensor>> partitioned;
 ////            for (auto &t: queue[key]) {
@@ -112,14 +112,14 @@
 //                auto end = sim.now();
 //                for (auto &tensor : tensors) {
 //                    if (PRINT) {
-//                        printf("[allreduce] iter %d jid %d mid %d tid %d size %d start %llu duration %llu end %llu cid %d\n",
+//                        myprintf("[allreduce] iter %d jid %d mid %d tid %d size %d start %llu duration %llu end %llu cid %d\n",
 //                               tensor->iter, tensor->job->id, tensor->machine->id, tensor->tensor_id, allreduce_size,
 //                               begin, end - begin, end, tensor->chunk_id);
 //                    }
 //                }
 //                if (tensors.front()->allreduced_size == tensors.front()->size) {
 //                    for (auto &tensor : tensors) {
-////                        printf("test\n");
+////                        myprintf("test\n");
 //                        tensor->iter++;
 //                        tensor->lock.release();
 //                    }
@@ -177,7 +177,7 @@
 //    void enqueue(const std::shared_ptr<Tensor> &tensor) override {
 //        auto key = std::make_pair(tensor->job->id, tensor->tensor_id);
 //        queue[key].push_back(tensor);
-////        printf("queue size %zu %d %d\n", queue[key].size(), tensor->tensor_id, tensor->job->id);
+////        myprintf("queue size %zu %d %d\n", queue[key].size(), tensor->tensor_id, tensor->job->id);
 //        if (queue[key].size() == tensor->job->num_workers_allocated) {
 //            ready_queue[tensor->job->id].push(std::move(queue[key]));
 //            queue.erase(key);
@@ -192,21 +192,21 @@
 ////            auto &queue = queues[tensor->job->id];
 ////            queue.emplace_back(pkt{tensor->size, tensor->machine, tensor->tensor_id, tensor->chunk_id, tensor->job});
 ////        }
-////        printf("queue size %zu\n", queues[tensor->job->id].size());
+////        myprintf("queue size %zu\n", queues[tensor->job->id].size());
 //    }
 //
 ////
 //    simcpp20::event<SIM_UNIT> collective_scheduler(simcpp20::simulation<SIM_UNIT> &sim, Cluster &cluster) override {
 //        auto chunk_size = CHUNK_SIZE;
 //        while (!cluster.all_jobs_finished) {
-////            printf("scanning through queue\n");
+////            myprintf("scanning through queue\n");
 //            for (auto &entry: ready_queue) {
 //                auto job_id = entry.first;
 //                auto &pqueue = entry.second; // priority queue
 //                auto drr = quantums[job_id];
 //                drr += quantum;
 //                while (!pqueue.empty()) {
-//                    printf("job %d drr %f\n", job_id, drr);
+//                    myprintf("job %d drr %f\n", job_id, drr);
 //                    auto tensors = pqueue.top();
 //                    auto q = compute_quantum(tensors.front());
 ////                    double q = 1.;
@@ -232,12 +232,12 @@
 //                        auto end = sim.now();
 //                        for (auto &tensor : tensors) {
 //                            if (PRINT) {
-//                                printf("[allreduce] iter %d jid %d mid %d tid %d size %lu start %llu duration %llu end %llu cid %d\n",
+//                                myprintf("[allreduce] iter %d jid %d mid %d tid %d size %lu start %llu duration %llu end %llu cid %d\n",
 //                                       tensor->iter, tensor->job->id, tensor->machine->id, tensor->tensor_id,
 //                                       allreduce_size, begin, end - begin, end, tensor->chunk_id);
 //                            }
 //                        }
-//                        printf("=== allreduced %lu %lu\n", tensors.front()->allreduced_size, tensors.front()->size);
+//                        myprintf("=== allreduced %lu %lu\n", tensors.front()->allreduced_size, tensors.front()->size);
 //                        if (tensors.front()->allreduced_size >= tensors.front()->size) {
 //                            for (auto &tensor : tensors) {
 //                                tensor->iter++;
@@ -256,7 +256,7 @@
 ////                            for (auto it = pqueue.begin(); it != pqueue.end();) {
 ////                                auto &p = *it;
 ////                                if (p.tid == pkt.tid && p.cid == pkt.cid) {
-////                                    printf("[%llu]\tinvoking allreduce within cs s%llu t%d c%d j%d m%d\n", sim.now(),
+////                                    myprintf("[%llu]\tinvoking allreduce within cs s%llu t%d c%d j%d m%d\n", sim.now(),
 ////                                           p.size, p.tid, p.cid, p.job->id, p.machine->id);
 ////                                    allreduce_events.push_back(p.machine->allreduce(sim, p.size, p.tid, p.cid, p.job));
 ////                                    it = pqueue.erase(it);
@@ -299,7 +299,7 @@
 //    void enqueue(const std::shared_ptr<Tensor> &tensor) override {
 //        auto key = std::make_pair(tensor->job->id, tensor->tensor_id);
 //        queue[key].push_back(tensor);
-////        printf("queue size %zu %d %d\n", queue[key].size(), tensor->tensor_id, tensor->job->id);
+////        myprintf("queue size %zu %d %d\n", queue[key].size(), tensor->tensor_id, tensor->job->id);
 //        if (queue[key].size() == tensor->job->num_workers_allocated) {
 //            ready_queue[tensor->job->id].push(std::move(queue[key]));
 //            queue.erase(key);
@@ -310,13 +310,13 @@
 //    simcpp20::event<SIM_UNIT> collective_scheduler(simcpp20::simulation<SIM_UNIT> &sim, Cluster &cluster) override {
 //        auto chunk_size = CHUNK_SIZE;
 //        while (!cluster.all_jobs_finished) {
-////            printf("scanning through queue\n");
+////            myprintf("scanning through queue\n");
 //            for (auto &entry: ready_queue) {
 //                auto job_id = entry.first;
 //                auto &queue = entry.second; // priority queue
 //                auto drr = quantums[job_id];
 //                while (!queue.empty()) {
-//                    printf("job %d drr %f\n", job_id, drr);
+//                    myprintf("job %d drr %f\n", job_id, drr);
 //                    auto tensors = queue.top();
 //                    std::vector<simcpp20::event<SIM_UNIT>> allreduce_events;
 //                    uint64_t allreduce_size;
@@ -338,12 +338,12 @@
 //                    auto end = sim.now();
 //                    for (auto &tensor : tensors) {
 //                        if (PRINT) {
-//                            printf("[allreduce] iter %d jid %d mid %d tid %d size %d start %llu duration %llu end %llu cid %d\n",
+//                            myprintf("[allreduce] iter %d jid %d mid %d tid %d size %d start %llu duration %llu end %llu cid %d\n",
 //                                   tensor->iter, tensor->job->id, tensor->machine->id, tensor->tensor_id,
 //                                   allreduce_size, begin, end - begin, end, tensor->chunk_id);
 //                        }
 //                    }
-//                    printf("=== allreduced %llu %llu\n", tensors.front()->allreduced_size, tensors.front()->size);
+//                    myprintf("=== allreduced %llu %llu\n", tensors.front()->allreduced_size, tensors.front()->size);
 //                    if (tensors.front()->allreduced_size >= tensors.front()->size) {
 //                        for (auto &tensor : tensors) {
 //                            tensor->iter++;
@@ -419,14 +419,14 @@ int main() {
             .g_per_m = 4,
     });
 
-    printf("workers: ");
+    myprintf("workers: ");
     for (const auto& w : cluster.workers)
-        printf("%d ", w->id);
-    printf("\n");
-    printf("switches: ");
+        myprintf("%d ", w->id);
+    myprintf("\n");
+    myprintf("switches: ");
     for (const auto& s : cluster.switches)
-        printf("%d ", s->id);
-    printf("\n");
+        myprintf("%d ", s->id);
+    myprintf("\n");
 
 
     PlacementAlgo *placement_algo;

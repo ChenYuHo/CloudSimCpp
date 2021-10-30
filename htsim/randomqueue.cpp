@@ -27,8 +27,7 @@ void RandomQueue::set_packet_loss_rate(double l) {
 void
 RandomQueue::receivePacket(Packet &pkt) {
 //    auto *p = (SwitchMLPacket *) &pkt;
-//    printf("[%llu] randomqueue receivepacket\n", eventlist().now());
-
+//    myprintf("[%llu] randomqueue receivepacket\n", eventlist().now());
 
     double drop_prob = 0;
     int crt = _queuesize + pkt.size();
@@ -37,6 +36,8 @@ RandomQueue::receivePacket(Packet &pkt) {
         //if (_logger) _logger->logQueue(*this, QueueLogger::PKT_DROP, pkt);
         //pkt.flow().logTraffic(pkt,*this,TrafficLogger::PKT_DROP);
         pkt.free();
+        cout<<"drop"<<endl;
+        exit(1);
         return;
     }
 
@@ -53,6 +54,8 @@ RandomQueue::receivePacket(Packet &pkt) {
             _buffer_drops++;
         }
         pkt.free();
+        cout<<"threshold exceeded"<<endl;
+        exit(1);
 
         //cout << "Drop "<<drop_prob<< " queue size "<< _queuesize/1000 << " queue id " << _name << endl;
 

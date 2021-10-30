@@ -118,7 +118,7 @@ TcpSrc::connect(const Route& routeout, const Route& routeback, TcpSink& sink,
     _flow.id = id; // identify the packet flow with the TCP source that generated it
     _sink->connect(*this, routeback);
 
-    //printf("Tcp %x msrc %x\n",this,_mSrc);
+    //myprintf("Tcp %x msrc %x\n",this,_mSrc);
     eventlist().sourceIsPending(*this,starttime);
 }
 
@@ -192,7 +192,7 @@ TcpSrc::receivePacket(Packet& pkt)
 	    if (seqno >= _last_packet_with_old_route) {
 		//delete _old_route;
 		_old_route = NULL;
-		//printf("Deleted old route\n");
+		//myprintf("Deleted old route\n");
 	    }
 	}
 	_RFC2988_RTO_timeout = eventlist().now() + _rto;// RFC 2988 5.3
@@ -410,7 +410,7 @@ TcpSrc::send_packets() {
 	}
 
 	//rtt in ms
-	//printf("%d\n",c);
+	//myprintf("%d\n",c);
     }
 
     while ((_last_acked + c >= _highest_sent + _mss) 

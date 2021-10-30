@@ -6,7 +6,7 @@
 #define CLOUDSIMCPP_JOB_SCHEDULER_H
 
 //#include <memory>
-//#include <unordered_map>
+#include <map>
 //#include <random>
 //#include <utility>
 //#include "eventlist.h"
@@ -25,7 +25,7 @@ public:
 
 class PlacementAlgo {
 public:
-    virtual std::unordered_map<unsigned, unsigned> place_job_in(
+    virtual std::map<unsigned, unsigned> place_job_in(
             Cluster &, std::shared_ptr<Job>) = 0;
 };
 

@@ -9,7 +9,7 @@ public:
     std::random_device rd{};
     std::mt19937 gen;
 
-    std::unordered_map<unsigned, unsigned> place_job_in(
+    std::map<unsigned, unsigned> place_job_in(
             Cluster &cluster, std::shared_ptr<Job> job) override;
 
     RandomPlacement():gen(std::mt19937(rd())){};

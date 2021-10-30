@@ -1,5 +1,6 @@
 #include "firstfit.h"
 #include <iostream>
+#include "common.h"
 
 FirstFit::FirstFit(simtime_picosec scanPeriod, EventList& eventlist, vector<const Route*>*** n) : EventSource(eventlist,"FirstFit"), _scanPeriod(scanPeriod) /*, _init(0)*/
 {
@@ -8,7 +9,7 @@ FirstFit::FirstFit(simtime_picosec scanPeriod, EventList& eventlist, vector<cons
 
   threshold = (int)(timeAsSec(_scanPeriod) * HOST_NIC * 100);
 
-  printf("Threshold is %d\n",threshold);
+  myprintf("Threshold is %d\n",threshold);
 }
 
 void FirstFit::doNextEvent() {
@@ -48,7 +49,7 @@ void FirstFit::run(){
       f->allocated = 0;
       
       //
-      //printf("Removing flow %d %d from path because delta is %d\n",f->src,f->dest,delta);
+      //myprintf("Removing flow %d %d from path because delta is %d\n",f->src,f->dest,delta);
 
       cout << "R";
       
@@ -92,7 +93,7 @@ void FirstFit::run(){
       assert(best_route>-1);
       //set route!
       f->allocated = 1;
-      //printf("Switching flow %d %d to path %d\n",f->src,f->dest,best_route);
+      //myprintf("Switching flow %d %d to path %d\n",f->src,f->dest,best_route);
       cout << "S";
 
       Route* new_route = new Route(*(net_paths[f->src][f->dest]->at(best_route)));

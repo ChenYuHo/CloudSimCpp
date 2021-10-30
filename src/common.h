@@ -2,14 +2,32 @@
 #define CLOUDSIMCPP_COMMON_H
 
 #include <cstdint>
+#include <cstdarg>
 #include <memory>
 #include <utility>
 #include <set>
 #include "resource.hpp"
+#include "CppProgressBar.h"
 
+
+#define SIMULATE_ALLREDUCE 1
+#define DEFAULTDATASIZE 9000
+#define HOST_NIC 100000 // host nic speed in Mbps
+#define SWITCH_BUFFER 10000000 // in bytes, per queue (port)
+#define SWITCH_PORTS 3
+#define GPUS_PER_NODE 1
 typedef uint64_t simtime_picosec;
 typedef simtime_picosec SIM_UNIT;
-const static uint32_t RTT = 1;
+const static uint32_t RTT = 1; // us
+const static unsigned CHUNK_SIZE = 262144;
+const static unsigned NUM_SLOTS=512; // pool size
+const static unsigned NUM_UPDATES=256; // elements per packet
+const static int SWITCHML_PKT_SIZE=DEFAULTDATASIZE;
+
+extern CppProgressBar cpb;
+
+int myprintf(const char* format, ...);
+
 
 class Worker;
 
@@ -54,14 +72,14 @@ public:
            simcpp20::simulation<SIM_UNIT> &sim) :
             size(size), machine(machine), job(std::move(job)),
             tensor_id(get_id()), lock(resource(sim, 1)) {
-//        printf("Tensor %lu constructor invoked\n", tensor_id);
+//        myprintf("Tensor %lu constructor invoked\n", tensor_id);
     }
 
     Tensor(uint64_t id, uint64_t size, Worker *machine, std::shared_ptr<Job> job,
            simcpp20::simulation<SIM_UNIT> &sim) :
             size(size), machine(machine), job(std::move(job)),
             tensor_id(id), lock(resource(sim, 1)) {
-//        printf("Tensor %lu constructor invoked\n", id);
+//        myprintf("Tensor %lu constructor invoked\n", id);
     }
 };
 

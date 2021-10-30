@@ -8,8 +8,9 @@ void ReadyAndGo::enqueue(const std::shared_ptr<Tensor> &tensor) {
     queue[key].push_back(tensor);
     if (queue[key].size() == tensor->job->num_workers_allocated) {
         for(auto & t: queue[key]) {
-            printf("Allreduce go %p\n", t.get());
+            myprintf("Allreduce go %p\n", t.get());
             t->machine->allreduce(sim, t);
+
         }
         queue[key].clear();
     }

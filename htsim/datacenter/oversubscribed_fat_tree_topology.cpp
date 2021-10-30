@@ -10,8 +10,6 @@
 #include "compositequeue.h"
 #include "ecnqueue.h"
 
-extern uint32_t RTT;
-
 string ntoa(double n);
 string itoa(uint64_t n);
 
@@ -111,9 +109,9 @@ void OversubscribedFatTreeTopology::init_network(){
 
     /*    for (int i = 0;i<NSRV;i++){
 	  for (int j = 0;j<NK;j++){
-	  printf("%p/%p ",queues_ns_nlp[i][j], queues_nlp_ns[j][i]);
+	  myprintf("%p/%p ",queues_ns_nlp[i][j], queues_nlp_ns[j][i]);
 	  }
-	  printf("\n");
+	  myprintf("\n");
 	  }*/
     
     //Lower layer in pod to upper layer in pod!
@@ -154,9 +152,9 @@ void OversubscribedFatTreeTopology::init_network(){
 
     /*for (int i = 0;i<NK;i++){
       for (int j = 0;j<NK;j++){
-      printf("%p/%p ",queues_nlp_nup[i][j], queues_nup_nlp[j][i]);
+      myprintf("%p/%p ",queues_nlp_nup[i][j], queues_nup_nlp[j][i]);
       }
-      printf("\n");
+      myprintf("\n");
       }*/
     
     // Upper layer in pod to core!
@@ -203,9 +201,9 @@ void OversubscribedFatTreeTopology::init_network(){
 
     /*    for (int i = 0;i<NK;i++){
 	  for (int j = 0;j<NC;j++){
-	  printf("%p/%p ",queues_nup_nc[i][j], queues_nc_nup[j][i]);
+	  myprintf("%p/%p ",queues_nup_nc[i][j], queues_nc_nup[j][i]);
 	  }
-	  printf("\n");
+	  myprintf("\n");
 	  }*/
 }
 
@@ -276,7 +274,7 @@ vector<const Route*>* OversubscribedFatTreeTopology::get_paths(int src, int dest
 		//now take the only link down to the destination server!
 	
 		int upper2 = HOST_POD(dest)*K/2 + 2 * core / K;
-		//printf("K %d HOST_POD(%d) %d core %d upper2 %d\n",K,dest,HOST_POD(dest),core, upper2);
+		//myprintf("K %d HOST_POD(%d) %d core %d upper2 %d\n",K,dest,HOST_POD(dest),core, upper2);
 	
 		routeout->push_back(queues_nc_nup[core][upper2]);
 		routeout->push_back(pipes_nc_nup[core][upper2]);

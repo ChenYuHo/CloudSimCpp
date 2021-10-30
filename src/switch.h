@@ -23,8 +23,6 @@ private:
 
 public:
     void multicast_downward(SwitchMLPacket *);
-
-    bool top_level = false;
     unsigned layer = 0;
     unsigned id;
     std::vector<std::shared_ptr<Worker>> machines;
@@ -39,6 +37,7 @@ public:
 
     std::unordered_map<unsigned, std::set<unsigned>> downward_ids_for_job{}; // JID, IDs (worker or switch) to send downward
     std::unordered_map<unsigned, unsigned> num_updates_for_job{}; // JID, num_updates
+    std::unordered_map<unsigned, bool> top_level_for_job{}; // JID, top_level
     // set when placement is determined, via topology, erase when job is done
 
     constexpr unsigned str2int(const char *str, int h = 0) {
@@ -63,7 +62,7 @@ public:
             EventSource(ev, "Switch"),
             cluster(cluster),
             id(get_id()) {
-//        printf("Switch %d constructor invoked\n", id);
+//        myprintf("Switch %d constructor invoked\n", id);
     }
 
     void doNextEvent() override;
@@ -98,13 +97,13 @@ public:
 //
 //void Switch::receivePacket(Packet &pkt) {
 //    auto *p = (SwitchMLPacket*)&pkt;
-//    printf("[%llu] switch got packet wid %d jid %d\n", p->ts(), p->wid, p->job_id);
+//    myprintf("[%llu] switch got packet wid %d jid %d\n", p->ts(), p->wid, p->job_id);
 //    if (counter.find(p->job_id) == counter.end())
 //        counter[p->job_id] = 0;
 //    counter[p->job_id] += 1;
 //
 //    if (counter[p->job_id] == 2) {
-//        printf("got all\n");
+//        myprintf("got all\n");
 //        auto topo = (HierarchicalTopology *) cluster->topology();
 //        for(unsigned i=0;i<2;i++) {
 //            auto route = topo->get_tor_to_worker_path(id(), i);
@@ -112,7 +111,7 @@ public:
 //            multicast_p->job_id = p->job_id;
 //            multicast_p->wid = i;
 //            multicast_p->set_ts(eventlist().now());
-//            printf("[%llu] switch multicast packet wid %d jid %d\n", p->ts(), p->wid, p->job_id);
+//            myprintf("[%llu] switch multicast packet wid %d jid %d\n", p->ts(), p->wid, p->job_id);
 //            multicast_p->sendOn();
 //        }
 //        p->free();

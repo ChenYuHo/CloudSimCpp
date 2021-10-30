@@ -143,16 +143,16 @@ CompositeQueue::receivePacket(Packet& pkt)
 			booted_pkt->flow().logTraffic(pkt,*this,TrafficLogger::PKT_BOUNCE);
 			//XXX what to do with it now?
 #if 0
-			printf("Bounce2 at %s\n", _nodename.c_str());
-			printf("Fwd route:\n");
+			myprintf("Bounce2 at %s\n", _nodename.c_str());
+			myprintf("Fwd route:\n");
 			print_route(*(booted_pkt->route()));
-			printf("nexthop: %d\n", booted_pkt->nexthop());
+			myprintf("nexthop: %d\n", booted_pkt->nexthop());
 #endif
 			booted_pkt->bounce();
 #if 0
-			printf("\nRev route:\n");
+			myprintf("\nRev route:\n");
 			print_route(*(booted_pkt->reverse_route()));
-			printf("nexthop: %d\n", booted_pkt->nexthop());
+			myprintf("nexthop: %d\n", booted_pkt->nexthop());
 #endif
 			_num_bounced++;
 			booted_pkt->sendOn();
@@ -202,16 +202,16 @@ CompositeQueue::receivePacket(Packet& pkt)
 	    pkt.flow().logTraffic(pkt,*this,TrafficLogger::PKT_BOUNCE);
 	    //XXX what to do with it now?
 #if 0
-	    printf("Bounce1 at %s\n", _nodename.c_str());
-	    printf("Fwd route:\n");
+	    myprintf("Bounce1 at %s\n", _nodename.c_str());
+	    myprintf("Fwd route:\n");
 	    print_route(*(pkt.route()));
-	    printf("nexthop: %d\n", pkt.nexthop());
+	    myprintf("nexthop: %d\n", pkt.nexthop());
 #endif
 	    pkt.bounce();
 #if 0
-	    printf("\nRev route:\n");
+	    myprintf("\nRev route:\n");
 	    print_route(*(pkt.reverse_route()));
-	    printf("nexthop: %d\n", pkt.nexthop());
+	    myprintf("nexthop: %d\n", pkt.nexthop());
 #endif
 	    _num_bounced++;
 	    pkt.sendOn();

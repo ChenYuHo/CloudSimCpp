@@ -9,8 +9,7 @@
 #include "compositequeue.h"
 #include "compositeprioqueue.h"
 #include "main.h"
-
-extern uint32_t RTT;
+#include "common.h"
 
 string ntoa(double n);
 string itoa(uint64_t n);
@@ -104,13 +103,13 @@ int BCubeTopology::srv_from_address(unsigned int* address){
     int addr = 0,crt_n = 0;
   
     crt_n = (int)pow(_NUM_PORTS,_K);
-    //printf("Computing addr from:");
+    //myprintf("Computing addr from:");
     for (int i=_K;i>=0;i--){
-	//    printf("%d ",address[i]);
+	//    myprintf("%d ",address[i]);
 	addr += crt_n * address[i];
 	crt_n /= _NUM_PORTS;
     }
-    //printf("\n");
+    //myprintf("\n");
 
     return addr;
 }
@@ -193,7 +192,7 @@ void BCubeTopology::init_network(){
 
 	    j = SWITCH_ID(i,k);
 
-	    //printf("SWITCH ID for server %d level %d is %d\n",i,k,j);
+	    //myprintf("SWITCH ID for server %d level %d is %d\n",i,k,j);
 
 	    //index k of the address
       
@@ -235,7 +234,7 @@ void BCubeTopology::init_network(){
   if (fail){
   //    cout <<"Null queue in route"<<endl;
   for (unsigned int i=1;i<rt->size()-1;i+=2)
-  printf("%p ",rt->at(i));
+  myprintf("%p ",rt->at(i));
   cout<<endl;
   assert(0);
   }
@@ -255,7 +254,7 @@ Route* BCubeTopology::bcube_routing(int src,int dest, int* permutation, int* nic
 	crt_addr[i] = addresses(src,i);
 
     int aaa = srv_from_address(crt_addr);
-    //printf("CRT is %d, SRV FROM ADDRESS %d\n",crt,aaa);
+    //myprintf("CRT is %d, SRV FROM ADDRESS %d\n",crt,aaa);
     assert(crt==aaa);
 
     for (i=_K;i>=0;i--){

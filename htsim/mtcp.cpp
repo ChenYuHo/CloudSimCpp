@@ -1,6 +1,7 @@
 #include "mtcp.h"
 #include <math.h>
 #include <iostream>
+#include "common.h"
 ////////////////////////////////////////////////////////////////
 //  Multipath TCP SOURCE
 ////////////////////////////////////////////////////////////////
@@ -200,7 +201,7 @@ MultipathTcpSrc::inflate_window(uint32_t cwnd, int newly_acked,uint32_t mss) {
     tmp = tmp2 / A_SCALE;
 
     if (tmp < 0){
-      printf("Negative increase!");
+      myprintf("Negative increase!");
       tmp = 0;
     }
 
@@ -272,7 +273,7 @@ MultipathTcpSrc::inflate_window(uint32_t cwnd, int newly_acked,uint32_t mss) {
     
 
   default:
-    printf("Unknown cc type %d\n",_cc_type);
+    myprintf("Unknown cc type %d\n",_cc_type);
     exit(1);
   }
 }
@@ -327,7 +328,7 @@ MultipathTcpSrc::deflate_window(uint32_t cwnd, uint32_t mss){
     return max(mss, (uint32_t)d);
 
   default:
-    printf("Unknown cc type %d\n",_cc_type);
+    myprintf("Unknown cc type %d\n",_cc_type);
     exit(1);    
   }
 }
@@ -337,7 +338,7 @@ MultipathTcpSrc::compute_total_window(){
   list<TcpSrc*>::iterator it;
   uint32_t crt_wnd = 0;
 
-  //  printf ("Tot wnd ");
+  //  myprintf ("Tot wnd ");
   for (it = _subflows.begin();it!=_subflows.end();it++){
 	TcpSrc& crt = *(*it);
 	crt_wnd += crt._in_fast_recovery?crt._ssthresh:crt._cwnd;

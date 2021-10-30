@@ -6,7 +6,6 @@
 #include <iostream>
 #include "main.h"
 
-extern uint32_t RTT;
 extern int N;
 
 string ntoa(double n);

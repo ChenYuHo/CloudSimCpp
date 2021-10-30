@@ -9,7 +9,7 @@ simcpp20::event<SIM_UNIT> broker(
     for (auto &job:jobs) {
         co_await sim.timeout(job->submit_time - sim.now());
 //        job->submitted_time = sim.now();
-        printf("[%llu]\tjob %u arrived\n", sim.now(), job->id);
+        myprintf("[%llu]\tjob %u arrived\n", sim.now(), job->id);
         cluster.jobs.push_back(job);
     }
     cluster.all_jobs_submitted = true;
@@ -39,7 +39,7 @@ simcpp20::event<SIM_UNIT> broker(
 //    auto job = _jobs.front();
 //    _scheduler->add_pending_job(job);
 ////    eventlist().sourceIsPending(*_scheduler, job->submit_time);
-//    printf("[%llu] job %u submitted at %llu\n", eventlist().now(), job->id(), job->submit_time);
+//    myprintf("[%llu] job %u submitted at %llu\n", eventlist().now(), job->id(), job->submit_time);
 //    _jobs.erase(_jobs.begin());
 //    if (!_jobs.empty()) {
 //        auto next_job = _jobs.front();

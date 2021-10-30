@@ -1,6 +1,7 @@
 // -*- c-basic-offset: 4; tab-width: 8; indent-tabs-mode: t -*-        
 #include "fairpullqueue.h"
 #include "ndppacket.h"
+#include "common.h"
 
 template<class PullPkt>
 BasePullQueue<PullPkt>::BasePullQueue() : _pull_count(0), _preferred_flow(-1) {
@@ -27,7 +28,7 @@ FifoPullQueue<PullPkt>::enqueue(PullPkt& pkt) {
 
 	_pull_queue.insert(it, &pkt);
     } else {
-	printf("Enqueue");
+	myprintf("Enqueue");
 	_pull_queue.push_front(&pkt);
     }
     this->_pull_count++;
@@ -38,10 +39,10 @@ template<class PullPkt>
 PullPkt*
 FifoPullQueue<PullPkt>::dequeue() {
     if (this->_pull_count == 0) {
-	printf("Dequeue empty");
+	myprintf("Dequeue empty");
 	return 0;
     }
-    printf("Dequeue");
+    myprintf("Dequeue");
     PullPkt* packet = _pull_queue.back();
     _pull_queue.pop_back();
     this->_pull_count--;

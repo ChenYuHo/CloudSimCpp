@@ -23,7 +23,7 @@ public:
 //            auto &queue = queues[job->id];
 //            queue.emplace_back(pkt{size, machine, tensor_id, chunk_id, job});
 //        }
-//        printf("queue size %zu\n", queues[job->id].size());
+//        myprintf("queue size %zu\n", queues[job->id].size());
 //    }
 
     virtual simcpp20::event<SIM_UNIT> collective_scheduler(simcpp20::simulation<SIM_UNIT> &, Cluster &) = 0;

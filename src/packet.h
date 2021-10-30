@@ -11,6 +11,7 @@ class SwitchMLPacket : public Packet {
 public:
     inline static SwitchMLPacket *newpkt(const Route &route) {
         SwitchMLPacket *p = _packetdb.allocPacket();
+        p->set_size(SWITCHML_PKT_SIZE);
         p->set_route(route);
         p->_type = IP;
         p->_nexthop = 0;
@@ -42,7 +43,7 @@ public:
 
     unsigned job_id{};
     unsigned n_updates{};
-    unsigned n_workers{};
+    unsigned n_workers{0};
     uint64_t grad_size{};
     bool top_level{false};
     bool upward{true};
@@ -56,7 +57,7 @@ public:
         auto &from_id = id;
         switch (type) {
             case 0: // worker to ToR
-                printf("[%llu] worker %d sent packet to ToR, ver %d slot %d offset %d upward %d grad_size %llu n_workers %d job_id %d \n", now, from_id, ver, slot, offset, upward, grad_size, n_workers, job_id);
+//                myprintf("[%llu] worker %d sent packet to ToR, ver %d slot %d offset %d upward %d grad_size %llu n_workers %d job_id %d \n", now, from_id, ver, slot, offset, upward, grad_size, n_workers, job_id);
 //                p->id = id;
 //                p->ver = ver;
 //                p->slot = slot;
@@ -68,14 +69,14 @@ public:
 //                p->tensor = tensor;
                 break;
             case 1: // ToR to worker
-                printf("");
+//                myprintf("");
                 break;
             case 2: // switch to switch upward
-                printf("[%llu] switch %d sent packet upward, ver %d slot %d offset %d upward %d grad_size %llu n_workers %d job_id %d \n", now, from_id, ver, slot, offset, upward, grad_size, n_workers, job_id);
+//                myprintf("[%llu] switch %d sent packet upward, ver %d slot %d offset %d upward %d grad_size %llu n_workers %d job_id %d \n", now, from_id, ver, slot, offset, upward, grad_size, n_workers, job_id);
 
                 break;
             case 3: // switch to switch downward
-                printf("");
+//                myprintf("");
                 break;
             default:
                 return;

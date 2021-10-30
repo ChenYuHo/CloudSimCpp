@@ -53,6 +53,7 @@ class VirtualQueue {
 class Packet {
     friend class PacketFlow;
  public:
+//    unsigned cnt{0};
     /* empty constructor; Packet::set must always be called as
        well. It's a separate method, for convenient reuse */
     Packet() {_is_header = false; _bounced = false; _type = IP; _flags = 0;}; 

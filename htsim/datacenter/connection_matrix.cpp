@@ -1,6 +1,7 @@
 #include "connection_matrix.h"
 #include <cstring>
 #include <iostream>
+#include "common.h"
 
 ConnectionMatrix::ConnectionMatrix(int n)
 {
@@ -62,7 +63,7 @@ void ConnectionMatrix::setPermutation(int conn, int rack_size){
     }
 
     int src = perm_tmp[pos];
-    printf("src=%d rack_size=%d\n", src, rack_size);
+    myprintf("src=%d rack_size=%d\n", src, rack_size);
     rack_load[src/rack_size]++;
     perm_tmp.erase(perm_tmp.begin()+pos);
 
@@ -111,7 +112,7 @@ void ConnectionMatrix::setPermutation(){
       while (is_dest[dest]);
 	
       if (src==dest){
-	printf("Wrong connections 2!\n");
+	myprintf("Wrong connections 2!\n");
 	exit(1);
       }
     }
@@ -414,7 +415,7 @@ void ConnectionMatrix::setHotspot(int hosts){
       while (is_dest[dest]);
 	
       if (src==dest){
-	printf("Wrong connections 2!\n");
+	myprintf("Wrong connections 2!\n");
 	exit(1);
       }
     }

@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; tab-width: 8; indent-tabs-mode: t -*-    
 #include "network.h"
+#include "common.h"
 
-#define DEFAULTDATASIZE 1500
 int Packet::_data_packet_size = DEFAULTDATASIZE;
 bool Packet::_packet_size_fixed = false;
 
@@ -46,14 +46,14 @@ Packet::sendOn() {
 	    //assert(_route->size() == _route->reverse()->size());
 	    nextsink = _route->reverse()->at(_nexthop);
 	    _nexthop++;
-	} else {
-//	    printf("nexthop %d route size %zu\n", _nexthop, _route->size());
-	    assert(_nexthop<_route->size());
-	    nextsink = _route->at(_nexthop);
-	    _nexthop++;
-	}
     } else {
-	assert(0);
+//        myprintf("nexthop %d route size %zu\n", _nexthop, _route->size());
+        assert(_nexthop < _route->size());
+        nextsink = _route->at(_nexthop);
+        _nexthop++;
+    }
+    } else {
+        assert(0);
     }
     nextsink->receivePacket(*this);
     return nextsink;

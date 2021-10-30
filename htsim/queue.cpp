@@ -1,9 +1,10 @@
 // -*- c-basic-offset: 4; tab-width: 8; indent-tabs-mode: t -*-        
 #include <sstream>
-#include <math.h>
+#include <cmath>
 #include "queue.h"
 #include "ndppacket.h"
 #include "queue_lossless.h"
+#include "common.h"
 
 Queue::Queue(linkspeed_bps bitrate, mem_b maxsize, EventList& eventlist, 
 	     QueueLogger* logger)
@@ -23,6 +24,7 @@ Queue::beginService()
 {
     /* schedule the next dequeue event */
     assert(!_enqueued.empty());
+//    myprintf("beginservice %llu\n", drainTime(_enqueued.back())+eventlist().now());
     eventlist().sourceIsPendingRel(*this, drainTime(_enqueued.back()));
 }
 
@@ -38,6 +40,7 @@ Queue::completeService()
     if (_logger) _logger->logQueue(*this, QueueLogger::PKT_SERVICE, *pkt);
 
     /* tell the packet to move on to the next pipe */
+//    pkt->cnt+=1;
     pkt->sendOn();
 
     if (!_enqueued.empty()) {
@@ -56,7 +59,7 @@ Queue::doNextEvent()
 void
 Queue::receivePacket(Packet& pkt) 
 {
-    printf("queue receivepacket\n");
+    myprintf("queue receivepacket\n");
     if (_queuesize+pkt.size() > _maxsize) {
 	/* if the packet doesn't fit in the queue, drop it */
 	if (_logger) 
@@ -160,7 +163,7 @@ PriorityQueue::serviceTime(Packet& pkt) {
 void
 PriorityQueue::receivePacket(Packet& pkt) 
 {
-    printf("priority queue receive packet\n");
+    myprintf("priority queue receive packet\n");
     //is this a PAUSE packet?
     if (pkt.type()==ETH_PAUSE){
 	EthPausePacket* p = (EthPausePacket*)&pkt;

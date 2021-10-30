@@ -16,7 +16,7 @@
 //    co_await pkt_lock->request(); // one packet at a time (per link)
 //    auto transfer_time = pkt_transfer_time(pkt_size);
 //    co_await sim.timeout(transfer_time); // worker to switch
-////    printf("[%llu]\tID %d Job packet arrived\n", sim.now(), all_ids);
+////    myprintf("[%llu]\tID %d Job packet arrived\n", sim.now(), all_ids);
 //    pkt_lock->release();
 //    auto it = counter_map.find(all_ids);
 //    if (it == counter_map.end()) {
@@ -63,6 +63,8 @@ void Switch::multicast_downward(SwitchMLPacket *p) {
         multicast_pkt->set_ts(eventlist().now());
         multicast_pkt->upward = false;
         multicast_pkt->tensor = p->tensor;
+//        multicast_pkt->cnt = p->cnt;
+//        cout<<"switch multicast:"<<p->cnt<<endl;
         multicast_pkt->sendOn();
     }
 }
@@ -72,54 +74,55 @@ void Switch::receivePacket(Packet &pkt) {
     auto *p = (SwitchMLPacket *) &pkt;
     auto key = hash(p->job_id, p->tensor->tensor_id, p->tensor->iter, p->ver, p->slot);
     auto key_of_the_other_slot = hash(p->job_id, p->tensor->tensor_id, p->tensor->iter, 1 - p->ver, p->slot);
-    printf("%llu %d %d %d -> %d\n", p->tensor->tensor_id, p->tensor->iter, p->ver, p->slot, key);
+//    myprintf("%llu %d %d %d -> %d\n", p->tensor->tensor_id, p->tensor->iter, p->ver, p->slot, key);
     //    auto key = p->ver + 10 * p->slot + p->id * 1000000;
 //    auto key_of_the_other_slot = (1 - p->ver) + 10 * p->slot + p->id * 1000000;
-    printf("[%llu] Switch %d got packet id %d ver %d slot %d off %d upward %d tid %llu, iter %llu\n", eventlist().now(),
-           id, p->id, p->ver, p->slot, p->offset, p->upward, p->tensor->tensor_id, p->tensor->tensor_id);
-//    printf("KEY %d\n", key);
+//    myprintf("[%llu] Switch %d got packet id %d ver %d slot %d off %d upward %d tid %llu, iter %llu\n", eventlist().now(),
+//           id, p->id, p->ver, p->slot, p->offset, p->upward, p->tensor->tensor_id, p->tensor->tensor_id);
+//    myprintf("KEY %d\n", key);
 
     if (!count.contains(key)) count[key] = 0;
     if (p->upward) {
         if (seen[key].contains(p->id)) {
-            printf("SHADOW BUFFER\n");
+//            myprintf("SHADOW BUFFER\n");
             // shadow buffer
         } else {
-            if (top_level)
-                printf("core switch got packet from switch %d for JID %d set %d slot %d\n", p->id, p->job_id, p->ver,
-                       p->slot);
-            else
-                printf("ToR got packet from worker %d for JID %d set %d slot %d\n", p->id, p->job_id, p->ver, p->slot);
+//            if (top_level_for_job[p->job_id]) {
+//                myprintf("core switch got packet from switch %d for JID %d set %d slot %d\n", p->id, p->job_id, p->ver, p->slot);
+//            }
+//            else {
+//                myprintf("ToR got packet from worker %d for JID %d set %d slot %d\n", p->id, p->job_id, p->ver, p->slot);
+//            }
             seen[key].insert(p->id);
             seen[key_of_the_other_slot].erase(p->id);
 //            auto &map = count[p->ver];
-//            printf("CNT %d\n", cnt);
+//            myprintf("CNT %d\n", cnt);
             count[key] =
                     ((count[key] + 1) % p->n_workers) %
                     num_updates_for_job[p->job_id];
-//            printf("CNT666 %d\n", count[hash(p->tensor->tensor_id, p->tensor->iter)][p->slot][p->ver]);
+//            myprintf("CNT666 %d\n", count[hash(p->tensor->tensor_id, p->tensor->iter)][p->slot][p->ver]);
 
 //            if (map.find(p->slot) == map.end())
 //                map[p->slot] = 0;
-//            printf("ToR %d, jid %d, num_workers %d, num_updates %d\n", id, p->job_id, p->n_workers, num_updates_for_job[p->job_id]);
+//            myprintf("ToR %d, jid %d, num_workers %d, num_updates %d\n", id, p->job_id, p->n_workers, num_updates_for_job[p->job_id]);
 //            map[p->slot] = ((map[p->slot] + 1) % p->n_workers) % num_updates_for_job[p->job_id];
 //            if self.count[pkt.ver, pkt.slot] == 1:
 //            self.slots[pkt.ver, pkt.slot] = pkt.vector.copy()
 //            else:
 //            self.slots[pkt.ver, pkt.slot] += pkt.vector
-            printf("switch %d got %d/%d updates\n", id,
-                   count[key] == 0
-                   ? num_updates_for_job[p->job_id] : count[key],
-                   num_updates_for_job[p->job_id]);
+//            myprintf("switch %d got %d/%d updates\n", id,
+//                   count[key] == 0
+//                   ? num_updates_for_job[p->job_id] : count[key],
+//                   num_updates_for_job[p->job_id]);
             if (count[key] == 0) {
                 // done aggregation
-                if (top_level) {
+                if (top_level_for_job[p->job_id]) {
                     count[key] = p->n_workers;
-                    printf("core switch done aggregation, multicast from switch %d\n", id);
+//                    myprintf("core switch done aggregation, multicast from switch %d\n", id);
                     // multicast
                     multicast_downward(p);
                 } else {
-                    printf("ToR done aggregation, sending to upper level from switch %d\n", id);
+//                    myprintf("ToR done aggregation, sending to upper level from switch %d\n", id);
                     // when going upward, dest is determined by the topology. put 0 as a placeholder.
                     const Route *route = cluster->_topo->get_switch_single_hop_route(id, 0, 0, true);
                     // send to upper level
@@ -136,8 +139,11 @@ void Switch::receivePacket(Packet &pkt) {
                     unicast_pkt->grad_size = p->grad_size;
                     unicast_pkt->set_ts(eventlist().now());
                     unicast_pkt->print_info(1, eventlist().now(), 1);
-                    print_route(*route);
+//                    print_route(*route);
+//                    cout<<"switch unicast:"<<p->cnt<<endl;
+//                    unicast_pkt->cnt = p->cnt;
                     unicast_pkt->sendOn();
+
                 }
             }
             p->free();
@@ -145,7 +151,7 @@ void Switch::receivePacket(Packet &pkt) {
     } else {
         // received from upper level switch
         count[key] = p->n_workers;
-        printf("received from upper level switch, multicast from switch %d\n", id);
+//        myprintf("received from upper level switch, multicast from switch %d\n", id);
         // multicast
         multicast_downward(p);
     }
@@ -156,7 +162,7 @@ void Switch::receivePacket(Packet &pkt) {
 //    pkt_counter[p->job_id] += 1;
 //
 //    if (pkt_counter[p->job_id] == p->n_updates) {
-//        printf("got all\n");
+//        myprintf("got all\n");
 //        auto topo = (HierarchicalTopology *) cluster->_topo;
 //        for (unsigned i = 0; i < p->n_updates; i++) {
 //            auto route = topo->get_tor_to_worker_path(id, i);
@@ -164,7 +170,7 @@ void Switch::receivePacket(Packet &pkt) {
 //            multicast_p->job_id = p->job_id;
 //            multicast_p->wid = i;
 //            multicast_p->set_ts(eventlist().now());
-//            printf("[%llu] switch multicast packet wid %d jid %d\n", eventlist().now(), p->wid, p->job_id);
+//            myprintf("[%llu] switch multicast packet wid %d jid %d\n", eventlist().now(), p->wid, p->job_id);
 //            multicast_p->sendOn();
 //        }
 //        p->free();

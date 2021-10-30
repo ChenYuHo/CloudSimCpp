@@ -9,8 +9,7 @@
 #include "compositequeue.h"
 #include "compositeprioqueue.h"
 #include "main.h"
-
-extern uint32_t RTT;
+#include "common.h"
 
 string ntoa(double n);
 string itoa(uint64_t n);

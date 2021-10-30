@@ -59,7 +59,7 @@ public:
     std::vector<std::shared_ptr<Worker>> workers() override { return _workers; };
 
     void set_switch_num_updates(
-            unsigned int job_id, unordered_map<unsigned int, unsigned int> run_config) override;
+            unsigned int job_id, map<unsigned int, unsigned int> run_config) override;
 
     const Route * get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) override;
 private:
@@ -80,7 +80,6 @@ private:
     int K{}, NC{};
     int _no_of_nodes{};
     mem_b _queuesize;
-
 
     Queue *alloc_queue(QueueLogger *queueLogger, uint64_t speed) const;
 };

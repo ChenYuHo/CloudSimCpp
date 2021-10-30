@@ -7,8 +7,6 @@
 #include "worker.h"
 #include "switch.h"
 
-//extern uint32_t RTT;
-
 template<typename T>
 string toa(T n) {
     stringstream s;
@@ -16,29 +14,30 @@ string toa(T n) {
     return s.str();
 }
 
-HierarchicalTopology::HierarchicalTopology(Cluster *c, int no_of_nodes,
+HierarchicalTopology::HierarchicalTopology(Cluster *c, int switch_ports,
                                            mem_b queuesize, Logfile *lg,
                                            EventList *ev)
         : cluster(c) {
     _queuesize = queuesize;
     logfile = lg;
     eventlist = ev;
-    set_params(no_of_nodes);
+    set_params(switch_ports);
     init_network();
 }
 
-void HierarchicalTopology::set_params(int no_of_nodes) {
-    _no_of_nodes = 0;
-    K = 1; // Switches with K number of ports, K-ary or K-port Fat tree
-    while (_no_of_nodes < no_of_nodes) {
-        K++;
-        _no_of_nodes = K * (K - 1);
-    }
-    if (_no_of_nodes > no_of_nodes) {
-        cerr << "Topology Error: can't have a two-layer Hierarchical Topology with " << no_of_nodes
-             << " nodes\n";
-        exit(1);
-    }
+void HierarchicalTopology::set_params(int switch_ports) {
+    assert(switch_ports>1);
+    _no_of_nodes = switch_ports * (switch_ports-1);
+    K = switch_ports; // Switches with K number of ports, K-ary or K-port Fat tree
+//    while (_no_of_nodes < no_of_nodes) {
+//        K++;
+//        _no_of_nodes = K * (K - 1);
+//    }
+//    if (_no_of_nodes > no_of_nodes) {
+//        cerr << "Topology Error: can't have a two-layer Hierarchical Topology with " << no_of_nodes
+//             << " nodes\n";
+//        exit(1);
+//    }
     tor_switches.resize(K, nullptr);
     _workers.resize(_no_of_nodes, nullptr);
     pipes_tor_core.resize(K, vector<Pipe *>(1));
@@ -53,7 +52,8 @@ void HierarchicalTopology::set_params(int no_of_nodes) {
 
 Queue *HierarchicalTopology::alloc_queue(QueueLogger *queueLogger, uint64_t speed = HOST_NIC) const {
     return new RandomQueue(speedFromMbps(speed),
-                           memFromPkt(SWITCH_BUFFER + RANDOM_BUFFER),
+                           _queuesize,
+//                           memFromPkt(SWITCH_BUFFER + RANDOM_BUFFER),
                            *eventlist, queueLogger, memFromPkt(RANDOM_BUFFER));
 }
 
@@ -88,7 +88,6 @@ void HierarchicalTopology::init_network() {
         }
     }
     core_switch = make_shared<Switch>(*eventlist, cluster);//*eventlist, cluster);
-    core_switch->top_level = true;
     core_switch->layer = 1;
 
     // links from ToR switch to worker
@@ -138,7 +137,7 @@ void check_non_null(Route *rt) {
     if (fail) {
         //    cout <<"Null queue in route"<<endl;
         for (unsigned int i = 1; i < rt->size() - 1; i += 2)
-            printf("%p ", rt->at(i));
+            myprintf("%p ", rt->at(i));
 
         cout << endl;
         assert(0);
@@ -148,14 +147,14 @@ void check_non_null(Route *rt) {
 const Route *HierarchicalTopology::get_worker_to_tor_path(unsigned src) {
     route_t *route_out;
     auto dest = HOST_ToR_SWITCH(src);
-    if (HOST_ToR_SWITCH(src) == dest) {
-        route_out = new Route();
-        route_out->push_back(queues_worker_tor[src][dest]);
-        route_out->push_back(pipes_worker_tor[src][dest]);
-        route_out->push_back(tor_switches[dest].get());
-        check_non_null(route_out);
-    }
-//    printf("%d, %d, %p\n", HOST_ToR_SWITCH(src), dest, tor_switches[dest].get());
+//    if (HOST_ToR_SWITCH(src) == dest) {
+    route_out = new Route();
+    route_out->push_back(queues_worker_tor[src][dest]);
+    route_out->push_back(pipes_worker_tor[src][dest]);
+    route_out->push_back(tor_switches[dest].get());
+    check_non_null(route_out);
+//    }
+//    myprintf("%d, %d, %p\n", HOST_ToR_SWITCH(src), dest, tor_switches[dest].get());
     return route_out;
 }
 
@@ -225,7 +224,7 @@ vector<const Route *> *HierarchicalTopology::get_paths(int src, int dest) {
         //now take the only link down to the destination worker!
 
 //        int HOST_ToR_SWITCH(dest) = HOST_POD(dest) * K / 2 + 2 * core / K;
-        //printf("K %d HOST_POD(%d) %d core %d HOST_ToR_SWITCH(dest) %d\n",K,dest,HOST_POD(dest),core, HOST_ToR_SWITCH(dest));
+        //myprintf("K %d HOST_POD(%d) %d core %d HOST_ToR_SWITCH(dest) %d\n",K,dest,HOST_POD(dest),core, HOST_ToR_SWITCH(dest));
 
         routeout->push_back(queues_core_tor[core][HOST_ToR_SWITCH(dest)]);
         routeout->push_back(pipes_core_tor[core][HOST_ToR_SWITCH(dest)]);
@@ -335,7 +334,7 @@ void HierarchicalTopology::print_path(std::ofstream &paths, int src, const Route
 }
 
 void HierarchicalTopology::set_switch_num_updates(
-        unsigned int job_id, unordered_map<unsigned int, unsigned int> run_config) {
+        unsigned int job_id, map<unsigned int, unsigned int> run_config) {
     std::set<unsigned> involved_tors{};
     for (const auto &pair : run_config) {
         auto tor_id = HOST_ToR_SWITCH(pair.first);
@@ -346,24 +345,34 @@ void HierarchicalTopology::set_switch_num_updates(
         map[job_id] += 1;
         map_ids[job_id].insert(pair.first);
         for (const auto &p: map) {
-            printf("ToR %d Jid %d num_updates %d\n", tor_id, job_id, map[job_id]);
+            myprintf("ToR %d Jid %d num_updates %d\n", tor_id, job_id, map[job_id]);
         }
-        printf("ToR %d Jid %d downward: ", tor_id, job_id);
+        myprintf("ToR %d Jid %d downward: ", tor_id, job_id);
         for (const auto &p: map_ids[job_id]) {
-            printf("%d ", p);
+            myprintf("%d ", p);
         }
-        printf("\n");
+        myprintf("\n");
     }
     if (involved_tors.size() > 1) {
         // need to involve the core switch
+        core_switch->top_level_for_job[job_id] = true;
+        for (auto& tor_id: involved_tors) {
+            tor_switches[tor_id]->top_level_for_job[job_id] = false;
+        }
         core_switch->num_updates_for_job[job_id] = involved_tors.size();
         core_switch->downward_ids_for_job[job_id].merge(involved_tors);
-        printf("core Jid %d num_updates %lu\n", job_id, core_switch->num_updates_for_job[job_id]);
-        printf("core Jid %d downward: ", job_id);
+        myprintf("core Jid %d num_updates %lu\n", job_id, core_switch->num_updates_for_job[job_id]);
+        myprintf("core Jid %d downward: ", job_id);
         for (const auto &p: core_switch->downward_ids_for_job[job_id]) {
-            printf("%d ", p);
+            myprintf("%d ", p);
         }
-        printf("\n");
+        myprintf("\n");
+    } else {
+        // need to involve the core switch
+        core_switch->top_level_for_job[job_id] = false;
+        for (auto& tor_id: involved_tors) {
+            tor_switches[tor_id]->top_level_for_job[job_id] = true;
+        }
     }
 }
 
@@ -394,7 +403,7 @@ const Route *HierarchicalTopology::get_switch_single_hop_route(unsigned src, uns
 }
 
 //void HierarchicalTopology::register_switch(Switch *s) {
-//    printf("register %d %p\n", s->id(), s);
+//    myprintf("register %d %p\n", s->id(), s);
 ////    cout<<s->id<<s;
 //    tor_switches[s->id()] = s;
 //}

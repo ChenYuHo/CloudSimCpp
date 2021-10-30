@@ -6,7 +6,6 @@
 void FirstInFirstOutOneByOne::enqueue(const std::shared_ptr<Tensor> &tensor) {
     auto key = std::make_pair(tensor->job->id, tensor->tensor_id);
     queue[key].push_back(tensor);
-//    printf("queue size %zu %llu %d\n", queue[key].size(), tensor->tensor_id, tensor->job->id);
     if (queue[key].size() == tensor->job->num_workers_allocated) {
         ready_queue.push(std::move(queue[key]));
         queue.erase(key);
@@ -20,7 +19,7 @@ simcpp20::event<SIM_UNIT> FirstInFirstOutOneByOne::run_scheduler_once(
         auto &tensors = ready_queue.front();
         std::vector<simcpp20::event<SIM_UNIT>> allreduce_events{};
         for (auto &tensor : tensors) {
-//            printf("[%llu]\tinvoking allreduce within cs %p s%llu j%d m%d\n", sim.now(),
+//            myprintf("[%llu]\tinvoking allreduce within cs %p s%llu j%d m%d\n", sim.now(),
 //                   tensor.get(), tensor->size, tensor->job->id, tensor->machine->id);
             allreduce_events.push_back(tensor->machine->allreduce(sim, tensor));
         }

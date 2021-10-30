@@ -27,8 +27,8 @@ private:
 
 public:
     unsigned id;
-    unsigned gpu{4};
-    unsigned gpu_capacity{4};
+    unsigned gpu{GPUS_PER_NODE};
+    unsigned gpu_capacity{GPUS_PER_NODE};
     std::vector<std::shared_ptr<Job>> jobs;
     Cluster *cluster;
     std::shared_ptr<Switch> tor;
@@ -50,14 +50,14 @@ public:
             EventSource(ev, "worker"),
             id(get_id()), cluster(cluster),
             tor(std::move(tor)) {
-//        printf("Worker %d constructor invoked\n", id);
+//        myprintf("Worker %d constructor invoked\n", id);
     }
 
 //    explicit Worker(config conf, Cluster *cluster, Switch *tor) :
 //            id(get_id()), gpu(conf.g_per_m),
 //            gpu_capacity(conf.g_per_m), cluster(cluster),
 //            tor(tor) {
-//        printf("Worker %d constructor invoked\n", id);
+//        myprintf("Worker %d constructor invoked\n", id);
 //    }
 
     //TODO: model forward pass
@@ -84,12 +84,12 @@ public:
 
 //    simcpp20::event<SIM_UNIT> run_job(simcpp20::simulation<SIM_UNIT> &sim, const std::shared_ptr<Job> &job) const {
 //        job->start_time = sim.now();
-//        printf("[%llu]\tWorker %d running job %d\n", sim.now(), id, job->id);
+//        myprintf("[%llu]\tWorker %d running job %d\n", sim.now(), id, job->id);
 //        for (unsigned i = 0; i < job->n_iter; ++i) {
 //            for (const auto &grad_size: job->model) {
-//                printf("[%llu]\tWorker %d job %d forward pass for %d started\n", sim.now(), id, job->id, grad_size);
+//                myprintf("[%llu]\tWorker %d job %d forward pass for %d started\n", sim.now(), id, job->id, grad_size);
 //                co_await sim.timeout(1);
-//                printf("[%llu]\tWorker %d job %d forward pass for %d done\n", sim.now(), id, job->id, grad_size);
+//                myprintf("[%llu]\tWorker %d job %d forward pass for %d done\n", sim.now(), id, job->id, grad_size);
 //            }
 //        }
 //    }
@@ -98,13 +98,15 @@ public:
 
 //    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, uint64_t, std::string, std::shared_ptr<Job>);
 
-    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, const shared_ptr<Tensor> &);
+    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, const shared_ptr<Tensor> &, unsigned= 0);
 
     void sendPacket(unsigned, unsigned, unsigned, unsigned, const shared_ptr<Tensor> &);
 
     std::unordered_map<uint64_t, std::set<unsigned>> received_pkts{}; // tensor_id, set
 
-    std::unordered_map<uint64_t , shared_ptr<resource<SIM_UNIT>>> locks{};
+    std::unordered_map<uint64_t, shared_ptr<resource<SIM_UNIT>>> locks{};
+
+    std::unordered_map<uint64_t, SIM_UNIT> allreduce_start{};
 };
 
 
@@ -137,7 +139,7 @@ public:
 //            _id(get_id()), cluster(cluster),
 //            _tor(std::move(tor)){
 ////        sim = ev.sim();
-//        printf("Machine %d constructor invoked\n", _id);
+//        myprintf("Machine %d constructor invoked\n", _id);
 //    }
 //
 //    explicit Worker(unsigned g_per_m, EventList &ev, Cluster *cluster, Switch *tor) :
@@ -146,7 +148,7 @@ public:
 //            _gpu_capacity(g_per_m), cluster(cluster),
 //            _tor(tor) {
 ////        sim = ev.sim();
-//        printf("Machine %d constructor invoked\n", _id);
+//        myprintf("Machine %d constructor invoked\n", _id);
 //    }
 //
 //    void doNextEvent() override;

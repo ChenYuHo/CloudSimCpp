@@ -69,6 +69,7 @@ set(SRCS)
 list(APPEND SRCS
         "src/common.cpp"
         "src/cluster.cpp"
+        "src/CppProgressBar.cpp"
         "src/topology/hierarchical_topology.cpp"
         "src/job.cpp"
         "src/job_scheduler.cpp"
@@ -78,9 +79,11 @@ list(APPEND SRCS
         "src/worker.cpp"
         "src/collective_scheduler.cpp"
         "src/job_placement/random.cpp"
+        "src/job_placement/yarn.cpp"
         "src/job_scheduling/first_come_first_served.cpp"
         "src/collective_scheduling/first_in_first_out_one_by_one.cpp"
         "src/collective_scheduling/ready_and_go.cpp"
+        "src/collective_scheduling/bytescheduler.cpp"
         )
 
 include_directories(htsim)
@@ -90,7 +93,10 @@ include_directories(src)
 
 add_library(htsim ${HTSIM_SRCS})
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 add_executable(CloudSimCpp main.cpp ${SRCS})
 add_executable(SwitchML switchml_main.cpp ${SRCS})
-target_link_libraries(CloudSimCpp PUBLIC htsim fschuetz04::simcpp20)
-target_link_libraries(SwitchML PUBLIC htsim fschuetz04::simcpp20)
+target_link_libraries(CloudSimCpp PUBLIC htsim fschuetz04::simcpp20 Threads::Threads)
+target_link_libraries(SwitchML PUBLIC htsim fschuetz04::simcpp20 Threads::Threads)

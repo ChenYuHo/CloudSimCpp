@@ -4,6 +4,7 @@
 #include "ndp.h"
 #include "queue.h"
 #include <stdio.h>
+#include "common.h"
 
 ////////////////////////////////////////////////////////////////
 //  NDP SOURCE
@@ -268,10 +269,10 @@ bool NdpSrc::is_bad_path() {
     // really congested on aggregate, so this is likely just a bad
     // path.
     if (ack_count > 0 && total/ack_count <= 3) {
-	printf("total: %d ack: %d nack:%d rts: %d, BAD\n", total, ack_count, nack_count, bounce_count);
+	myprintf("total: %d ack: %d nack:%d rts: %d, BAD\n", total, ack_count, nack_count, bounce_count);
 	return true;
     }
-    printf("total: %d ack: %d nack:%d rts: %d, NOT BAD\n", total, ack_count, nack_count, bounce_count);
+    myprintf("total: %d ack: %d nack:%d rts: %d, NOT BAD\n", total, ack_count, nack_count, bounce_count);
     return false;
 }
 
@@ -304,20 +305,20 @@ void NdpSrc::processRTS(NdpPacket& pkt){
 	//for a pull.  Waiting reduces the effective window by one.
 	send_packet(0);
 	if (_log_me) {
-	    printf("bounce send pw=%d\n", _pull_window);
+	    myprintf("bounce send pw=%d\n", _pull_window);
 	} else {
-	    //printf("bounce send\n");
+	    //myprintf("bounce send\n");
 	}
     } else {
 	if (_log_me) {
-	    printf("bounce swallow pw=%d\n", _pull_window);
+	    myprintf("bounce swallow pw=%d\n", _pull_window);
 	} else {
-	    //printf("bounce swallow\n");
+	    //myprintf("bounce swallow\n");
 	}
     }
 #else
     send_packet(0);
-    //printf("bounce send\n");
+    //myprintf("bounce send\n");
 #endif
 }
 
@@ -329,9 +330,9 @@ void NdpSrc::processNack(const NdpNack& nack){
     NdpPacket* p;
 /*
     if (nack.pull())
-	printf("Receive NACK (pull)\n");
+	myprintf("Receive NACK (pull)\n");
     else
-	printf("Receive NACK (----)\n");
+	myprintf("Receive NACK (----)\n");
 */
     
     bool last_packet = (nack.ackno() + _mss - 1) >= _flow_size;
@@ -369,9 +370,9 @@ void NdpSrc::processAck(const NdpAck& ack) {
 
     /*
       if (pull)
-      printf("Receive ACK (pull): %s\n", ack.pull_bitmap().to_string().c_str());
+      myprintf("Receive ACK (pull): %s\n", ack.pull_bitmap().to_string().c_str());
       else
-      printf("Receive ACK (----): %s\n", ack.pull_bitmap().to_string().c_str());
+      myprintf("Receive ACK (----): %s\n", ack.pull_bitmap().to_string().c_str());
     */
     log_rtt(_first_sent_times[ackno]);
     _first_sent_times.erase(ackno);
@@ -450,9 +451,9 @@ void NdpSrc::receivePacket(Packet& pkt)
 	    _pull_window++;
 	    _first_window_count--;
 	    /*if (_log_me) {
-		printf("NACK, pw=%d\n", _pull_window);
+		myprintf("NACK, pw=%d\n", _pull_window);
 	    } else {
-		printf("NACK\n");
+		myprintf("NACK\n");
 	    }*/
 	    processNack((const NdpNack&)pkt);
 	    pkt.free();
@@ -463,7 +464,7 @@ void NdpSrc::receivePacket(Packet& pkt)
 	    _pulls_received++;
 	    _pull_window--;
 	    if (_log_me) {
-		printf("PULL, pw=%d\n", _pull_window);
+		myprintf("PULL, pw=%d\n", _pull_window);
 	    }
 	    NdpPull *p = (NdpPull*)(&pkt);
 	    NdpPull::seq_t cum_ackno = p->cumulative_ack();
@@ -474,7 +475,7 @@ void NdpSrc::receivePacket(Packet& pkt)
 		_last_acked = cum_ackno;
 	  
 	    }
-	    //printf("Receive PULL: %s\n", p->pull_bitmap().to_string().c_str());
+	    //myprintf("Receive PULL: %s\n", p->pull_bitmap().to_string().c_str());
 	    pull_packets(p->pullno(), p->pacerno());
 	    return;
 	}
@@ -484,7 +485,7 @@ void NdpSrc::receivePacket(Packet& pkt)
 	    _pull_window++;
 	    _first_window_count--;
 	    //	    if (_log_me) {
-	    //	printf("ACK, pw=%d\n", _pull_window);
+	    //	myprintf("ACK, pw=%d\n", _pull_window);
 	    //}
 	    processAck((const NdpAck&)pkt);
 	    pkt.free();
@@ -517,7 +518,7 @@ const Route* NdpSrc::choose_route() {
 	_avoid_score[path_id] = _avoid_ratio[path_id];
 	int ctr = 0;
 	while (_avoid_score[path_id] > 0 /* && ctr < 2*/) {
-	    printf("as[%d]: %d\n", path_id, _avoid_score[path_id]);
+	    myprintf("as[%d]: %d\n", path_id, _avoid_score[path_id]);
 	    _avoid_score[path_id]--;
 	    ctr++;
 	    //re-choosing path

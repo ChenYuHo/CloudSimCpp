@@ -2,6 +2,7 @@
 #define TOPOLOGY
 #include "network.h"
 #include <memory>
+#include <map>
 
 class Worker;
 class Switch;
@@ -19,7 +20,7 @@ public:
     virtual vector<shared_ptr<Switch>> switches() = 0;
 
     virtual void set_switch_num_updates(
-            unsigned int, unordered_map<unsigned int, unsigned int>) = 0;
+            unsigned int, std::map<unsigned int, unsigned int>) = 0;
 
     virtual const Route *get_worker_to_tor_path(unsigned) = 0;
     virtual const Route * get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) = 0;

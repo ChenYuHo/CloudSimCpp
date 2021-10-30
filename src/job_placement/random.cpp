@@ -5,10 +5,10 @@
 #include "worker.h"
 #include "job.h"
 
-std::unordered_map<unsigned, unsigned> RandomPlacement::place_job_in(
+std::map<unsigned, unsigned> RandomPlacement::place_job_in(
         Cluster &cluster, std::shared_ptr <Job> job) {
     std::vector<unsigned> candidates;
-    std::unordered_map<unsigned, unsigned> counter;
+    std::map<unsigned, unsigned> counter;
     for (auto &machine:cluster.workers) {
         for (int i = 0; i < machine->gpu; i++) candidates.push_back(machine->id);
     }

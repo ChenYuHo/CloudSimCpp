@@ -16,18 +16,19 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
     while (!cluster.all_jobs_started) {
         std::shared_ptr<Job> job = s->choose_job_to_execute_in(cluster);
         if (job != nullptr) {
-            printf("[%llu]\tjob %d which requires %d gpus is chosen\n", sim.now(), job->id, job->gpu);
+            myprintf("[%llu]\tjob %d which requires %d gpus is chosen\n", sim.now(), job->id, job->gpu);
             auto run_config = p->place_job_in(cluster, job);
             if (run_config.empty()) {
-                printf("[%llu]\tplacement failed for task %d requiring %d GPUs\n", sim.now(), job->id, job->gpu);
+                myprintf("[%llu]\tplacement failed for task %d requiring %d GPUs\n", sim.now(), job->id, job->gpu);
             } else {
-                printf("[%llu]\tjob %d placement: ", sim.now(), job->id);
+                myprintf("[%llu]\tjob %d placement: ", sim.now(), job->id);
                 job->num_workers_allocated = run_config.size(); // multiple GPUs in one machine count as 1
+                job->master_mid = run_config.begin()->first;
                 for (const auto &pair: run_config) {
-                    printf("mid %d -> %d gpu ", pair.first, pair.second);
+                    myprintf("mid %d -> %d gpu ", pair.first, pair.second);
                     cluster.worker_map[pair.first]->execute_job(sim, job, pair.second, cs);
                 }
-                printf("\n");
+                myprintf("\n");
                 // sets num_updates_for_job and downward_ids_for_job
                 cluster._topo->set_switch_num_updates(job->id, run_config);
             }
@@ -98,28 +99,28 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
 //
 //void JobScheduler::doNextEvent() {
 //    if (_all_jobs_started) {
-//        printf("[%llu]\tAll jobs started, quitting scheduler\n", eventlist().now());
+//        myprintf("[%llu]\tAll jobs started, quitting scheduler\n", eventlist().now());
 //        return;
 //    }
 //
 //    std::shared_ptr<Job> job = _scheduling->choose_job_to_execute_in(_jobs, _cluster);
 //    if (job != nullptr) {
-//        printf("[%llu]\tjob %d which requires %d gpus is chosen\n", eventlist().now(), job->id(),
+//        myprintf("[%llu]\tjob %d which requires %d gpus is chosen\n", eventlist().now(), job->id(),
 //               job->gpus_required);
 //        auto run_config = _placement->place_job_in(_cluster, job);
 //        if (run_config.empty()) {
-//            printf("[%llu]\tplacement failed for task %d requiring %d GPUs\n", eventlist().now(), job->id(),
+//            myprintf("[%llu]\tplacement failed for task %d requiring %d GPUs\n", eventlist().now(), job->id(),
 //                   job->gpus_required);
 //        } else {
-//            printf("[%llu]\tjob %d placement: ", eventlist().now(), job->id());
+//            myprintf("[%llu]\tjob %d placement: ", eventlist().now(), job->id());
 //            job->num_workers_allocated = run_config.size();
 //            job->start_time = eventlist().now();
 //            check_if_all_jobs_are_started();
 //            for (const auto &pair: run_config) {
-//                printf("mid %d -> %d gpu ", pair.first, pair.second);
+//                myprintf("mid %d -> %d gpu ", pair.first, pair.second);
 //                _cluster->workers()[pair.first]->execute_job(job, pair.second);
 //            }
-//            printf("\n");
+//            myprintf("\n");
 //        }
 //        // There could be multiple jobs with the same submission timestamp
 //        eventlist().sourceIsPendingRel(*this, 0);
