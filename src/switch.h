@@ -28,10 +28,10 @@ public:
     std::vector<std::shared_ptr<Worker>> machines;
     Cluster *cluster;
     std::deque<pkt> buffer;
-    std::unordered_map<unsigned, unsigned> pkt_counter;
-    std::unordered_map<std::string, std::shared_ptr<counter<SIM_UNIT>>> counter_map;
-    std::unordered_map<unsigned, std::shared_ptr<resource<SIM_UNIT>>> pkt_lock_map;
-    std::unordered_map<unsigned, std::shared_ptr<resource<SIM_UNIT>>> pkt_lock_map2;
+//    std::unordered_map<unsigned, unsigned> pkt_counter;
+//    std::unordered_map<std::string, std::shared_ptr<counter<SIM_UNIT>>> counter_map;
+//    std::unordered_map<unsigned, std::shared_ptr<resource<SIM_UNIT>>> pkt_lock_map;
+//    std::unordered_map<unsigned, std::shared_ptr<resource<SIM_UNIT>>> pkt_lock_map2;
 //    std::shared_ptr<resource<SIM_UNIT>> pkt_lock;
 
 

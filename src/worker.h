@@ -33,9 +33,9 @@ public:
     Cluster *cluster;
     std::shared_ptr<Switch> tor;
     std::deque<pkt> buffer;
-    std::unordered_map<unsigned, // worker id
-            std::unordered_map<unsigned, // job id
-                    std::shared_ptr<resource<SIM_UNIT>>>> allreduce_lock;
+//    std::unordered_map<unsigned, // worker id
+//            std::unordered_map<unsigned, // job id
+//                    std::shared_ptr<resource<SIM_UNIT>>>> allreduce_lock;
 
     void doNextEvent() override;
 
@@ -98,13 +98,15 @@ public:
 
 //    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, uint64_t, std::string, std::shared_ptr<Job>);
 
-    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, const shared_ptr<Tensor> &, unsigned= 0);
+    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, const shared_ptr<Tensor> &, unsigned = 0);
 
     void sendPacket(unsigned, unsigned, unsigned, unsigned, const shared_ptr<Tensor> &);
 
     std::unordered_map<uint64_t, std::set<unsigned>> received_pkts{}; // tensor_id, set
 
-    std::unordered_map<uint64_t, shared_ptr<resource<SIM_UNIT>>> locks{};
+    std::unordered_map<uint64_t, shared_ptr<resource<SIM_UNIT>>> locks_fp{};
+
+    std::unordered_map<uint64_t, shared_ptr<resource<SIM_UNIT>>> locks_allreduce{};
 
     std::unordered_map<uint64_t, SIM_UNIT> allreduce_start{};
 };

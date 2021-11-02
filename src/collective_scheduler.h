@@ -14,7 +14,7 @@ public:
 //    std::map<unsigned, std::deque<pkt>> queues{}; // each job has a queue
 //    virtual void enqueue(uint64_t size, Worker *machine, unsigned tensor_id, unsigned chunk_id,
 //                         const std::shared_ptr<Job> &job) = 0;
-    virtual void enqueue(const std::shared_ptr<Tensor> &) = 0;
+    virtual simcpp20::event<SIM_UNIT> enqueue(simcpp20::simulation<SIM_UNIT> &, const std::shared_ptr<Tensor> &) = 0;
 //    {
 //        auto it = queues.find(job->id);
 //        if (it == queues.end()) {

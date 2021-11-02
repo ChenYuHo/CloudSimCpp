@@ -5,14 +5,13 @@
 
 #include <cstdint>
 #include <queue>
-
 #include "fschuetz04/simcpp20.hpp"
 
 template <typename T=double>
 class counter {
 public:
-    counter(simcpp20::simulation<T> &sim, unsigned needed)
-            : sim{sim}, needed_{needed}, count_{} {}
+    counter(simcpp20::simulation<T> &sim, unsigned needed, unsigned initial_cnt=0)
+            : sim{sim}, needed_{needed}, count_{initial_cnt} {}
 
     simcpp20::event<T> done() {
         auto ev = sim.event();
@@ -41,8 +40,10 @@ private:
             if (ev.aborted()) {
                 continue;
             }
-
             ev.trigger();
+        }
+        if (count() == needed_) { // now evs are all triggered, clear counter
+            count_ = 0;
         }
     }
 };

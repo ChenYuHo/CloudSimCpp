@@ -11,90 +11,57 @@
 #include "packet.h"
 
 
-//simcpp20::event<SIM_UNIT>
-//Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim, uint64_t grad_size, std::string tensor_id,
-//                  std::shared_ptr<Job> job) {
-//    auto start = sim.now();
-//    myprintf("[ALLREDUCE] jid %d mid %d tid %s size %llu start %llu\n",
-//           job->id, id, tensor_id.c_str(), grad_size, start);
-////    if (job->id == JID)
-////        myprintf("[1,%d]<stdout>:SYNTHETIC COLLECTIVE START %llu %llu\n", id, uint64_t(start * 1e9), grad_size);
-////    co_await lock.at(id).at(job->id)->request(); // allreduce goes one by one (non-preemptive)
-//
-//    const static uint64_t pkt_size = 1024 * 1024; // number of elements
-//    myprintf("[%llu]\tWorker %d Job %d invoke allreduce on %llu\n", sim.now(), id, job->id, grad_size);
-//    std::vector<simcpp20::event<SIM_UNIT>> pkt_events;
-//    unsigned i = 0;
-//    uint64_t c = 0;
-//    for (; i < grad_size / pkt_size; ++i) {
-//        std::stringstream s;
-//        std::string all_ids;
-//        s << job->id << "," << tensor_id << "," << i;
-//        s >> all_ids; // job_id, tensor_id, pkt_id
-//        myprintf("[%llu]\tWorker %d Job %d tensor %d send packet %d\n", sim.now(), id, job->id, grad_size, i);
-//        pkt_events.push_back(tor->send_receive(sim, pkt_size, all_ids, job->num_workers_allocated, id));
-//        co_await sim.timeout(0);
-//        c += pkt_size;
-//    }
-//    if (grad_size % pkt_size) {
-//        std::stringstream s;
-//        std::string all_ids;
-//        s << job->id << "," << tensor_id << "," << i;
-//        s >> all_ids; // job_id, tensor_id, pkt_id
-//        myprintf("[%llu]\tWorker %d Job %d tensor %d send packet %d\n", sim.now(), id, job->id, grad_size, i);
-//        pkt_events.push_back(tor->send_receive(sim, grad_size % pkt_size, all_ids, job->num_workers_allocated, id));
-//        c += grad_size % pkt_size;
-//    }
-//    assert(c == grad_size);
-//    co_await sim.all_of(pkt_events);
-////    myprintf("[%.3f]\tWorker %d done allreduce for Job %d on %d\n", sim.now(), id, job->id, grad_size);
-////    auto duration = sim.now() - start;
-////    if (job->id == JID) {
-////        myprintf("[1,%d]<stdout>:SYNTHETIC COLLECTIVE PROFILE %llu %llu 1 %llu 0\n", id, uint64_t(start * 1e9),
-////               uint64_t(duration * 1e9), grad_size);
-////    }
-////    lock.at(id).at(job->id)->release();
-//}
-
 simcpp20::event<SIM_UNIT>
 Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, std::shared_ptr<Job> job, const unsigned gpus_required,
                     CollectiveScheduler *cs) {
     jobs.push_back(job);
-//    myprintf("[%llu]\tmachine %d free gpu %d, job %d asking %d\n", sim.now(), id, gpu, job->id, gpus_required);
+    myprintf("[%llu]\tmachine %d uses %d of its %d free GPUs for job %d \n", sim.now(), id, gpus_required, gpu,
+             job->id);
     gpu -= gpus_required;
-    assert(gpu >= 0);
+    assert(gpu >= 0);  // something wrong with the placement!
     job->start_time = sim.now();
     cluster->check_if_all_jobs_started();
 
     std::vector<std::shared_ptr<Tensor>> tensors;
     unsigned tensor_id = 0;
-    for (uint64_t i = 0; i < job->model.size(); ++i) {
-        tensors.push_back(
-                std::make_shared<Tensor>(Tensor(i, job->model[i], this, job, sim)));
-        locks.emplace(job->id * 10000 + i,
-                      make_shared<resource<SIM_UNIT>>(sim, 1));
+    if (job->model.size() == job->forward_pass_time.size()) {
+        for (uint64_t i = 0; i < job->model.size(); ++i) {
+            tensors.push_back(
+                    std::make_shared<Tensor>(i, job->forward_pass_time[i], job->backward_pass_time[i], job->model[i],
+                                             this, job, sim));
+            locks_fp.emplace(job->id * 10000 + i,
+                             make_shared<resource<SIM_UNIT>>(sim, 1));
+            locks_allreduce.emplace(job->id * 10000 + i,
+                                    make_shared<resource<SIM_UNIT>>(sim, 1));
+        }
+    } else {
+        for (uint64_t i = 0; i < job->model.size(); ++i) {
+            tensors.push_back(
+                    std::make_shared<Tensor>(i, forward_pass_time(job->model[i]), backward_pass_time(job->model[i]),
+                                             job->model[i], this, job, sim));
+            locks_fp.emplace(job->id * 10000 + i,
+                             make_shared<resource<SIM_UNIT>>(sim, 1));
+            locks_allreduce.emplace(job->id * 10000 + i,
+                                    make_shared<resource<SIM_UNIT>>(sim, 1));
+        }
     }
-//    for (auto grad_size: job->model) {
-//        tensors.push_back(
-//                std::make_shared<Tensor>(Tensor(grad_size, this, job, sim)));
-//    }
-
-//    auto &jid_allreduce_lock = allreduce_lock[id];
-//    jid_allreduce_lock.erase(job->id);
-//    jid_allreduce_lock.emplace(job->id, std::make_shared<resource<SIM_UNIT>>(sim, 1));
-//    myprintf("NITER %d\n", job->n_iter);
+//    auto tensor_counter = counter(sim, tensors.size(), tensors.size());
     for (unsigned iter = 0; iter < job->n_iter; ++iter) {
-//        myprintf("Worker %d starting iter %d for job %d\n", id, iter, job->id);
-//        myprintf("[1,%d]<stdout>:SYNTHETIC ITERATION START PROFILE %llu\n", id, sim.now());
-
+//        co_await tensor_counter.done();
         for (auto &tensor: tensors) {
 
 //            myprintf("%d waiting LOCKF %p %llu %d\n", id, tensor.get(), tensor->tensor_id, tensor->iter);
-            auto &lock = locks[job->id * 10000 + tensor->tensor_id];
-            co_await lock->request(); // block if last step's allreduce is not completed yet
+            auto &lock = locks_fp[job->id * 10000 + tensor->tensor_id];
+
+            myprintf(2, "mid %u tid %u jid %u forward request lock\n", id, tensor->tensor_id, job->id);
+            co_await lock->request(); // will block if last step's allreduce is not completed yet
+            myprintf(2, "mid %u tid %u jid %u forward got lock\n", id, tensor->tensor_id, job->id);
+            if (tensor->tensor_id == 0) {
+                myprintf("[1,%d]<stdout>:SYNTHETIC ITERATION START PROFILE %llu JOB %u\n", id, sim.now(), job->id);
+            }
 //            myprintf("%d LOCKF %llu %d\n", id, tensor->tensor_id, tensor->iter);
             tensor->allreduced_size = 0;
-            auto fptime = forward_pass_time(tensor->size);
+            auto fptime = tensor->forward_pass_time;
             auto forward_begin = sim.now();
             co_await sim.timeout(fptime);
 //            if (PRINT) {
@@ -109,31 +76,34 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, std::shared_ptr<Job> jo
         std::ranges::reverse_view reversed{tensors};
 //        unsigned tensor_id = 0;
         for (auto &tensor: reversed) {
-            auto bptime = backward_pass_time(tensor->size);
+//            auto bptime = backward_pass_time(tensor->size);
+            auto bptime = tensor->backward_pass_time;
             auto backward_begin = sim.now();
             co_await sim.timeout(bptime);
-//            if (PRINT) {
             myprintf("[backward] iter %d jid %d mid %d tid %d size %d start %llu duration %llu end %llu\n", iter,
                      job->id, id, tensor->tensor_id, tensor->size, backward_begin, bptime, sim.now());
-//            }
             auto key = job->id * 10000 + tensor->tensor_id;
-            co_await locks[key]->request(); // release after allreduce is done so next fp can proceed
+            co_await locks_fp[key]->request(); // release after allreduce is done so next fp can proceed
 //            myprintf("%d LOCKB %llu %d\n", id, tensor->tensor_id, tensor->iter);
             //            myprintf("got lock for iter %d jid %d mid %d tid %d size %d\n", tensor->iter,
 //                   job->id, id, tensor->tensor_id, tensor->size);
 
             tensor->iter++;
-            if (job->num_workers_allocated>1) {
+            if (job->num_workers_allocated > 1) {
                 // original
                 if (cs != nullptr) {
-                    cs->enqueue(tensor);
+                    cs->enqueue(sim, tensor);
                 } else {
+                    myprintf("mid %u invoking nonblocking allreduce\n", id);
                     allreduce(sim, tensor); // nonblocking
                 }
             } else {
 //                myprintf("job %u single machine, no allreduce\n", job->id);
-                locks[key]->release();
-                if (id == tensor->job->master_mid) cpb.cntIncrement();
+                locks_fp[key]->release();
+                if (id == tensor->job->master_mid) {
+//                    myprintf("incrementing cpb from %d\n", id);
+                    cpb.cntIncrement();
+                }
             }
 
 
@@ -163,14 +133,18 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, std::shared_ptr<Job> jo
     for (auto &tensor: tensors) {
 //        myprintf("waiting start for iter %d jid %d mid %d tid %llu size %llu", tensor->iter,
 //               job->id, id, tensor->tensor_id, tensor->size);
-        auto &lock = locks[job->id * 10000 + tensor->tensor_id];
+        auto key = job->id * 10000 + tensor->tensor_id;
+        auto &lock = locks_fp[key];
         co_await lock->request(); // wait until final allreduces are done
         lock->release();
+        locks_fp.erase(key);
+        locks_allreduce.erase(key);
 //        locks.erase(job->id * 10000 + tensor->tensor_id);
 //        myprintf("%d LOCKFINAL %llu %d\n", id, tensor->tensor_id, tensor->iter);
 //        myprintf("waiting done for iter %d jid %d mid %d tid %llu size %llu\n", tensor->iter,
 //               job->id, id, tensor->tensor_id, tensor->size);
     }
+    tensors.clear();
     job->finish_time = sim.now();
     gpu += gpus_required;
     myprintf("[%lu]\tmachine %d finishes job %d and has %d gpu now\n", sim.now(), id, job->id, gpu);
@@ -196,25 +170,10 @@ void Worker::receivePacket(Packet &pkt) {
     set.insert(pkt_idx);
     // cancel timer
     if (set.size() == p->tensor->num_pkts_expected) {
-//        cout<<"WORKER DONE: "<<eventlist().now()<<endl;
-//        cout<<"CNT"<<p->cnt<<endl;
-//        exit(1);
         auto key = p->job_id * 10000 + p->tensor->tensor_id;
-//        auto start = allreduce_start[key];
-//        auto end = eventlist().now();
-//        myprintf("DONE %llu %d %d %d\n", p->tensor->tensor_id, p->tensor->iter, p->ver, p->slot);
-//        myprintf("[allreduce] iter %d jid %d mid %d tid %d size %d start %llu duration %llu end %llu\n",
-//               p->tensor->iter-1, p->job_id, id, p->tensor->tensor_id, p->tensor->size, start, end-start, end);
-//        p->tensor->received_pkts.clear(); // counter for switch
-//        for (auto &s : cluster->_topo->switches()) {
-//            s->received_pkts[p->ver][p->slot].clear();
-//            s->count[p->ver][p->slot] = 0;
-//        }
+        // can't erase if loss recovery is enabled
         received_pkts.erase(p->tensor->tensor_id); // counter for worker
-//        myprintf("%d RELEASE LOCKDONE %p %llu %d\n", id, p->tensor.get(), p->tensor->tensor_id, p->tensor->iter);
-        locks[key]->release();
-        if (id == p->tensor->job->master_mid) cpb.cntIncrement();
-//        myprintf("%d LOCKDONE %llu %d\n", id, p->tensor->tensor_id, p->tensor->iter);
+        locks_allreduce[key]->release();
         return;
     }
     auto next_start = p->offset + NUM_UPDATES * NUM_SLOTS;
@@ -226,20 +185,6 @@ void Worker::receivePacket(Packet &pkt) {
 }
 
 
-//#include "worker.h"
-//#include "cluster.h"
-//#include "topology/hierarchical_topology.h"
-//#include "fschuetz04/simcpp20.hpp"
-//
-//void Worker::doNextEvent() {
-//    // schedule start of allreduce
-//    allreduce(0);
-//}
-//
-//void Worker::receivePacket(Packet &packet) {
-//    myprintf("[%llu] worker got packet\n", eventlist().now());
-//}
-//
 void Worker::sendPacket(unsigned start, unsigned ver,
                         unsigned slot, unsigned grad_size,
                         const shared_ptr<Tensor> &tensor) {
@@ -278,7 +223,11 @@ void Worker::sendPacket(unsigned start, unsigned ver,
 simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
                                             const shared_ptr<Tensor> &tensor,
                                             unsigned chunk_size) {
+    // assuming a chunked tensor does not concurrently invoke allreduce
+    // i.e., at most one allreduce going on for a tensor
+
     auto key = tensor->job->id * 10000 + tensor->tensor_id;
+    co_await locks_allreduce[key]->request();
     allreduce_start[key] = sim.now();
     auto grad_size = (chunk_size == 0)
                      ? tensor->size
@@ -288,9 +237,11 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
     if (SIMULATE_ALLREDUCE) {
 //    myprintf("[%llu] worker %d start allreduce for tensor size %llu iter %d\n", eventlist().now(), id, grad_size,
 //           tensor->iter);
-        const static unsigned num_updates = (SWITCHML_PKT_SIZE-(8+14+20+8+6+4+12))/4;
+        const static unsigned num_updates = (SWITCHML_PKT_SIZE - (8 + 14 + 20 + 8 + 6 + 4 + 12)) / 4;
         tensor->num_pkts_expected = grad_size / num_updates;
         if (grad_size % num_updates) tensor->num_pkts_expected += 1;
+
+        // assuming switches have infinite slots
         for (unsigned slot = 0; slot < NUM_SLOTS; ++slot) {
             auto start = slot * num_updates;
             if (start >= grad_size) break;
@@ -335,97 +286,18 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
             default:;
         }
         co_await sim.timeout(sleep_time);
-        locks[key]->release();
+        locks_allreduce[key]->release();
     }
-    co_await locks[key]->request();
+    co_await locks_allreduce[key]->request();
+    tensor->allreduced_size += grad_size;
     auto end = sim.now();
     myprintf("[allreduce] iter %d jid %d mid %d tid %d size %d start %llu duration %llu end %llu\n",
-             tensor->iter - 1, tensor->job->id, id, tensor->tensor_id, tensor->size, allreduce_start[key],
+             tensor->iter - 1, tensor->job->id, id, tensor->tensor_id, grad_size, allreduce_start[key],
              end - allreduce_start[key], end);
-//    co_await sim.timeout(0);
-    locks[key]->release();
-//    if (id == tensor->job->master_mid) cpb.cntIncrement();
+    if (id == tensor->job->master_mid && tensor->allreduced_size == tensor->size) {
+//        myprintf("incrementing cpb from %d\n", id);
+        cpb.cntIncrement();
+    }
+    locks_allreduce[key]->release();
+    locks_fp[key]->release();
 }
-//
-//void Worker::execute_job(const std::shared_ptr<Job> &job, const unsigned int gpus_required) {
-//    jobs.push_back(job);
-//    myprintf("[%llu]\tworker %d executing job %d using %d gpus\n", eventlist().now(), _id, job->id(), gpus_required);
-//    _gpu -= gpus_required;
-//    assert(_gpu >= 0);
-//
-////    std::vector<std::shared_ptr<Tensor>> tensors;
-////    unsigned tensor_id = 0;
-////    for (auto grad_size: job->model) {
-////        tensors.push_back(
-////                std::make_shared<Tensor>(Tensor{grad_size, 0, this, job, tensor_id++, 0, 0, resource(sim, 1)}));
-////    }
-////
-////    auto &jid_allreduce_lock = allreduce_lock[id];
-////    jid_allreduce_lock.erase(job->id);
-////    jid_allreduce_lock.emplace(job->id, std::make_shared<resource<SIM_UNIT>>(sim, 1));
-////
-//    for (unsigned iter = 0; iter < job->n_iter; ++iter) {
-//////        if (job->id == JID) myprintf("[1,%d]<stdout>:SYNTHETIC ITERATION START PROFILE %llu\n", id, sim.now());
-////
-////        for (auto &tensor: tensors) {
-////            co_await tensor->lock.request(); // block if last step's allreduce is not completed yet
-////            tensor->allreduced_size = 0;
-////            auto fptime = forward_pass_time(tensor->size);
-////            auto forward_begin = sim.now();
-////            co_await sim.timeout(fptime);
-////            if (PRINT) {
-////                myprintf("[forward] iter %d jid %d mid %d tid %d size %llu start %llu duration %llu end %llu\n", iter,
-////                       job->id, id, tensor->tensor_id, tensor->size, forward_begin, fptime, sim.now());
-////            }
-////            tensor->lock.release();
-////        }
-////        //    myprintf("[%llu]\tWorker %d job %d forward pass all done\n", sim.now(), id, job->id);
-////
-////        std::ranges::reverse_view reversed{tensors};
-////        unsigned tensor_id = 0;
-////        for (auto &tensor: reversed) {
-////            auto bptime = backward_pass_time(tensor->size);
-////            auto backward_begin = sim.now();
-////            co_await sim.timeout(bptime);
-////            if (PRINT) {
-////                myprintf("[backward] iter %d jid %d mid %d tid %d size %d start %llu duration %llu end %llu\n", iter,
-////                       job->id, id, tensor->tensor_id, tensor->size, backward_begin, bptime, sim.now());
-////            }
-////            co_await tensor->lock.request(); // release after allreduce is done so next fp can proceed
-////            myprintf("got lock for iter %d jid %d mid %d tid %d size %d\n", tensor->iter,
-////                   job->id, id, tensor->tensor_id, tensor->size);
-////            cs->enqueue(tensor);
-//////            auto chunk_size = CHUNK_SIZE;
-//////            if (chunk_size) {
-//////                unsigned chunk_id = 0;
-//////                for (unsigned i = 0; i < tensor.size / chunk_size; ++i) {
-//////                    cs->enqueue(chunk_size, this, tensor_id, chunk_id++, job);
-//////                }
-//////                if (tensor.size % chunk_size) {
-//////                    cs->enqueue(tensor.size % chunk_size, this, tensor_id, chunk_id++, job);
-//////                }
-//////                tensor_id++;
-//////            } else {
-//////                cs->enqueue(tensor.size, this, tensor_id++, 0, job);
-//////            }
-//////            co_await sim.timeout(0);
-//////            allreduce_events.push_back(allreduce(sim, grad_size, tensor_id++, job)); // allreduce doesn't block
-////        }
-//////        co_await sim.all_of(allreduce_events);
-//////        myprintf("[%llu]\tmachine %d backward loop over\n", sim.now(), id);
-//////        if(job->id==JID) myprintf("[1,%d]<stdout>:SYNTHETIC ITERATION END PROFILE %llu\n", id, sim.now());
-//    }
-////    for (auto &tensor: tensors) {
-////        myprintf("waiting start for iter %d jid %d mid %d tid %d size %lu\n", tensor->iter,
-////               job->id, id, tensor->tensor_id, tensor->size);
-////        co_await tensor->lock.request(); // wait until final allreduces are done
-////        myprintf("waiting done for iter %d jid %d mid %d tid %d size %lu\n", tensor->iter,
-////               job->id, id, tensor->tensor_id, tensor->size);
-////    }
-////    job->finish_time = sim.now();
-////    gpu += gpus_required;
-////    myprintf("[%llu]\tmachine %d finishes job %d and has %d gpu now\n", sim.now(), id, job->id, gpu);
-////    assert(gpu <= gpu_capacity);
-////    cluster->check_if_all_jobs_finished();
-//
-//}
