@@ -25,6 +25,7 @@ Packet::set_route(PacketFlow& flow, const Route &route, int pkt_size,
     _size = pkt_size;
     _id = id;
     _nexthop = 0;
+    delete _route;
     _route = &route;
     _is_header = 0;
     _flags = 0;
@@ -32,6 +33,7 @@ Packet::set_route(PacketFlow& flow, const Route &route, int pkt_size,
 
 void 
 Packet::set_route(const Route &route){
+    delete _route;
     _route = &route;
 }
 
