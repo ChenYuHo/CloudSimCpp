@@ -40,29 +40,29 @@ int main() {
 //    event_list.sourceIsPending(t, 12325754841);
 
 //    auto cluster = std::make_shared<Cluster>(event_list);
-    auto cluster = Cluster(event_list);
+    auto cluster = Cluster(event_list, 2, SWITCH_BUFFER);
     cout<<cluster._topo->no_of_nodes()<< " nodes in total. Each node has "<< GPUS_PER_NODE << " GPUs"<<endl;
 
 
-    io::CSVReader<5> in("../HeliosData/data/60_job.csv");
-    in.read_header(io::ignore_extra_column, "num_gpu", "duration", "submit_time", "iterations", "model");
-    int num_gpu;
-    simtime_picosec duration;
-    simtime_picosec submit_time;
-    unsigned iterations;
-    std::string model;
-    std::vector<std::shared_ptr<Job>> jobs;
-    while(in.read_row(num_gpu, duration, submit_time, iterations, model)){
-        jobs.push_back(std::make_shared<Job>(timeFromSec(submit_time), sim, "alexnet", iterations, num_gpu));
-    }
+//    io::CSVReader<5> in("../HeliosData/data/60_job.csv");
+//    in.read_header(io::ignore_extra_column, "num_gpu", "duration", "submit_time", "iterations", "model");
+//    int num_gpu;
+//    simtime_picosec duration;
+//    simtime_picosec submit_time;
+//    unsigned iterations;
+//    std::string model;
+//    std::vector<std::shared_ptr<Job>> jobs;
+//    while(in.read_row(num_gpu, duration, submit_time, iterations, model)){
+//        jobs.push_back(std::make_shared<Job>(timeFromSec(submit_time), sim, "alexnet", iterations, num_gpu));
+//    }
 
 
-//    std::vector<std::shared_ptr<Job>> jobs = std::vector<std::shared_ptr<Job>>{
-//            std::make_shared<Job>(0, sim, "alexnet", 5, 8),
-//            std::make_shared<Job>(0, sim, "alexnet", 10, 4),
-//        // layer size in number of elements!
-////            std::make_shared<Job>(0, sim, std::vector<uint64_t>{26214400}, 10, 2), 589824, 256, 37748736, 4096, 16777216, 4096, 4096000, 1000})
-//    };
+    std::vector<std::shared_ptr<Job>> jobs = std::vector<std::shared_ptr<Job>>{
+            std::make_shared<Job>(0, sim, std::vector<uint64_t>{100, 120}, 2, 2),
+            std::make_shared<Job>(0, sim, std::vector<uint64_t>{90, 130}, 2, 2),
+        // layer size in number of elements!
+//            std::make_shared<Job>(0, sim, std::vector<uint64_t>{26214400}, 10, 2), 589824, 256, 37748736, 4096, 16777216, 4096, 4096000, 1000})
+    };
 
     unsigned cnt = 0;
     for (auto& job: jobs) {
@@ -73,7 +73,7 @@ int main() {
 
     PlacementAlgo *placement_algo;
     SchedulingAlgo *scheduling_algo;
-    RandomPlacement r = RandomPlacement(76);
+    RandomPlacement r = RandomPlacement(87);
     placement_algo = &r;
     FirstComeFirstServed f = FirstComeFirstServed();
     scheduling_algo = &f;

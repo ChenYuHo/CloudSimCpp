@@ -7,6 +7,7 @@
 #include "config.h"
 #include "loggertypes.h"
 #include "route.h"
+#include "common.h"
 
 class Packet;
 class PacketFlow;
@@ -62,16 +63,16 @@ class Packet {
        destroy it, so it can be reused) */
     virtual void free();
 
-    static void set_packet_size(int packet_size) {
-	// Use Packet::set_packet_size() to change the default packet
-	// size for TCP or NDP data packets.  You MUST call this
-	// before the value has been used to initialize anything else.
-	// If someone has already read the value of packet size, no
-	// longer allow it to be changed, or all hell will break
-	// loose.
-	assert(_packet_size_fixed == false);
-	_data_packet_size = packet_size;
-    }
+//    static void set_packet_size(int packet_size) {
+//	// Use Packet::set_packet_size() to change the default packet
+//	// size for TCP or NDP data packets.  You MUST call this
+//	// before the value has been used to initialize anything else.
+//	// If someone has already read the value of packet size, no
+//	// longer allow it to be changed, or all hell will break
+//	// loose.
+//	assert(_packet_size_fixed == false);
+//	_data_packet_size = packet_size;
+//    }
 
     static int data_packet_size() {
 	_packet_size_fixed = true;

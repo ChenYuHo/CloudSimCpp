@@ -102,13 +102,10 @@ public:
 
     void sendPacket(unsigned, unsigned, unsigned, unsigned, shared_ptr<Tensor>);
 
-    std::unordered_map<uint64_t, std::set<unsigned>> received_pkts{}; // tensor_id, set
+    std::unordered_map<unsigned , unsigned> rank_for_job{};
 
-    std::unordered_map<uint64_t, shared_ptr<resource<SIM_UNIT>>> locks_fp{};
-
-    std::unordered_map<uint64_t, shared_ptr<resource<SIM_UNIT>>> locks_allreduce{};
-
-    std::unordered_map<uint64_t, SIM_UNIT> allreduce_start{};
+    std::unordered_map<uint64_t, shared_ptr<resource<SIM_UNIT>>> fp_locks{};
+    std::unordered_map<uint64_t, shared_ptr<resource<SIM_UNIT>>> allreduce_locks{};
 };
 
 

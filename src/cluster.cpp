@@ -40,15 +40,14 @@ void Cluster::check_if_all_jobs_finished() {
     all_jobs_finished = true;
 }
 
-void Cluster::init_topo() {
+void Cluster::init_topo(int switch_ports=SWITCH_PORTS, mem_b switch_buffer=SWITCH_BUFFER) {
     _topo = (Topology *) new HierarchicalTopology(this,
-                                                  SWITCH_PORTS,
-                                                  SWITCH_BUFFER,
+                                                  switch_ports,
+                                                  switch_buffer,
                                                   nullptr,
                                                   &_eventlist);
     workers = _topo->workers();
     for (const auto& w : workers) worker_map[w->id] = w;
-//    machine_map[m->id] = machines.back();
     switches = _topo->switches();
 }
 

@@ -10,7 +10,7 @@ class Worker;
 class Cluster : EventSource {
 public:
     std::vector<Worker *> workers;
-    std::unordered_map<unsigned, Worker*> worker_map;
+    std::unordered_map<unsigned, Worker *> worker_map;
     std::vector<Switch *> switches;
     std::vector<std::shared_ptr<Job>> jobs;
     bool all_jobs_submitted{};
@@ -18,13 +18,14 @@ public:
     bool all_jobs_finished{};
     Topology *_topo{};
 
-    explicit Cluster(EventList &event_list) : EventSource(event_list, "Cluster") {
-        init_topo();
+    explicit Cluster(EventList &event_list, int switch_ports, mem_b switch_buffer) :
+            EventSource(event_list, "Cluster") {
+        init_topo(switch_ports, switch_buffer);
     };
 
     ~Cluster() override;
 
-    void init_topo();
+    void init_topo(int, mem_b);
 
     void add_job(std::shared_ptr<Job> job) {
         jobs.push_back(job);
