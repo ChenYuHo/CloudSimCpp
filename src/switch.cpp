@@ -3,52 +3,10 @@
 #include "cluster.h"
 #include "topology/hierarchical_topology.h"
 
-//simcpp20::event<SIM_UNIT>
-//Switch::send_receive(simcpp20::simulation<SIM_UNIT> &sim, uint64_t pkt_size, std::string all_ids,
-//                     unsigned num_pkts_needed,
-//                     unsigned mid) {
-//    auto ptr_it = pkt_lock_map.find(mid);
-//    if (ptr_it == pkt_lock_map.end()) {
-//        pkt_lock_map.emplace(mid, std::make_shared<resource<SIM_UNIT>>(sim, 1));
-//    }
-//    auto pkt_lock = pkt_lock_map[mid];
-////    if(pkt_lock==nullptr) pkt_lock = std::make_shared<resource<SIM_UNIT>>(sim, 1);
-//    co_await pkt_lock->request(); // one packet at a time (per link)
-//    auto transfer_time = pkt_transfer_time(pkt_size);
-//    co_await sim.timeout(transfer_time); // worker to switch
-////    myprintf("[%llu]\tID %d Job packet arrived\n", sim.now(), all_ids);
-//    pkt_lock->release();
-//    auto it = counter_map.find(all_ids);
-//    if (it == counter_map.end()) {
-//        counter_map.emplace(all_ids, std::make_shared<counter<SIM_UNIT>>(sim, num_pkts_needed));
-//    }
-//    counter_map.at(all_ids)->add_counter();
-//    co_await counter_map.at(all_ids)->done(); // we have all_ids packet from all workers
-//    auto ptr_it2 = pkt_lock_map2.find(mid);
-//    if (ptr_it2 == pkt_lock_map2.end()) {
-//        pkt_lock_map2.emplace(mid, std::make_shared<resource<SIM_UNIT>>(sim, 1));
-//    }
-//    auto pkt_lock2 = pkt_lock_map2[mid];
-//    co_await pkt_lock2->request(); // one packet at a time (per link)
-//    counter_map.erase(all_ids);
-//    co_await sim.timeout(transfer_time); // ToR to worker
-//    pkt_lock2->release();
-//}
-
 void Switch::doNextEvent() {
 
 }
 
-
-////
-//// Created by Chen-Yu Ho on 9/27/21.
-////
-//
-//#include "switch.h"
-//#include "packet.h"
-//#include "cluster.h"
-//#include "topology/hierarchical_topology.h"
-//
 void Switch::multicast_downward(SwitchMLPacket *p) {
     for (auto dest: downward_ids_for_job[p->job_id]) {
         const Route *route = cluster->_topo->get_switch_single_hop_route(id, layer, dest, false);
@@ -63,8 +21,6 @@ void Switch::multicast_downward(SwitchMLPacket *p) {
         multicast_pkt->set_ts(eventlist().now());
         multicast_pkt->upward = false;
         multicast_pkt->tensor = p->tensor;
-//        multicast_pkt->cnt = p->cnt;
-//        cout<<"switch multicast:"<<p->cnt<<endl;
         multicast_pkt->sendOn();
     }
 }
@@ -100,10 +56,6 @@ void Switch::receivePacket(Packet &pkt) {
             count[key] =
                     ((count[key] + 1) % p->n_workers) %
                     num_updates_for_job[p->job_id];
-//            myprintf("CNT666 %d\n", count[hash(p->tensor->tensor_id, p->tensor->iter)][p->slot][p->ver]);
-
-//            if (map.find(p->slot) == map.end())
-//                map[p->slot] = 0;
 //            myprintf("ToR %d, jid %d, num_workers %d, num_updates %d\n", id, p->job_id, p->n_workers, num_updates_for_job[p->job_id]);
 //            map[p->slot] = ((map[p->slot] + 1) % p->n_workers) % num_updates_for_job[p->job_id];
 //            if self.count[pkt.ver, pkt.slot] == 1:
@@ -155,39 +107,4 @@ void Switch::receivePacket(Packet &pkt) {
         multicast_downward(p);
     }
     p->free();
-
-//    if (pkt_counter.find(p->job_id) == pkt_counter.end())
-//        pkt_counter[p->job_id] = 0;
-//    pkt_counter[p->job_id] += 1;
-//
-//    if (pkt_counter[p->job_id] == p->n_updates) {
-//        myprintf("got all\n");
-//        auto topo = (HierarchicalTopology *) cluster->_topo;
-//        for (unsigned i = 0; i < p->n_updates; i++) {
-//            auto route = topo->get_tor_to_worker_path(id, i);
-//            SwitchMLPacket *multicast_p = SwitchMLPacket::newpkt(*route);
-//            multicast_p->job_id = p->job_id;
-//            multicast_p->wid = i;
-//            multicast_p->set_ts(eventlist().now());
-//            myprintf("[%llu] switch multicast packet wid %d jid %d\n", eventlist().now(), p->wid, p->job_id);
-//            multicast_p->sendOn();
-//        }
-//        p->free();
-////        p->set_ts(eventlist().now());
-//    }
-
-
-//    print_route(*(p->route()));
-
-//    p->set_route(*(p->reverse_route()));
-//    print_route(*(p->route()));
-//    p->sendOn();
 }
-//
-//void Switch::doNextEvent() {
-//
-//}
-//
-////void Switch::receivePacket(Packet &) {
-////    assert(0);
-////}

@@ -9,9 +9,9 @@ class Worker;
 
 class Cluster : EventSource {
 public:
-    std::vector<std::shared_ptr<Worker>> workers;
-    std::unordered_map<unsigned, std::shared_ptr<Worker>> worker_map;
-    std::vector<std::shared_ptr<Switch>> switches;
+    std::vector<Worker *> workers;
+    std::unordered_map<unsigned, Worker*> worker_map;
+    std::vector<Switch *> switches;
     std::vector<std::shared_ptr<Job>> jobs;
     bool all_jobs_submitted{};
     bool all_jobs_started{};

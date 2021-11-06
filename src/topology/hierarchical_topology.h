@@ -21,8 +21,8 @@ class Cluster;
 class HierarchicalTopology : public Topology {
 public:
     shared_ptr<Switch> core_switch{};
-    vector<shared_ptr<Switch>> tor_switches{};
-    vector<shared_ptr<Worker>> _workers{};
+    vector<Switch*> tor_switches{};
+    vector<Worker*> _workers{};
     vector<vector<Pipe *> > pipes_core_tor{};
     vector<vector<Pipe *> > pipes_tor_worker{};
     vector<vector<Queue *> > queues_core_tor{};
@@ -54,11 +54,11 @@ public:
 
     const Route *get_worker_to_tor_path(unsigned src) override;
 
-    const Route *get_tor_to_worker_path(int src, int dest);
+//    const Route *get_tor_to_worker_path(int src, int dest);
 
-    std::vector<std::shared_ptr<Switch>> switches() override { return tor_switches; };
+    std::vector<Switch*> switches() override { return tor_switches; };
 
-    std::vector<std::shared_ptr<Worker>> workers() override { return _workers; };
+    std::vector<Worker*> workers() override { return _workers; };
 
     void set_switch_num_updates(
             unsigned int job_id, map<unsigned int, unsigned int> run_config) override;

@@ -25,7 +25,7 @@ public:
     void multicast_downward(SwitchMLPacket *);
     unsigned layer = 0;
     unsigned id;
-    std::vector<std::shared_ptr<Worker>> machines;
+    std::vector<Worker*> machines;
     Cluster *cluster;
 //    std::deque<pkt> buffer;
 //    std::unordered_map<unsigned, unsigned> pkt_counter;

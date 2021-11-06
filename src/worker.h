@@ -31,8 +31,8 @@ public:
     unsigned gpu_capacity{GPUS_PER_NODE};
     std::vector<std::shared_ptr<Job>> jobs;
     Cluster *cluster;
-    std::shared_ptr<Switch> tor;
-    std::deque<pkt> buffer;
+    Switch *tor;
+//    std::deque<pkt> buffer;
 //    std::unordered_map<unsigned, // worker id
 //            std::unordered_map<unsigned, // job id
 //                    std::shared_ptr<resource<SIM_UNIT>>>> allreduce_lock;
@@ -46,10 +46,10 @@ public:
         return example;
     };
 
-    explicit Worker(EventList &ev, Cluster *cluster, std::shared_ptr<Switch> tor) :
+    explicit Worker(EventList &ev, Cluster *cluster, Switch *tor) :
             EventSource(ev, "worker"),
             id(get_id()), cluster(cluster),
-            tor(std::move(tor)) {
+            tor(tor) {
 //        myprintf("Worker %d constructor invoked\n", id);
     }
 

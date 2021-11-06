@@ -17,9 +17,9 @@ public:
 
     virtual int no_of_nodes() const { abort(); };
 
-    virtual vector<shared_ptr<Worker>> workers() = 0;
+    virtual vector<Worker *> workers() = 0;
 
-    virtual vector<shared_ptr<Switch>> switches() = 0;
+    virtual vector<Switch *> switches() = 0;
 
     virtual void set_switch_num_updates(
             unsigned int, std::map<unsigned int, unsigned int>) = 0;
