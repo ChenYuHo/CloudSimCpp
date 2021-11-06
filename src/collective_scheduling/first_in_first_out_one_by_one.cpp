@@ -4,7 +4,7 @@
 #include "worker.h"
 
 simcpp20::event<SIM_UNIT>
-FirstInFirstOutOneByOne::enqueue(simcpp20::simulation<SIM_UNIT> &sim, const shared_ptr<Tensor> &tensor) {
+FirstInFirstOutOneByOne::enqueue(simcpp20::simulation<SIM_UNIT> &sim, shared_ptr<Tensor> tensor) {
     auto key = std::make_pair(tensor->job->id, tensor->tensor_id);
     queue[key].push_back(tensor);
     std::vector<simcpp20::event<SIM_UNIT>> events{};

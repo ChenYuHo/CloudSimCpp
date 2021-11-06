@@ -3,7 +3,7 @@
 #include "cluster.h"
 #include "worker.h"
 
-simcpp20::event<SIM_UNIT> ReadyAndGo::enqueue(simcpp20::simulation<SIM_UNIT> & sim, const std::shared_ptr<Tensor> &tensor) {
+simcpp20::event<SIM_UNIT> ReadyAndGo::enqueue(simcpp20::simulation<SIM_UNIT> & sim, std::shared_ptr<Tensor> tensor) {
     auto key = std::make_pair(tensor->job->id, tensor->tensor_id);
     queue[key].push_back(tensor);
     if (queue[key].size() == tensor->job->num_workers_allocated) {

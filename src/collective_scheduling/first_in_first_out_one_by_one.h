@@ -15,7 +15,7 @@ public:
     std::unordered_map<std::pair<unsigned, unsigned>, std::deque<std::shared_ptr<Tensor>>, pair_hash> queue;
     std::queue<std::deque<std::shared_ptr<Tensor>>> ready_queue;
 
-    simcpp20::event<SIM_UNIT> enqueue(simcpp20::simulation<SIM_UNIT> &sim, const std::shared_ptr<Tensor> &tensor) override;
+    simcpp20::event<SIM_UNIT> enqueue(simcpp20::simulation<SIM_UNIT> &sim, std::shared_ptr<Tensor> tensor) override;
 
     simcpp20::event<SIM_UNIT> collective_scheduler(simcpp20::simulation<SIM_UNIT> &sim, Cluster &cluster) override;
 

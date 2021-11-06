@@ -18,15 +18,15 @@ public:
     bool all_jobs_finished{};
     Topology *_topo{};
 
-    Cluster(EventList &event_list) : EventSource(event_list, "Cluster") {
+    explicit Cluster(EventList &event_list) : EventSource(event_list, "Cluster") {
         init_topo();
     };
 
-    ~Cluster();
+    ~Cluster() override;
 
     void init_topo();
 
-    void add_job(const std::shared_ptr<Job> &job) {
+    void add_job(std::shared_ptr<Job> job) {
         jobs.push_back(job);
     }
 

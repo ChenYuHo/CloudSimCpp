@@ -25,7 +25,7 @@ void Cluster::setup(config conf) {
 
 void Cluster::check_if_all_jobs_started() {
     if (!all_jobs_submitted) return;
-    for (const std::shared_ptr<Job> &j:jobs) {
+    for (std::shared_ptr<Job> j:jobs) {
         if (j->start_time == std::numeric_limits<uint64_t>::max()) return; // at least one job not started yet
     }
     all_jobs_started = true;
@@ -34,7 +34,7 @@ void Cluster::check_if_all_jobs_started() {
 
 void Cluster::check_if_all_jobs_finished() {
     if (!all_jobs_started) return;
-    for (const std::shared_ptr<Job> &j:jobs) {
+    for (std::shared_ptr<Job> j:jobs) {
         if (j->finish_time == std::numeric_limits<uint64_t>::max()) return; // at least one job not finished yet
     }
     all_jobs_finished = true;
@@ -55,7 +55,7 @@ void Cluster::init_topo() {
 void Cluster::doNextEvent() {}
 
 Cluster::~Cluster() {
-//    delete _topo;
+    delete (HierarchicalTopology*)_topo;
 }
 
 //#include "cluster.h"

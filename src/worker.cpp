@@ -192,7 +192,7 @@ void Worker::receivePacket(Packet &pkt) {
 
 void Worker::sendPacket(unsigned start, unsigned ver,
                         unsigned slot, unsigned grad_size,
-                        const shared_ptr<Tensor> &tensor) {
+                        shared_ptr<Tensor> tensor) {
     auto topo = cluster->_topo;
     const Route *route = topo->get_worker_to_tor_path(id);
     auto p = SwitchMLPacket::newpkt(*route);
@@ -226,7 +226,7 @@ void Worker::sendPacket(unsigned start, unsigned ver,
 //    }
 //};
 simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
-                                            const shared_ptr<Tensor> &tensor,
+                                            shared_ptr<Tensor> tensor,
                                             unsigned chunk_size) {
     // assuming a chunked tensor does not concurrently invoke allreduce
     // i.e., at most one allreduce going on for a tensor

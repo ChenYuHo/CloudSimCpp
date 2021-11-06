@@ -98,9 +98,9 @@ public:
 
 //    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, uint64_t, std::string, std::shared_ptr<Job>);
 
-    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, const shared_ptr<Tensor> &, unsigned = 0);
+    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, shared_ptr<Tensor>, unsigned = 0);
 
-    void sendPacket(unsigned, unsigned, unsigned, unsigned, const shared_ptr<Tensor> &);
+    void sendPacket(unsigned, unsigned, unsigned, unsigned, shared_ptr<Tensor>);
 
     std::unordered_map<uint64_t, std::set<unsigned>> received_pkts{}; // tensor_id, set
 
