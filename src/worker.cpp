@@ -163,6 +163,7 @@ void Worker::receivePacket(Packet &pkt) {
     unsigned pkt_idx = p->offset / NUM_UPDATES;
     auto &set = received_pkts[p->tensor->tensor_id];
     if (set.contains(pkt_idx)) {
+        p->free();
         // duplicate
 //        myprintf("already received %d/%d pkt, discarding\n", pkt_idx, p->tensor->num_pkts_expected);
         return;
@@ -174,14 +175,18 @@ void Worker::receivePacket(Packet &pkt) {
         // can't erase if loss recovery is enabled
         received_pkts.erase(p->tensor->tensor_id); // counter for worker
         locks_allreduce[key]->release();
+        p->free();
         return;
     }
     auto next_start = p->offset + NUM_UPDATES * NUM_SLOTS;
-    if (next_start >= p->grad_size) return;
+    if (next_start >= p->grad_size) {
+        p->free();
+        return;
+    }
     sendPacket(next_start, 1 - p->ver, p->slot, p->grad_size, p->tensor);
 //    myprintf("[%llu] worker %d got aggregated pkt JID %d slot %d offset %d\n",
 //           eventlist().now(), id, p->job_id, p->slot, p->offset);
-
+    p->free();
 }
 
 

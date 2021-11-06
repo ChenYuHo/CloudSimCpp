@@ -7,6 +7,7 @@
  */
 
 #include "config.h"
+
 #include <list>
 #include <vector>
 
@@ -14,6 +15,7 @@ class PacketSink;
 class Route {
   public:
     Route() : _reverse(NULL) {};
+    ~Route();
     inline PacketSink* at(size_t n) const {return _sinklist.at(n);}
     void push_back(PacketSink* sink) {_sinklist.push_back(sink);}
     void push_front(PacketSink* sink) {_sinklist.insert(_sinklist.begin(), sink);}

@@ -9,6 +9,8 @@ class Switch;
 
 class Topology {
 public:
+    virtual ~Topology() = default;
+
     virtual vector<const Route *> *get_paths(int src, int dest) = 0;
 
     virtual vector<int> *get_neighbours(int src) = 0;

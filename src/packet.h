@@ -20,6 +20,7 @@ public:
 
     inline static SwitchMLPacket *newpkt(const Route &route, SwitchMLPacket *other) {
         SwitchMLPacket *p = _packetdb.allocPacket();
+//        delete p->_route;
         p->set_route(route);
         p->_type = IP;
         p->_nexthop = 0;
@@ -33,9 +34,12 @@ public:
         return p;
     }
 
-    void free() { _packetdb.freePacket(this); }
+    void free() override {
+//        delete _route;
+        _packetdb.freePacket(this);
+    }
 
-    virtual ~SwitchMLPacket() {}
+    ~SwitchMLPacket() override;
 
     inline simtime_picosec ts() const { return _ts; }
 
@@ -53,35 +57,35 @@ public:
     unsigned offset{};
     shared_ptr<Tensor> tensor{};
 
-    void print_info(unsigned type, SIM_UNIT now, unsigned to_id) {
-        auto &from_id = id;
-        switch (type) {
-            case 0: // worker to ToR
-//                myprintf("[%llu] worker %d sent packet to ToR, ver %d slot %d offset %d upward %d grad_size %llu n_workers %d job_id %d \n", now, from_id, ver, slot, offset, upward, grad_size, n_workers, job_id);
-//                p->id = id;
-//                p->ver = ver;
-//                p->slot = slot;
-//                p->offset = start;
-//                p->upward = true;
-//                p->grad_size = grad_size;
-//                p->n_workers = tensor->job->num_workers_allocated;
-//                p->job_id = tensor->job->id;
-//                p->tensor = tensor;
-                break;
-            case 1: // ToR to worker
-//                myprintf("");
-                break;
-            case 2: // switch to switch upward
-//                myprintf("[%llu] switch %d sent packet upward, ver %d slot %d offset %d upward %d grad_size %llu n_workers %d job_id %d \n", now, from_id, ver, slot, offset, upward, grad_size, n_workers, job_id);
-
-                break;
-            case 3: // switch to switch downward
-//                myprintf("");
-                break;
-            default:
-                return;
-        }
-    }
+//    void print_info(unsigned type, SIM_UNIT now, unsigned to_id) {
+//        auto &from_id = id;
+//        switch (type) {
+//            case 0: // worker to ToR
+////                myprintf("[%llu] worker %d sent packet to ToR, ver %d slot %d offset %d upward %d grad_size %llu n_workers %d job_id %d \n", now, from_id, ver, slot, offset, upward, grad_size, n_workers, job_id);
+////                p->id = id;
+////                p->ver = ver;
+////                p->slot = slot;
+////                p->offset = start;
+////                p->upward = true;
+////                p->grad_size = grad_size;
+////                p->n_workers = tensor->job->num_workers_allocated;
+////                p->job_id = tensor->job->id;
+////                p->tensor = tensor;
+//                break;
+//            case 1: // ToR to worker
+////                myprintf("");
+//                break;
+//            case 2: // switch to switch upward
+////                myprintf("[%llu] switch %d sent packet upward, ver %d slot %d offset %d upward %d grad_size %llu n_workers %d job_id %d \n", now, from_id, ver, slot, offset, upward, grad_size, n_workers, job_id);
+//
+//                break;
+//            case 3: // switch to switch downward
+////                myprintf("");
+//                break;
+//            default:
+//                return;
+//        }
+//    }
 
 protected:
     simtime_picosec _ts;

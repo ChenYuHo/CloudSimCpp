@@ -4,8 +4,6 @@
 #include <iostream>
 #include "main.h"
 #include "queue.h"
-#include "worker.h"
-#include "switch.h"
 
 template<typename T>
 string toa(T n) {
@@ -170,6 +168,7 @@ const Route *HierarchicalTopology::get_tor_to_worker_path(int src, int dest) {
     return route_out;
 }
 
+// unused
 vector<const Route *> *HierarchicalTopology::get_paths(int src, int dest) {
     auto *paths = new vector<const Route *>();
 
@@ -400,6 +399,34 @@ const Route *HierarchicalTopology::get_switch_single_hop_route(unsigned src, uns
         check_non_null(route_out);
     }
     return route_out;
+}
+
+HierarchicalTopology::~HierarchicalTopology() {
+    for (int j = 0; j < 1; j++) {
+        for (int k = 0; k < K; k++) {
+            delete queues_core_tor[j][k];
+            delete pipes_core_tor[j][k];
+        }
+    }
+
+    for (int j = 0; j < K; j++) {
+        for (int k = 0; k < 1; k++) {
+            delete queues_tor_core[j][k];
+            delete pipes_tor_core[j][k];
+        }
+    }
+
+    for (int j = 0; j < K; j++) {
+        for (int k = 0; k < K * (K - 1); k++) {
+            delete queues_tor_worker[j][k];
+            delete pipes_tor_worker[j][k];
+            delete queues_worker_tor[k][j];
+            delete pipes_worker_tor[k][j];
+        }
+    }
+
+//    delete logfile;
+//    delete eventlist;
 }
 
 //void HierarchicalTopology::register_switch(Switch *s) {

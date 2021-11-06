@@ -54,6 +54,10 @@ void Cluster::init_topo() {
 
 void Cluster::doNextEvent() {}
 
+Cluster::~Cluster() {
+//    delete _topo;
+}
+
 //#include "cluster.h"
 //#include "topology/hierarchical_topology.h"
 //

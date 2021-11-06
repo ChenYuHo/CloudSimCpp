@@ -22,6 +22,8 @@ public:
         init_topo();
     };
 
+    ~Cluster();
+
     void init_topo();
 
     void add_job(const std::shared_ptr<Job> &job) {

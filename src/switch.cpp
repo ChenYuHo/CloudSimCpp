@@ -138,7 +138,7 @@ void Switch::receivePacket(Packet &pkt) {
                     unicast_pkt->slot = p->slot;
                     unicast_pkt->grad_size = p->grad_size;
                     unicast_pkt->set_ts(eventlist().now());
-                    unicast_pkt->print_info(1, eventlist().now(), 1);
+//                    unicast_pkt->print_info(1, eventlist().now(), 1);
 //                    print_route(*route);
 //                    cout<<"switch unicast:"<<p->cnt<<endl;
 //                    unicast_pkt->cnt = p->cnt;
@@ -146,7 +146,6 @@ void Switch::receivePacket(Packet &pkt) {
 
                 }
             }
-            p->free();
         }
     } else {
         // received from upper level switch
@@ -155,7 +154,7 @@ void Switch::receivePacket(Packet &pkt) {
         // multicast
         multicast_downward(p);
     }
-
+    p->free();
 
 //    if (pkt_counter.find(p->job_id) == pkt_counter.end())
 //        pkt_counter[p->job_id] = 0;

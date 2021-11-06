@@ -38,6 +38,8 @@ public:
 
     HierarchicalTopology(Cluster *, int no_of_nodes, mem_b queuesize, Logfile *log, EventList *ev);
 
+    ~HierarchicalTopology() override;
+
     void init_network();
 
     vector<const Route *> *get_paths(int src, int dest) override;

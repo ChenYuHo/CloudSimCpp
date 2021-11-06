@@ -15,4 +15,9 @@ Route::add_endpoints(PacketSink *src, PacketSink* dst) {
     }
 }
 
-
+Route::~Route() {
+//    delete _reverse;
+//    for (auto &packet_sink: _sinklist) {
+//        delete packet_sink;
+//    }
+}
