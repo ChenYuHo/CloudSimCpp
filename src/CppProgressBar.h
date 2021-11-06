@@ -12,7 +12,7 @@ private:
     int preWinSize_;
     int nowWinSize_;
     std::string progress_bar_;
-    std::string empty_line_;
+    std::string empty_line_{std::string(140, ' ') + "\r"};
     size_t percentage_;
     float oneHundledth_;
     std::string progress_line_;
@@ -25,7 +25,7 @@ public:
         return loop_counter_;
     }
     inline void cntIncrement() {
-        loop_counter_ ++;
+        loop_counter_++;
     }
     void init_variable(size_t loop_number);
     void update_variable();
@@ -38,7 +38,7 @@ public:
                 progress_bar_[j] = '=';
             }
         }
-        std::clog << "100% \[" << progress_bar_ << ']' << std::endl;
+        std::clog << "100% [" << progress_bar_ << ']' << std::endl;
     };
 //    template <typename T> inline void stdout_in_for_progress (T& e);
     inline void stdout_in_for_progress (std::string& e) {
