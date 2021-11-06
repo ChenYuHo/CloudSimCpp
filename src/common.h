@@ -15,23 +15,29 @@
 #define HOST_NIC 100000 // host nic speed in Mbps
 #define SWITCH_BUFFER 100000000 // in bytes, per queue (port)
 #define SWITCH_PORTS 8
-#define GPUS_PER_NODE 1
-#define PRINT_MASK 0b00000000000000000000000000000011
-// 0
-// 1 worker.cpp lock for tensors
+#define GPUS_PER_NODE 2
+#define PRINT_MASK 0b00000000000000000000000000000100
+// 1
+// 2 worker.cpp lock for tensors
+// 4 forward backward allreduce timestamp
+// 8 packet tracing
 typedef uint64_t simtime_picosec;
 typedef simtime_picosec SIM_UNIT;
 const static uint32_t RTT = 1; // us
+const static int SWITCHML_PKT_SIZE = DEFAULTDATASIZE;
 const static unsigned CHUNK_SIZE = 262144;
-const static unsigned NUM_SLOTS=512; // pool size
-const static unsigned NUM_UPDATES=256; // elements per packet
-const static int SWITCHML_PKT_SIZE=DEFAULTDATASIZE;
+//const static unsigned NUM_SLOTS=512; // pool size
+//const static unsigned NUM_UPDATES = (SWITCHML_PKT_SIZE - (8 + 14 + 20 + 8 + 6 + 4 + 12)) / 4;
+const static unsigned NUM_SLOTS = 5; // pool size
+const static unsigned NUM_UPDATES = 10;// (SWITCHML_PKT_SIZE - (8 + 14 + 20 + 8 + 6 + 4 + 12)) / 4;
 
 extern CppProgressBar cpb;
 
-int myprintf(const char*, ...);
-int myprintf(uint32_t, const char*, ...);
-int myprintf(const char*, va_list, int);
+int myprintf(const char *, ...);
+
+int myprintf(uint32_t, const char *, ...);
+
+int myprintf(const char *, va_list, int);
 
 
 class Worker;
@@ -66,33 +72,36 @@ public:
     uint64_t allreduced_size{0};
     Worker *machine;
     std::shared_ptr<Job> job;
-    unsigned chunk_id{0};
     unsigned iter{0};
-    resource<SIM_UNIT> lock;
+    // lock is specific to tensor, however switch doesn't know how to retrive tensor
+//    resource<SIM_UNIT> lock;
+//    resource<SIM_UNIT> allreduce_lock;
     uint64_t tensor_id;
-    std::set<unsigned> received_pkts{};
+//    std::vector<std::set<unsigned>> received_pkts{2*NUM_SLOTS};
+    std::set<unsigned> received_pkts;
     unsigned num_pkts_expected{0};
     uint64_t forward_pass_time{};
     uint64_t backward_pass_time{};
+    SIM_UNIT allreduce_start{};
 
     Tensor(uint64_t size, Worker *machine, std::shared_ptr<Job> job,
            simcpp20::simulation<SIM_UNIT> &sim) :
             size(size), machine(machine), job(std::move(job)),
-            tensor_id(get_id()), lock(resource(sim, 1)) {
+            tensor_id(get_id()) {
 //        myprintf("Tensor %lu constructor invoked\n", tensor_id);
     }
 
     Tensor(uint64_t id, uint64_t size, Worker *machine, std::shared_ptr<Job> job,
            simcpp20::simulation<SIM_UNIT> &sim) :
             size(size), machine(machine), job(std::move(job)),
-            tensor_id(id), lock(resource(sim, 1)) {
+            tensor_id(id) {
 //        myprintf("Tensor %lu constructor invoked\n", id);
     }
 
     Tensor(uint64_t id, uint64_t f, uint64_t b, uint64_t size, Worker *machine, std::shared_ptr<Job> job,
            simcpp20::simulation<SIM_UNIT> &sim) :
             size(size), forward_pass_time(f), backward_pass_time{b}, machine(machine), job(std::move(job)),
-            tensor_id(id), lock(resource(sim, 1)) {
+            tensor_id(id) {
 //        myprintf("Tensor %lu constructor invoked\n", id);
     }
 
