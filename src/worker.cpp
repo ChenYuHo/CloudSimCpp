@@ -299,10 +299,13 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
     myprintf("[allreduce] iter %d jid %d mid %d tid %d size %d start %llu duration %llu end %llu\n",
              tensor->iter - 1, tensor->job->id, id, tensor->tensor_id, grad_size, allreduce_start[key],
              end - allreduce_start[key], end);
-    if (id == tensor->job->master_mid && tensor->allreduced_size == tensor->size) {
-//        myprintf("incrementing cpb from %d\n", id);
-        cpb.cntIncrement();
-    }
     locks_allreduce[key]->release();
-    locks_fp[key]->release();
+    if (tensor->allreduced_size == tensor->size) {
+        locks_fp[key]->release();
+        if (id == tensor->job->master_mid) {
+//        myprintf("incrementing cpb from %d\n", id);
+            cpb.cntIncrement();
+        }
+    }
+
 }
