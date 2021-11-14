@@ -1,7 +1,6 @@
 .idea/
 cmake-build-*
 HeliosData/
-src/collective_scheduling/bytescheduler.cpp
-src/collective_scheduling/bytescheduler.h
-src/job_placement/yarn.cpp
-src/job_placement/yarn.h
+.clion*
+.ipynb_checkpoints/
+env/
