@@ -27,6 +27,7 @@ public:
     inline void cntIncrement() {
         loop_counter_++;
     }
+    CppProgressBar() noexcept = default;
     void init_variable(size_t loop_number);
     void update_variable();
     inline void display_progress_bar() {

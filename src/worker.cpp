@@ -10,12 +10,6 @@
 #include "topology/hierarchical_topology.h"
 #include "packet.h"
 
-//simcpp20::event<SIM_UNIT> a(simcpp20::simulation<SIM_UNIT> &sim, Job *job){
-//    for (unsigned iter = 0; iter < job->n_iter; ++iter) {
-//        co_await forward_pass(tensors);
-//        co_await backward_pass(tensors);
-//    }
-//}
 
 simcpp20::event<SIM_UNIT>
 Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus_required, CollectiveScheduler *cs) {
