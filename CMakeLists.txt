@@ -96,7 +96,11 @@ add_library(htsim ${HTSIM_SRCS})
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-add_executable(CloudSimCpp main.cpp ${SRCS})
+## for profiling
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -fno-omit-frame-pointer")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer")
+
+#add_executable(CloudSimCpp main.cpp ${SRCS})
 add_executable(SwitchML switchml_main.cpp ${SRCS})
-target_link_libraries(CloudSimCpp PUBLIC htsim fschuetz04::simcpp20 Threads::Threads)
-target_link_libraries(SwitchML PUBLIC htsim fschuetz04::simcpp20 Threads::Threads)
+#target_link_libraries(CloudSimCpp PUBLIC htsim fschuetz04::simcpp20)
+target_link_libraries(SwitchML PUBLIC htsim fschuetz04::simcpp20)

@@ -7,6 +7,8 @@
 #include "network.h"
 #include <tuple>
 #include <set>
+#include <string>
+#include <unordered_map>
 
 class Worker;
 
@@ -27,6 +29,9 @@ public:
     unsigned id;
     std::vector<Worker*> machines;
     Cluster *cluster;
+    Switch *upper_level_switch;
+    std::vector<Switch*> lower_level_switches;
+    std::unordered_map<unsigned, bool> clean_upper_level_switch_for_job{};
 //    std::deque<pkt> buffer;
 //    std::unordered_map<unsigned, unsigned> pkt_counter;
 //    std::unordered_map<std::string, std::shared_ptr<counter<SIM_UNIT>>> counter_map;
@@ -40,28 +45,32 @@ public:
     std::unordered_map<unsigned, bool> top_level_for_job{}; // JID, top_level
     // set when placement is determined, via topology, erase when job is done
 
-    constexpr unsigned str2int(const char *str, int h = 0) {
-        return !str[h] ? 5381 : (str2int(str, h + 1) * 33) ^ str[h];
+    static std::size_t hash(unsigned tid, unsigned iter, unsigned ver, unsigned slot, unsigned cid) {
+        return std::hash<std::string>{}(std::to_string(tid) + "-"
+                                        + std::to_string(iter) + "-"
+                                        + std::to_string(ver) + "-"
+                                        + std::to_string(slot) + "-"
+                                        + std::to_string(cid));
     }
 
-    unsigned hash(unsigned jid, unsigned tid, unsigned iter, unsigned ver, unsigned slot) {
-        char str[50];
-        sprintf(str, "%da%da%da%da%d", jid, tid, iter, ver, slot);
-        return str2int(str);
-    }
 
+    std::unordered_map<unsigned, std::unordered_map<size_t, unsigned>> count_for_job{}; // jid, hash
+    // p.ver, p.slot_idx, jid, tid, cid, iter
+    std::unordered_map<unsigned, std::unordered_map<size_t, std::set<unsigned>>> seen_for_job{};
 
-    std::unordered_map<unsigned, unsigned> count{};
-    std::unordered_map<unsigned, std::set<unsigned>> seen{};
-//    std::vector<std::unordered_map<unsigned, unsigned>> count{std::unordered_map<unsigned, unsigned>{},
-//                                                              std::unordered_map<unsigned, unsigned>{}};
-//    std::vector<std::unordered_map<unsigned, std::set<unsigned>>> received_pkts{std::unordered_map<unsigned, std::set<unsigned>>{},
-//                                                                                std::unordered_map<unsigned, std::set<unsigned>>{}};
-
-    explicit Switch(EventList &ev, Cluster *cluster) :
+    explicit Switch(EventList &ev, Cluster *cluster, Switch *upper_level_switch) :
             EventSource(ev, "Switch"),
             cluster(cluster),
+            upper_level_switch(upper_level_switch),
             id(get_id()) {
+//        myprintf("Switch %d constructor invoked\n", id);
+    }
+
+    explicit Switch(unsigned id, EventList &ev, Cluster *cluster, Switch *upper_level_switch) :
+            EventSource(ev, "Switch"),
+            cluster(cluster),
+            upper_level_switch(upper_level_switch),
+            id(id) {
 //        myprintf("Switch %d constructor invoked\n", id);
     }
 

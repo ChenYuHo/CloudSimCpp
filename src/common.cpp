@@ -1,12 +1,16 @@
 #include "common.h"
 #include <string>
 #include "CppProgressBar.h"
-
+#include "job.h"
 
 CppProgressBar cpb;
 
-simtime_picosec pkt_transfer_time(uint64_t pkt_size) {
-    return pkt_size/*num elements*/* 320; // 100Gbps
+uint64_t get_key(uint64_t job_id, uint64_t tensor_id){
+    return job_id * 1000000 + tensor_id;
+}
+
+uint64_t get_key(Tensor *tensor) {
+    return tensor->job->id * 1000000 + tensor->tensor_id;
 }
 
 int myprintf(const char* format, ...) {
@@ -40,4 +44,22 @@ int myprintf(uint32_t type, const char* format, ...) {
         va_end(args);
         return r;
     } else return 0;
+}
+
+Tensor::Tensor(uint64_t size, Worker *machine, Job *job, simcpp20::simulation<SIM_UNIT> &sim)
+        : size(size), machine(machine), job(job), tensor_id(get_id()) {
+    key = get_key(job->id, tensor_id);
+}
+
+Tensor::Tensor(uint64_t id, uint64_t size, Worker *machine, Job *job,
+               simcpp20::simulation<SIM_UNIT> &sim)
+        : size(size), machine(machine), job(job), tensor_id(id) {
+    key = get_key(job->id, tensor_id);
+}
+
+Tensor::Tensor(uint64_t id, uint64_t f, uint64_t b, uint64_t size, Worker *machine, Job *job,
+               simcpp20::simulation<SIM_UNIT> &sim)
+        : size(size), forward_pass_time(f), backward_pass_time{b}, machine(machine), job(job),
+          tensor_id(id) {
+    key = get_key(job->id, tensor_id);
 }

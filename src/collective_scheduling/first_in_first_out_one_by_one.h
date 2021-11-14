@@ -12,16 +12,12 @@ class FirstInFirstOutOneByOne : public CollectiveScheduler {
 public:
     FirstInFirstOutOneByOne(simcpp20::simulation<SIM_UNIT> &sim, Cluster &cluster)
             : CollectiveScheduler(sim, cluster) {};
-    std::unordered_map<std::pair<unsigned, unsigned>, std::deque<std::shared_ptr<Tensor>>, pair_hash> queue;
-    std::queue<std::deque<std::shared_ptr<Tensor>>> ready_queue;
-
-    simcpp20::event<SIM_UNIT> enqueue(simcpp20::simulation<SIM_UNIT> &sim, std::shared_ptr<Tensor> tensor) override;
 
     simcpp20::event<SIM_UNIT> collective_scheduler(simcpp20::simulation<SIM_UNIT> &sim, Cluster &cluster) override;
 
 //    simcpp20::event<SIM_UNIT> run_scheduler_once(simcpp20::simulation<SIM_UNIT> &sim, Cluster &cluster);
 
-    resource<SIM_UNIT> lock{sim, 1};
+    resource<SIM_UNIT> lock{_sim, 1};
 };
 
 

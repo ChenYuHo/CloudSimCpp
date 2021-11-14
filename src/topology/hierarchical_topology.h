@@ -20,7 +20,7 @@ class Cluster;
 
 class HierarchicalTopology : public Topology {
 public:
-    shared_ptr<Switch> core_switch{};
+    unique_ptr<Switch> core_switch{};
     vector<Switch*> tor_switches{};
     vector<Worker*> _workers{};
     vector<vector<Pipe *> > pipes_core_tor{};
@@ -36,11 +36,11 @@ public:
     Logfile *logfile;
     EventList *eventlist;
 
-    HierarchicalTopology(Cluster *, int no_of_nodes, mem_b queuesize, Logfile *log, EventList *ev);
+    HierarchicalTopology(Cluster *, int no_of_nodes, mem_b queuesize, Logfile *log, EventList *ev, unsigned);
 
     ~HierarchicalTopology() override;
 
-    void init_network();
+    void init_network(unsigned);
 
     vector<const Route *> *get_paths(int src, int dest) override;
 

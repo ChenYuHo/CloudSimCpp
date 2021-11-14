@@ -14,13 +14,13 @@ string toa(T n) {
 
 HierarchicalTopology::HierarchicalTopology(Cluster *c, int switch_ports,
                                            mem_b queuesize, Logfile *lg,
-                                           EventList *ev)
+                                           EventList *ev, unsigned gpus_per_node)
         : cluster(c) {
     _queuesize = queuesize;
     logfile = lg;
     eventlist = ev;
     set_params(switch_ports);
-    init_network();
+    init_network(gpus_per_node);
 }
 
 void HierarchicalTopology::set_params(int switch_ports) {
@@ -55,7 +55,7 @@ Queue *HierarchicalTopology::alloc_queue(QueueLogger *queueLogger, uint64_t spee
                            *eventlist, queueLogger, memFromPkt(RANDOM_BUFFER));
 }
 
-void HierarchicalTopology::init_network() {
+void HierarchicalTopology::init_network(unsigned gpus_per_node) {
     for (int j = 0; j < 1; j++)
         for (int k = 0; k < K; k++) {
             queues_core_tor[j][k] = nullptr;
@@ -77,16 +77,17 @@ void HierarchicalTopology::init_network() {
         }
 
     // instantiate workers and switches
+    core_switch = make_unique<Switch>(K, *eventlist, cluster, nullptr);
+    core_switch->layer = 1;
     for (int j = 0; j < K; j++) {
-        tor_switches[j] = new Switch(*eventlist, cluster);
+        tor_switches[j] = new Switch(j, *eventlist, cluster, core_switch.get());
 //        printf("%p\n", tor_switches[j]);
         for (int k = 0; k < K - 1; k++) {
-            _workers[k + j * (K - 1)] = new Worker(*eventlist, cluster, tor_switches[j]);
+            _workers[k + j * (K - 1)] = new Worker(*eventlist, cluster, tor_switches[j], gpus_per_node);
             tor_switches[j]->machines.push_back(_workers[k + j * (K - 1)]);
         }
     }
-    core_switch = make_shared<Switch>(*eventlist, cluster);
-    core_switch->layer = 1;
+
 
     // links from ToR switch to worker
     for (int j = 0; j < K; j++) {
@@ -335,8 +336,14 @@ void HierarchicalTopology::print_path(std::ofstream &paths, int src, const Route
 void HierarchicalTopology::set_switch_num_updates(
         unsigned int job_id, map<unsigned int, unsigned int> run_config) {
     std::set<unsigned> involved_tors{};
+    unordered_map<unsigned, bool> cleaner_worker_set{};
     for (const auto &pair : run_config) {
         auto tor_id = HOST_ToR_SWITCH(pair.first);
+        if (!cleaner_worker_set[tor_id]) {
+            cleaner_worker_set[tor_id] = true;
+            // this worker is responsible for cleaning the switch after job completes
+            _workers[pair.first]->clean_ToR_for_job[job_id] = true;
+        }
         involved_tors.insert(tor_id);
         auto &map = tor_switches[tor_id]->num_updates_for_job;
         auto &map_ids = tor_switches[tor_id]->downward_ids_for_job;
@@ -355,7 +362,12 @@ void HierarchicalTopology::set_switch_num_updates(
     if (involved_tors.size() > 1) {
         // need to involve the core switch
         core_switch->top_level_for_job[job_id] = true;
+        bool cleaner_set = false;
         for (auto& tor_id: involved_tors) {
+            if (!cleaner_set){
+                cleaner_set = true;
+                tor_switches[tor_id]->clean_upper_level_switch_for_job[job_id] = true;
+            }
             tor_switches[tor_id]->top_level_for_job[job_id] = false;
         }
         core_switch->num_updates_for_job[job_id] = involved_tors.size();

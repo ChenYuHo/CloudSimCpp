@@ -55,7 +55,7 @@ public:
     unsigned slot{};
     unsigned ver{};
     unsigned offset{};
-    shared_ptr<Tensor> tensor{};
+    Tensor* tensor{};
 
 //    void print_info(unsigned type, SIM_UNIT now, unsigned to_id) {
 //        auto &from_id = id;
