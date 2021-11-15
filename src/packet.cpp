@@ -6,5 +6,5 @@
 PacketDB<SwitchMLPacket> SwitchMLPacket::_packetdb;
 
 SwitchMLPacket::~SwitchMLPacket() {
-    delete _route;
+//    delete _route;
 }

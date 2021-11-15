@@ -21,7 +21,8 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
             if (run_config.empty()) {
                 myprintf("[%llu]\tplacement failed for task %d requiring %d GPUs\n", sim.now(), job->id, job->gpu);
             } else {
-                myprintf("[%llu]\tjob %d placement: ", sim.now(), job->id);
+//                std::string str = "[" + std::to_string(sim.now()) + "]\tjob "+std::to_string(job->id)+" placement: ";
+                auto str = string_format("[%llu]\tjob %d placement: ", sim.now(), job->id);
                 job->num_workers_allocated = run_config.size();
                 // multiple GPUs in one machine count as 1, assumming local reduce/broadcast is implicitly handled
                 job->master_mid = run_config.begin()->first;
@@ -31,12 +32,18 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                 cluster.check_if_all_jobs_started();
                 unsigned rank = 0;
                 for (const auto &pair: run_config) {
-                    myprintf("mid %d rank %u -> %d gpu ", pair.first, rank, pair.second);
+                    str += string_format("mid %d rank %u -> %d gpu, ", pair.first, rank, pair.second);
+//                    myprintf("mid %d rank %u -> %d gpu ", pair.first, rank, pair.second);
                     cluster.worker_map[pair.first]->rank_for_job[job->id] = rank;
                     cluster.worker_map[pair.first]->execute_job(sim, job, pair.second, cs);
                     ++rank;
                 }
-                myprintf("\n");
+                if (!run_config.empty()) {
+                    str.pop_back();
+                    str.pop_back();
+                }
+                str += "\n";
+                myprintf(str);
                 sim.timeout(0);
                 continue;
             }

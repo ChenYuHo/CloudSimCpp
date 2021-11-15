@@ -103,4 +103,5 @@ find_package(Threads REQUIRED)
 #add_executable(CloudSimCpp main.cpp ${SRCS})
 add_executable(SwitchML switchml_main.cpp ${SRCS})
 #target_link_libraries(CloudSimCpp PUBLIC htsim fschuetz04::simcpp20)
-target_link_libraries(SwitchML PUBLIC htsim fschuetz04::simcpp20)
+# Threads::Threads for csvio
+target_link_libraries(SwitchML PUBLIC htsim fschuetz04::simcpp20 Threads::Threads)

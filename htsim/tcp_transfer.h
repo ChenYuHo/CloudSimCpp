@@ -8,7 +8,6 @@
 #include <list>
 #include <vector>
 #include <sstream>
-#include <strstream>
 #include <iostream>
 #include "config.h"
 #include "network.h"

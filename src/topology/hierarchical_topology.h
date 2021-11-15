@@ -84,6 +84,8 @@ private:
     mem_b _queuesize;
 
     Queue *alloc_queue(QueueLogger *queueLogger, uint64_t speed) const;
+
+    std::unordered_map<std::string, Route*> routes{};
 };
 
 #endif

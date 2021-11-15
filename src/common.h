@@ -6,8 +6,11 @@
 #include <memory>
 #include <utility>
 #include <set>
+#include <string>
+#include <stdexcept>
 #include "resource.hpp"
 #include "CppProgressBar.h"
+
 
 typedef uint64_t simtime_picosec;
 typedef simtime_picosec SIM_UNIT;
@@ -24,6 +27,8 @@ extern const uint32_t& NUM_SLOTS; // pool size
 extern const uint32_t& NUM_UPDATES;
 
 extern CppProgressBar cpb;
+
+int myprintf(std::string , ...);
 
 int myprintf(const char *, ...);
 
@@ -71,5 +76,15 @@ uint64_t get_key(uint64_t job_id, uint64_t tensor_id);
 uint64_t get_key(Tensor*);
 
 std::string getenv(const std::string& variable_name, const std::string& default_value) noexcept;
+
+template<typename ... Args>
+std::string string_format( const std::string& format, Args ... args){
+    int size_s = std::snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
+    if( size_s <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
+    auto size = static_cast<size_t>( size_s );
+    auto buf = std::make_unique<char[]>( size );
+    std::snprintf( buf.get(), size, format.c_str(), args ... );
+    return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
+}
 
 #endif //CLOUDSIMCPP_COMMON_H

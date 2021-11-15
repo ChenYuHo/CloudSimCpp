@@ -32,13 +32,13 @@ namespace {
         RTT_impl = std::stoul(getenv("RTT_us", "1"));
         CHUNK_SIZE_impl = std::stoul(getenv("CHUNK_SIZE", "262144"));
         NUM_SLOTS_impl = std::stoul(getenv("NUM_SLOTS", "512"));
-        PRINT_MASK_impl = std::stoul(getenv("PRINT_MASK", "4"));
+        PRINT_MASK_impl = std::stoul(getenv("PRINT_MASK", std::to_string(1<<4|1<<7)));
         NUM_UPDATES_impl = (DEFAULTDATASIZE_impl - (8 + 14 + 20 + 8 + 6 + 4 + 12)) / 4;
-        printf("variables:\nMTU %u\nNIC_Gbps %u\nSWITCH_BUFFER_BYTES %u\n"
+        printf("variables:\nMTU %u\nNIC_Gbps %lu\nSWITCH_BUFFER_BYTES %u\n"
                "SWITCH_PORTS %u\nGPUS_PER_NODE %u\nRTT_us %u\nCHUNK_SIZE %u\n"
-               "NUM_SLOTS %u\nNUM_UPDATES %u\n", DEFAULTDATASIZE_impl, gbps,
+               "NUM_SLOTS %u\nNUM_UPDATES %u\nPRINT_MASK %u\n", DEFAULTDATASIZE_impl, gbps,
                SWITCH_BUFFER_impl, SWITCH_PORTS_impl, GPUS_PER_NODE_impl, RTT_impl,
-               CHUNK_SIZE_impl, NUM_SLOTS_impl, NUM_UPDATES_impl);
+               CHUNK_SIZE_impl, NUM_SLOTS_impl, NUM_UPDATES_impl, PRINT_MASK_impl);
         return true;
     }
 
@@ -56,6 +56,7 @@ const uint32_t &PRINT_MASK = PRINT_MASK_impl;
 // 1
 // 2 worker.cpp lock for tensors
 // 4 forward backward allreduce timestamp
+// 7 collective scheduler logs
 // 8 packet tracing
 const uint32_t &SWITCHML_PKT_SIZE = DEFAULTDATASIZE;
 const uint32_t &NUM_UPDATES = NUM_UPDATES_impl;
@@ -67,6 +68,19 @@ uint64_t get_key(uint64_t job_id, uint64_t tensor_id) {
 
 uint64_t get_key(Tensor *tensor) {
     return tensor->job->id * 1000000 + tensor->tensor_id;
+}
+
+int myprintf(std::string format, ...) {
+    va_list args;
+    va_start(args, format);
+    auto size = std::vsnprintf(nullptr, 0, format.c_str(), args);
+    std::string s(size + 1, '\0');
+    va_start(args, format);
+    auto r = std::vsprintf(&s[0], format.c_str(), args);
+    cpb.update_variable();
+    cpb.stdout_in_for_progress(s);
+    va_end(args);
+    return r;
 }
 
 int myprintf(const char* format, ...) {
@@ -91,7 +105,7 @@ int myprintf(const char* format, va_list args, int size) {
 }
 
 int myprintf(uint32_t type, const char* format, ...) {
-    if (type & PRINT_MASK) {
+    if ((1<<type) & PRINT_MASK) {
         va_list args;
         va_start(args, format);
         auto size = std::vsnprintf(nullptr, 0, format, args);

@@ -56,7 +56,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
             myprintf(4, "[backward] iter %d jid %d mid %d rank %u tid %d size %d start %llu duration %llu end %llu\n",
                      iter, job->id, id, rank, tensor->tensor_id, tensor->size, backward_begin, bptime, sim.now());
             if (job->num_workers_allocated > 1) {
-                if (cs != nullptr) {
+                if (cs) {
                     cs->enqueue(sim, tensor);
                 } else {
                     myprintf(2, "L67 mid %u rank %u tid %u jid %u calling allreduce\n", id, rank, tensor->tensor_id,
@@ -84,15 +84,19 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
     }
     tensors.clear();
 
-    // clean Switch status
-    if (clean_ToR_for_job[job->id] && tor) {
-        tor->count_for_job.erase(job->id);
-        tor->seen_for_job.erase(job->id);
-        if (tor->clean_upper_level_switch_for_job[job->id] && tor->upper_level_switch) {
-            tor->upper_level_switch->count_for_job.erase(job->id);
-            tor->upper_level_switch->seen_for_job.erase(job->id);
-        }
-    }
+    // job is done! clean a bit...
+    // clean collective scheduler
+    if (cs) cs->cleanup_for_job(job->id);
+
+//    // clean Switch status
+//    if (clean_ToR_for_job[job->id] && tor) {
+//        tor->count_for_job.erase(job->id);
+//        tor->seen_for_job.erase(job->id);
+//        if (tor->clean_upper_level_switch_for_job[job->id] && tor->upper_level_switch) {
+//            tor->upper_level_switch->count_for_job.erase(job->id);
+//            tor->upper_level_switch->seen_for_job.erase(job->id);
+//        }
+//    }
 
     gpu += gpus_required;
     myprintf(4, "[%lu]\tmachine %d finishes job %d and has %d gpu now\n", sim.now(), id, job->id, gpu);
@@ -124,6 +128,7 @@ void Worker::receivePacket(Packet &pkt) {
         // can't erase if loss recovery is enabled
         set.clear();
         allreduce_locks[p->tensor->key]->release();
+        received_pkts.erase(p->tensor->key);
         p->free();
         return;
     }
@@ -141,7 +146,7 @@ void Worker::sendPacket(unsigned start, unsigned ver,
                         unsigned slot, unsigned grad_size,
                         Tensor *tensor) {
     auto topo = cluster->_topo;
-    const Route *route = topo->get_worker_to_tor_path(id);
+    auto route = topo->get_worker_to_tor_path(id);
     auto p = SwitchMLPacket::newpkt(*route);
 //    p->set_packet_size(SWITCHML_PKT_SIZE);
     p->id = id;
@@ -210,6 +215,15 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
         if (rank == 0) {
             myprintf(8, "incrementing cpb from %d\n", id);
             cpb.cntIncrement();
+        }
+        // clean Switch status
+        if (clean_ToR_for_job[tensor->job->id] && tor) {
+            tor->count_for_tensor_key.erase(tensor->key);
+            tor->seen_for_tensor_key.erase(tensor->key);
+            if (tor->clean_upper_level_switch_for_job[tensor->job->id] && tor->upper_level_switch) {
+                tor->upper_level_switch->count_for_tensor_key.erase(tensor->key);
+                tor->upper_level_switch->seen_for_tensor_key.erase(tensor->key);
+            }
         }
     } else {
         tensor->chunk_id++;

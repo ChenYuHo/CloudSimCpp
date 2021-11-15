@@ -33,6 +33,7 @@ int main() {
     const char *value = getenv("JOB_CSV");
     // "../HeliosData/data/60_job.csv"
     if (value) {
+        printf("using job file %s\n", value);
         io::CSVReader<5> in(value);
         in.read_header(io::ignore_extra_column, "num_gpu", "duration", "submit_time", "iterations", "model");
         int num_gpu;
@@ -44,6 +45,7 @@ int main() {
             jobs.push_back(new Job(timeFromSec(submit_time), sim, "alexnet", iterations, num_gpu));
         }
     } else {
+        printf("using hard coded jobs\n");
         jobs.push_back(new Job(0, sim, "alexnet", 5, 2));
         jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440,2621440,2621440}, 5, 2));
     }
@@ -62,9 +64,31 @@ int main() {
     FirstComeFirstServed f = FirstComeFirstServed();
     scheduling_algo = &f;
 
-//    CollectiveScheduler *cs = nullptr;//new FirstInFirstOutOneByOne(sim, cluster);
-    CollectiveScheduler *cs = new ReadyAndGo(sim, cluster);
-//    CollectiveScheduler *cs = new FirstInFirstOutOneByOne(sim, cluster);
+    CollectiveScheduler *cs = nullptr;
+    const char *cs_type = getenv("CS");
+    // "../HeliosData/data/60_job.csv"
+    if (cs_type) {
+        auto type = std::strtol(cs_type, nullptr, 10);
+        switch(type) {
+            case 1:
+                cs = new ByteScheduler(sim, cluster);
+                printf("scheduler: ByteScheduler\n");
+                break;
+            case 2:
+                cs = new FirstInFirstOutOneByOne(sim, cluster);
+                printf("scheduler: FirstInFirstOutOneByOne\n");
+                break;
+            case 3:
+                cs = new ReadyAndGo(sim, cluster);
+                printf("scheduler: ReadyAndGo\n");
+                break;
+            default:
+                printf("scheduler: None\n");
+        }
+    } else printf("scheduler: None\n");
+////    CollectiveScheduler *cs = nullptr;//new FirstInFirstOutOneByOne(sim, cluster);
+////    CollectiveScheduler *cs = new ReadyAndGo(sim, cluster);
+////    CollectiveScheduler *cs = new FirstInFirstOutOneByOne(sim, cluster);
 //    CollectiveScheduler *cs = new ByteScheduler(sim, cluster);
     if (cs) cs->collective_scheduler(sim, cluster);
 

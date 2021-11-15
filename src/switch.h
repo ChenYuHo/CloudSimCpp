@@ -45,18 +45,9 @@ public:
     std::unordered_map<unsigned, bool> top_level_for_job{}; // JID, top_level
     // set when placement is determined, via topology, erase when job is done
 
-    static std::size_t hash(unsigned tid, unsigned iter, unsigned ver, unsigned slot, unsigned cid) {
-        return std::hash<std::string>{}(std::to_string(tid) + "-"
-                                        + std::to_string(iter) + "-"
-                                        + std::to_string(ver) + "-"
-                                        + std::to_string(slot) + "-"
-                                        + std::to_string(cid));
-    }
-
-
-    std::unordered_map<unsigned, std::unordered_map<size_t, unsigned>> count_for_job{}; // jid, hash
+    std::unordered_map<unsigned, std::unordered_map<std::string, unsigned>> count_for_tensor_key{}; // jid, hash
     // p.ver, p.slot_idx, jid, tid, cid, iter
-    std::unordered_map<unsigned, std::unordered_map<size_t, std::set<unsigned>>> seen_for_job{};
+    std::unordered_map<unsigned, std::unordered_map<std::string, std::set<unsigned>>> seen_for_tensor_key{};
 
     explicit Switch(EventList &ev, Cluster *cluster, Switch *upper_level_switch) :
             EventSource(ev, "Switch"),
@@ -83,14 +74,6 @@ public:
         static string example = "switch";
         return example;
     };
-
-//    int running_jobs() {
-//        int n = 0;
-//        for (const std::shared_ptr<Worker>& m: machines)
-//            n += m->running_jobs();
-//        return n;
-//    }
-//    simcpp20::event<SIM_UNIT> send_receive(simcpp20::simulation<SIM_UNIT> &, uint64_t, std::string, unsigned, unsigned);
 };
 
 

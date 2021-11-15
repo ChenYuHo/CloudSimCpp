@@ -144,16 +144,17 @@ void check_non_null(Route *rt) {
 }
 
 const Route *HierarchicalTopology::get_worker_to_tor_path(unsigned src) {
-    route_t *route_out;
     auto dest = HOST_ToR_SWITCH(src);
-//    if (HOST_ToR_SWITCH(src) == dest) {
-    route_out = new Route();
+    auto key = "ws"+std::to_string(src)+"d"+std::to_string(dest);
+    if (routes.contains(key)) {
+        return routes[key];
+    }
+    auto route_out = new Route();
     route_out->push_back(queues_worker_tor[src][dest]);
     route_out->push_back(pipes_worker_tor[src][dest]);
     route_out->push_back(tor_switches[dest]);
     check_non_null(route_out);
-//    }
-//    myprintf("%d, %d, %p\n", HOST_ToR_SWITCH(src), dest, tor_switches[dest].get());
+    routes[key] = route_out;
     return route_out;
 }
 
@@ -353,11 +354,13 @@ void HierarchicalTopology::set_switch_num_updates(
         for (const auto &p: map) {
             myprintf("ToR %d Jid %d num_updates %d\n", tor_id, job_id, map[job_id]);
         }
-        myprintf("ToR %d Jid %d downward: ", tor_id, job_id);
+
+        auto str = string_format("ToR %d Jid %d downward: ", tor_id, job_id);
         for (const auto &p: map_ids[job_id]) {
-            myprintf("%d ", p);
+            str += string_format("%d ", p);
         }
-        myprintf("\n");
+        str += "\n";
+        myprintf(str);
     }
     if (involved_tors.size() > 1) {
         // need to involve the core switch
@@ -373,11 +376,12 @@ void HierarchicalTopology::set_switch_num_updates(
         core_switch->num_updates_for_job[job_id] = involved_tors.size();
         core_switch->downward_ids_for_job[job_id].merge(involved_tors);
         myprintf("core Jid %d num_updates %lu\n", job_id, core_switch->num_updates_for_job[job_id]);
-        myprintf("core Jid %d downward: ", job_id);
+        auto str = string_format("core Jid %d downward: ", job_id);
         for (const auto &p: core_switch->downward_ids_for_job[job_id]) {
-            myprintf("%d ", p);
+            str += string_format("%d ", p);
         }
-        myprintf("\n");
+        str += "\n";
+        myprintf(str);
     } else {
         // need to involve the core switch
         core_switch->top_level_for_job[job_id] = false;
@@ -391,26 +395,47 @@ const Route *HierarchicalTopology::get_switch_single_hop_route(unsigned src, uns
                                                                unsigned dest, bool upward) {
     // valid layer: 0, 1
     assert(layer == 1 || layer == 0);
-    auto route_out = new Route();
+//    auto route_out = new Route();
     if (layer == 1) { // from core to ToRs
         src = 0;
+        auto key = "s"+std::to_string(src)+"d"+std::to_string(dest)+"l1u0";
+        if (routes.contains(key)) {
+            return routes[key];
+        }
+        auto route_out = new Route();
         route_out->push_back(queues_core_tor[src][dest]);
         route_out->push_back(pipes_core_tor[src][dest]);
         route_out->push_back(tor_switches[dest]);
         check_non_null(route_out);
+        routes[key] = route_out;
+        return route_out;
     } else if (upward) { // from ToR to core
         dest = 0;
+        auto key = "s"+std::to_string(src)+"d"+std::to_string(dest)+"l0u1";
+        if (routes.contains(key)) {
+            return routes[key];
+        }
+        auto route_out = new Route();
         route_out->push_back(queues_tor_core[src][dest]);
         route_out->push_back(pipes_tor_core[src][dest]);
         route_out->push_back(core_switch.get());
         check_non_null(route_out);
+        routes[key] = route_out;
+        return route_out;
     } else { // from ToR to workers
+        auto key = "s"+std::to_string(src)+"d"+std::to_string(dest)+"l0u0";
+        if (routes.contains(key)) {
+            return routes[key];
+        }
+        auto route_out = new Route();
         route_out->push_back(queues_tor_worker[src][dest]);
         route_out->push_back(pipes_tor_worker[src][dest]);
         route_out->push_back(_workers[dest]);
         check_non_null(route_out);
+        routes[key] = route_out;
+        return route_out;
     }
-    return route_out;
+
 }
 
 HierarchicalTopology::~HierarchicalTopology() {
@@ -445,6 +470,10 @@ HierarchicalTopology::~HierarchicalTopology() {
         }
     }
 
+    for (const auto& pair: routes) {
+        delete pair.second;
+    }
+    routes.clear();
 //    delete logfile;
 //    delete eventlist;
 }
