@@ -23,7 +23,7 @@ simcpp20::event<SIM_UNIT> ByteScheduler::kick_off(simcpp20::simulation<SIM_UNIT>
     auto &pq = ready_queue[jid];
     while (active_jobs.contains(jid)) {
         if (pq.empty()) {
-            co_await sim.timeout(timeFromMs(1));
+            co_await sim.timeout(timeFromUs(5u));
             continue;
         }
         auto tensors = pq.top();

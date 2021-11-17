@@ -1,7 +1,3 @@
-//
-// Created by Chen-Yu Ho on 10/12/21.
-//
-
 #ifndef CLOUDSIMCPP_BYTESCHEDULER_H
 #define CLOUDSIMCPP_BYTESCHEDULER_H
 

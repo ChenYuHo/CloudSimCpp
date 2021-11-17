@@ -78,13 +78,25 @@ uint64_t get_key(Tensor*);
 std::string getenv(const std::string& variable_name, const std::string& default_value) noexcept;
 
 template<typename ... Args>
-std::string string_format( const std::string& format, Args ... args){
-    int size_s = std::snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
-    if( size_s <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
+std::string string_format(const std::string &format, Args ... args) {
+    int size_s = std::snprintf(nullptr, 0, format.c_str(), args ...) + 1; // Extra space for '\0'
+    if (size_s <= 0) { throw std::runtime_error("Error during formatting."); }
     auto size = static_cast<size_t>( size_s );
-    auto buf = std::make_unique<char[]>( size );
-    std::snprintf( buf.get(), size, format.c_str(), args ... );
-    return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
+    auto buf = std::make_unique<char[]>(size);
+    std::snprintf(buf.get(), size, format.c_str(), args ...);
+    return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
+}
+
+typedef std::uint64_t hash_t;
+constexpr hash_t prime = 0x100000001B3ull;
+constexpr hash_t basis = 0xCBF29CE484222325ull;
+
+constexpr hash_t hash_compile_time(char const *str, hash_t last_value = basis) {
+    return *str ? hash_compile_time(str + 1, (*str ^ last_value) * prime) : last_value;
+}
+
+constexpr unsigned long long operator "" _hash(char const *p, size_t) {
+    return hash_compile_time(p);
 }
 
 #endif //CLOUDSIMCPP_COMMON_H

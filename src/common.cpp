@@ -34,7 +34,7 @@ namespace {
         NUM_SLOTS_impl = std::stoul(getenv("NUM_SLOTS", "512"));
         PRINT_MASK_impl = std::stoul(getenv("PRINT_MASK", std::to_string(1<<4|1<<7)));
         NUM_UPDATES_impl = (DEFAULTDATASIZE_impl - (8 + 14 + 20 + 8 + 6 + 4 + 12)) / 4;
-        printf("variables:\nMTU %u\nNIC_Gbps %lu\nSWITCH_BUFFER_BYTES %u\n"
+        printf("MTU %u\nNIC_Gbps %lu\nSWITCH_BUFFER_BYTES %u\n"
                "SWITCH_PORTS %u\nGPUS_PER_NODE %u\nRTT_us %u\nCHUNK_SIZE %u\n"
                "NUM_SLOTS %u\nNUM_UPDATES %u\nPRINT_MASK %u\n", DEFAULTDATASIZE_impl, gbps,
                SWITCH_BUFFER_impl, SWITCH_PORTS_impl, GPUS_PER_NODE_impl, RTT_impl,
