@@ -65,7 +65,9 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
                 }
             } else {
                 fp_locks[tensor->key]->release();
-//                myprintf(4, "[%u,%u]<stdout>:SYNTHETIC ITERATION END PROFILE %llu\n", job->id, rank, sim.now());
+                if (tensor->tensor_id == 0) { // mark iteration end
+                    myprintf(4, "[%u,%u]<stdout>:SYNTHETIC ITERATION END PROFILE %llu\n", job->id, rank, sim.now());
+                }
                 myprintf(2, "L72 mid %u rank %u tid %u jid %u released lock\n", id, rank, tensor->tensor_id, job->id);
                 if (rank_for_job[tensor->job->id] == 0) {
                     myprintf(2, "L75 mid %u rank %u tid %u jid %u incrementing progress\n",
@@ -204,6 +206,12 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
     myprintf(4, "[allreduce] iter %d jid %d mid %d rank %u tid %d size %d start %llu duration %llu end %llu\n",
              tensor->iter, tensor->job->id, id, rank, tensor->tensor_id, grad_size, tensor->allreduce_start,
              end - tensor->allreduce_start, end);
+    allreduce_counter[tensor->iter % 2]++;
+    if (allreduce_counter[tensor->iter % 2] == tensor->job->model.size()) {
+        allreduce_counter[1 - tensor->iter % 2] = 0;
+        myprintf(4, "[%u,%u]<stdout>:SYNTHETIC ITERATION END PROFILE %llu\n",
+                 tensor->job->id, rank, sim.now());
+    }
     allreduce_locks[tensor->key]->release();
     if (tensor->allreduced_size >= tensor->size) {
         myprintf(8, "RANK %u mid %u tid %u jid %u\n", rank, id, tensor->tensor_id, tensor->job->id);

@@ -44,70 +44,10 @@ simcpp20::event<SIM_UNIT> ByteScheduler::kick_off(simcpp20::simulation<SIM_UNIT>
     }
 }
 
-//simcpp20::event<SIM_UNIT> ByteScheduler::run_scheduler_once(simcpp20::simulation<SIM_UNIT> &sim) {
-//    if (!ready_queue.empty()) {
-////        for (auto &it: ready_queue) {
-////        auto pq = it.second;
-////        if (!pq.empty()) {
-////            auto job_id = it.first;
-////                myprintf("job %d has something!!\n", job_id);
-////                running_allreduce[job_id] = true;
-//        const static auto chunk_size = CHUNK_SIZE;
-//
-////        if (!running_allreduce.contains(job_id) || !running_allreduce[job_id]) {
-//        // allreduce a chunk
-//        auto &tensors = ready_queue.top();
-//        auto job_id = tensors.front()->job->id;
-//        std::vector<simcpp20::event<SIM_UNIT>> allreduce_events;
-//        uint64_t allreduce_size;
-//        myprintf("jid %u tid %u, %u\n", job_id, tensors.front()->tensor_id, running_allreduce[job_id]);
-////        running_allreduce[job_id] = true;
-//        for (auto &tensor: tensors) {
-//            allreduce_events.push_back(tensor->machine->allreduce(sim, tensor, chunk_size));
-//        }
-//        auto &t = tensors.front();
-////        auto *running = &running_allreduce[job_id];
-//        auto ev = sim.all_of(allreduce_events);
-//        ev.add_callback([&t, this](const auto &) {
-////            *running = false;
-//            if (t->allreduced_size >= t->size) {
-//                myprintf("allreduce done!!\n");
-////                ready_queue.pop();
-//            }
-//        });
-////        }
-////        }
-////        }
-//    }
-//    co_await sim.timeout(0);
-//}
-
-//simcpp20::event<SIM_UNIT> allreduce_one_chunk_from(
-//        simcpp20::simulation<SIM_UNIT> &sim,
-//        std::priority_queue<std::vector<Tensor *>> &pq) {
-//
-//}
-//
-//void notify_job(unsigned job_id) {
-//
-//}
-
-
 simcpp20::event<SIM_UNIT> ByteScheduler::collective_scheduler(
         simcpp20::simulation<SIM_UNIT> &sim,
         Cluster &cluster) {
-//    while (!cluster.all_jobs_finished) {
-//        for (auto &pair : ready_queue) {
-//            auto jid = pair.first;
-//            auto &pq = pair.second;
-//            if (pq.empty()) continue;
-//            auto &tensors = pq.top();
-//
-//
-//        }
-//        run_scheduler_once(sim);
     co_await sim.timeout(timeFromSec(1));
-//    }
 }
 
 void ByteScheduler::cleanup_for_job(unsigned jid) {

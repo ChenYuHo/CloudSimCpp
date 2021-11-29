@@ -72,6 +72,7 @@ public:
     std::unordered_map<uint64_t, resource<SIM_UNIT> *> fp_locks{};
     std::unordered_map<uint64_t, resource<SIM_UNIT> *> allreduce_locks{};
     std::unordered_map<unsigned, std::set<unsigned>> received_pkts{};
+    unsigned allreduce_counter[2]{0, 0};
 };
 
 #endif //CLOUDSIMCPP_WORKER_H

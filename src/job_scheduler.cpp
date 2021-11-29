@@ -18,6 +18,7 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
             myprintf("[%llu]\tjob %d which requires %d gpus is chosen\n", sim.now(), job->id, job->gpu);
             auto run_config = cluster.placement->place_job_in(cluster, job);
             if (run_config.empty()) {
+                // TODO: check if stuck
                 myprintf("[%llu]\tplacement failed for task %d requiring %d GPUs\n", sim.now(), job->id, job->gpu);
             } else {
                 auto str = string_format("[%llu]\tjob %d placement: ", sim.now(), job->id);

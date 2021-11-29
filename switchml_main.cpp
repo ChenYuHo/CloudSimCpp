@@ -20,6 +20,7 @@
 #include "collective_scheduling/first_in_first_out_one_by_one.h"
 #include "collective_scheduling/ready_and_go.h"
 #include "collective_scheduling/bytescheduler.h"
+#include "collective_scheduling/deficit_round_robin.h"
 
 #include "cluster.h"
 #include "job.h"
@@ -39,14 +40,21 @@ int main() {
     if (value) {
         printf("JOB_CSV %s\n", value);
         io::CSVReader<5> in(value);
-        in.read_header(io::ignore_extra_column, "num_gpu", "duration", "submit_time", "iterations", "model");
-        int num_gpu;
+        in.read_header(io::ignore_missing_column, "num_gpu", "duration", "submit_time", "iterations", "model");
+        unsigned num_gpu;
         simtime_picosec duration;
         simtime_picosec submit_time;
-        unsigned iterations;
-        std::string model;
-        while(in.read_row(num_gpu, duration, submit_time, iterations, model)){
-            jobs.push_back(new Job(timeFromSec(double(submit_time)), sim, "alexnet", iterations, num_gpu));
+        unsigned iterations = 0;
+        std::string model = "alexnet";
+        unsigned counter = 0;
+        while (in.read_row(num_gpu, duration, submit_time, iterations, model)) {
+//            auto iters = duration * 1000 / 32;
+//            if (counter < 16) {
+//                counter++;
+//            } else break;
+            jobs.push_back(
+                    new Job(timeFromMs(int(submit_time * 10)), sim, "alexnet", iterations > 9 ? iterations / 10 : 1,
+                            num_gpu));
         }
     } else {
         printf("JOB_CSV SYNTHETIC\n");
