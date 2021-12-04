@@ -84,6 +84,7 @@ list(APPEND SRCS
         "src/job_scheduling/first_come_first_served.cpp"
         "src/job_scheduling/fit_first.cpp"
         "src/collective_scheduling/first_in_first_out_one_by_one.cpp"
+        "src/collective_scheduling/deficit_round_robin.cpp"
         "src/collective_scheduling/ready_and_go.cpp"
         "src/collective_scheduling/bytescheduler.cpp"
         )

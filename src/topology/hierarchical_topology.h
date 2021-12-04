@@ -86,6 +86,8 @@ private:
     Queue *alloc_queue(QueueLogger *queueLogger, uint64_t speed) const;
 
     std::unordered_map<std::string, Route*> routes{};
+
+    bool accommodate(const std::set<unsigned>&, const std::set<unsigned>&) override;
 };
 
 #endif // CLOUDSIMCPP_HIERARCHICAL_TOPOLOGY_H

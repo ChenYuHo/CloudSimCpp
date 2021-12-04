@@ -26,6 +26,8 @@ public:
 
     virtual const Route *get_worker_to_tor_path(unsigned) = 0;
     virtual const Route * get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) = 0;
+
+    virtual bool accommodate(const std::set<unsigned>&, const std::set<unsigned>&) {return false;};
 };
 
 #endif

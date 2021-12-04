@@ -88,6 +88,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
 
     // job is done! clean a bit...
     // clean collective scheduler
+    co_await sim.timeout(0);
     if (cs) cs->cleanup_for_job(job->id);
 
 //    // clean Switch status

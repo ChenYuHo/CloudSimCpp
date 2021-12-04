@@ -24,6 +24,9 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
             } else {
                 auto str = string_format("[%llu]\tjob %d placement: ", sim.now(), job->id);
                 job->num_workers_allocated = run_config.size();
+                for (auto const& it: run_config) {
+                    job->wids_allocated.insert(it.first);
+                }
                 // multiple GPUs in one machine count as 1, assumming local reduce/broadcast is implicitly handled
                 job->master_mid = run_config.begin()->first;
                 // sets num_updates_for_job and downward_ids_for_job

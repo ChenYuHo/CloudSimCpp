@@ -2,6 +2,7 @@
 #include <vector>
 #include <memory>
 #include <iostream>
+#include <algorithm>
 #include "main.h"
 #include "queue.h"
 
@@ -436,6 +437,28 @@ const Route *HierarchicalTopology::get_switch_single_hop_route(unsigned src, uns
         return route_out;
     }
 
+}
+
+bool HierarchicalTopology::accommodate(const std::set<unsigned> &these, const std::set<unsigned> &those) {
+    std::set<unsigned> tors_these;
+    for (auto wid: these) tors_these.insert(HOST_ToR_SWITCH(wid));
+    if (tors_these.size() == 1) { // don't need core
+        tors_these.clear();
+    }
+    std::set<unsigned> tors_those;
+    for (auto wid: those) {
+        if (these.contains(wid))
+            return false;
+        tors_those.insert(HOST_ToR_SWITCH(wid));
+    }
+    if (tors_those.size() == 1) { // don't need core
+        tors_those.clear();
+    }
+    if (ranges::any_of(tors_those.cbegin(), tors_those.cend(),
+                       [&tors_these](unsigned tor_id) { return tors_these.contains(tor_id); })) {
+        return false;
+    }
+    return true;
 }
 
 HierarchicalTopology::~HierarchicalTopology() {

@@ -9,122 +9,99 @@ DeficitRoundRobin::enqueue(simcpp20::simulation<SIM_UNIT> &sim, Tensor *tensor) 
     if (queue[tensor->key].size() == tensor->job->num_workers_allocated) {
         myprintf(7, "putting jid %u tid %u size %u into ready queue\n", tensor->job->id, tensor->tensor_id,
                  tensor->size);
-        ready_queue[tensor->job->id].push(std::move(queue[tensor->key]));
+        ready_pqueues[tensor->job->id].push(std::move(queue[tensor->key]));
         queue.erase(tensor->key);
-        if (!active_jobs.contains(tensor->job->id)) { //  && !done_jobs.contain(tensor->job->id)
-            active_jobs.insert(tensor->job->id);
-            kick_off(sim, tensor->job->id);
+        if (!loop_is_running) {
+            collective_scheduler(sim, cluster);
+            loop_is_running = true;
         }
     }
     co_await sim.timeout(0);
 }
 
-simcpp20::event<SIM_UNIT> DeficitRoundRobin::kick_off(simcpp20::simulation<SIM_UNIT> &sim, unsigned jid) {
-    auto &pq = ready_queue[jid];
-    while (active_jobs.contains(jid)) {
-        if (pq.empty()) {
-            co_await sim.timeout(timeFromUs(5u));
-            continue;
-        }
-        auto tensors = pq.top();
-        auto front = tensors.front();
-        if (front->allreduced_size + CHUNK_SIZE >= front->size) {
-            myprintf(7, "popping jid %u tid %u\n",
-                     jid, front->tensor_id);
-            pq.pop();
-        }
-        std::vector<simcpp20::event<SIM_UNIT>> allreduce_events{};
-        myprintf(7, "invoking allreduce for jid %u tid %u iter %u cid %u/%u\n",
-                 jid, front->tensor_id, front->iter, front->allreduced_size / CHUNK_SIZE,
-                 front->size % CHUNK_SIZE ? front->size / CHUNK_SIZE +1 : front->size / CHUNK_SIZE);
-        for (auto tensor:tensors) {
-            allreduce_events.push_back(std::move(tensor->machine->allreduce(sim, tensor, CHUNK_SIZE)));
-        }
-        co_await sim.all_of(allreduce_events);
-    }
-}
-
 simcpp20::event<SIM_UNIT> DeficitRoundRobin::collective_scheduler(
         simcpp20::simulation<SIM_UNIT> &sim,
         Cluster &cluster) {
-    while (!cluster.all_jobs_finished) {
-        //            printf("scanning through queue\n");
-        for (auto &entry: ready_queue) {
-            auto job_id = entry.first;
-            auto &pqueue = entry.second; // priority queue
-            auto drr = quantums[job_id];
-            drr += quantum;
-            while (!pqueue.empty()) {
-                printf("job %d drr %f\n", job_id, drr);
-                auto tensors = pqueue.top();
-                auto q = compute_quantum(tensors.front());
-                //                    double q = 1.;
-                if (drr >= q) {
-                    drr -= q;
-                    std::vector<simcpp20::event<SIM_UNIT>> allreduce_events;
-                    uint64_t allreduce_size;
-                    for (auto &tensor: tensors) {
-                        if (tensor->size - tensor->allreduced_size > chunk_size) {
-                            allreduce_size = chunk_size;
-                        } else {
-                            allreduce_size = tensor->size % chunk_size;
-                        }
-                        allreduce_events.push_back(
-                                tensor->machine->allreduce(sim, allreduce_size,
-                                                           std::to_string(tensor->tensor_id) + "," +
-                                                           std::to_string(tensor->chunk_id), tensor->job));
-                        tensor->allreduced_size += allreduce_size;
-                        tensor->chunk_id++;
-                    }
-                    auto begin = sim.now();
-                    co_await sim.all_of(allreduce_events);
-                    auto end = sim.now();
-                    for (auto &tensor : tensors) {
-                        if (PRINT) {
-                            printf("[allreduce] iter %d jid %d mid %d tid %d size %lu start %llu duration %llu end %llu cid %d\n",
-                                   tensor->iter, tensor->job->id, tensor->machine->id, tensor->tensor_id,
-                                   allreduce_size, begin, end - begin, end, tensor->chunk_id);
-                        }
-                    }
-                    printf("=== allreduced %lu %lu\n", tensors.front()->allreduced_size, tensors.front()->size);
-                    if (tensors.front()->allreduced_size >= tensors.front()->size) {
-                        for (auto &tensor : tensors) {
-                            tensor->iter++;
-                            tensor->lock.release();
-                        }
-                        tensors.clear();
-                        pqueue.pop();
-                    }
-                    //                        unsigned count = 0;
-
-                    //                        for (auto &p : pqueue) { // check all worker enqueued
-                    //                            if (p.tid == pkt.tid && p.cid == pkt.cid) count++;
-                    //                            if (count == pkt.job->num_workers_allocated) break;
-                    //                        }
-                    //                        if (count == pkt.job->num_workers_allocated) {
-                    //                            for (auto it = pqueue.begin(); it != pqueue.end();) {
-                    //                                auto &p = *it;
-                    //                                if (p.tid == pkt.tid && p.cid == pkt.cid) {
-                    //                                    printf("[%llu]\tinvoking allreduce within cs s%llu t%d c%d j%d m%d\n", sim.now(),
-                    //                                           p.size, p.tid, p.cid, p.job->id, p.machine->id);
-                    //                                    allreduce_events.push_back(p.machine->allreduce(sim, p.size, p.tid, p.cid, p.job));
-                    //                                    it = pqueue.erase(it);
-                    //                                } else {
-                    //                                    ++it;
-                    //                                }
-                    //                            }
-                    //                        }
-                    //                        co_await sim.all_of(allreduce_events);
-                    //                        pkt.machine->allreduce(sim, pkt.size, pkt.tid, pkt.job);
-                    //                        pqueue.pop_front();
-                } else break;
+    std::unordered_map<unsigned, unsigned> quantums;
+    while (!ready_pqueues.empty()) {
+        for (auto it = ready_pqueues.begin(); it != ready_pqueues.end(); ++it) {
+            auto jid = it->first;
+            auto &pq = it->second;
+            if (pq.empty()) {
+                ready_pqueues.erase(it);
+                continue;
             }
+//            printf("2 %lu\n", pq.size());
+            auto &tensors = pq.top();
+//            printf("3 %zu\n", tensors.size());
+            auto &front = tensors.front();
+//            printf("4\n");
+            std::set<unsigned> involved_wids{front->job->wids_allocated};
+//            printf("5\n");
+            std::set<unsigned> involved_jids{jid};
+//            printf("6\n");
+            while (true) { // work conservation
+//                printf("7\n");
+                unsigned current_min_quantum = 0xffffffff;
+                auto selected_idx = it;
+//                printf("8\n");
+                std::set<unsigned> &selected_wids = front->job->wids_allocated;
+//                printf("9\n");
+                for (auto j = ready_pqueues.begin(); j != ready_pqueues.end(); ++j) {
+                    auto job_id = j->first;
+//                    printf("10\n");
+                    if (involved_jids.contains(job_id) || ready_pqueues[job_id].empty()) continue;
+//                    printf("11 %lu\n", ready_pqueues[job_id].size());
+                    auto additional_tensors = ready_pqueues[job_id].top();
+//                    printf("12 %u\n", quantums[job_id]);
+                    if (cluster._topo->accommodate(involved_wids, additional_tensors.front()->job->wids_allocated) &&
+                        quantums[job_id] < current_min_quantum) {
+//                        printf("13\n");
+                        current_min_quantum = quantums[job_id];
+//                        printf("14\n");
+                        selected_idx = j;
+//                        printf("15\n");
+                        selected_wids = additional_tensors.front()->job->wids_allocated;
+                    }
+//                    printf("16\n");
+                }
+                if (selected_idx == it) {
+//                    printf("20\n");
+                    break; // nothing can be added
+                }
+//                printf("17\n");
+                involved_jids.insert(selected_idx->first);
+//                printf("18\n");
+                for (auto wid: selected_wids) involved_wids.insert(wid);
+//                printf("19\n");
+            }
+            std::vector<simcpp20::event<SIM_UNIT>> allreduce_events{};
+            for (auto job_id: involved_jids) {
+                auto all_tensors = ready_pqueues[job_id].top();
+                auto front_tensor = ready_pqueues[job_id].top().front();
+                quantums[job_id] += 1;
+                myprintf(7, "invoking allreduce for job_id %u tid %u iter %u cid %u/%u\n", job_id, front_tensor->tensor_id,
+                         front_tensor->iter, front_tensor->allreduced_size / CHUNK_SIZE + 1,
+                         front_tensor->size % CHUNK_SIZE ? front_tensor->size / CHUNK_SIZE + 1 : front_tensor->size /
+                                                                                                 CHUNK_SIZE);
+                if (front_tensor->allreduced_size + CHUNK_SIZE >= front_tensor->size) {
+                    myprintf(7, "popping job_id %u tid %u\n", job_id, front_tensor->tensor_id);
+                    ready_pqueues[job_id].pop();
+                }
+                for (auto tensor:all_tensors) {
+                    allreduce_events.push_back(std::move(tensor->machine->allreduce(sim, tensor, CHUNK_SIZE)));
+                }
+            }
+            co_await sim.all_of(allreduce_events);
         }
-        co_await sim.timeout(1e6);
     }
+//    printf("dddssssdd\n");
+    co_await sim.timeout(0);
+    loop_is_running = false;
 }
 
 void DeficitRoundRobin::cleanup_for_job(unsigned jid) {
-    active_jobs.erase(jid);
-    ready_queue.erase(jid);
+//    myprintf("clean invoked\n");
+//    while(!ready_queue[jid].empty()) ready_queue[jid].pop();
+    ready_pqueues.erase(jid);
 }
