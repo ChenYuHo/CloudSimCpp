@@ -18,6 +18,7 @@ public:
     virtual simcpp20::event<SIM_UNIT> collective_scheduler(
             simcpp20::simulation<SIM_UNIT> &, Cluster &) = 0;
 
+    // will be called after each job finishes
     virtual void cleanup_for_job(unsigned){};
 
 protected:

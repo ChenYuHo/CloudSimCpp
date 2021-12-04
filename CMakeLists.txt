@@ -79,6 +79,7 @@ list(APPEND SRCS
         "src/worker.cpp"
         "src/collective_scheduler.cpp"
         "src/job_placement/random.cpp"
+        "src/job_placement/custom.cpp"
         "src/job_placement/yarn.cpp"
         "src/job_scheduling/first_come_first_served.cpp"
         "src/job_scheduling/fit_first.cpp"

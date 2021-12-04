@@ -13,6 +13,7 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                   SchedulingAlgo *s,
                   CollectiveScheduler *cs) {
     while (!cluster.all_jobs_started) {
+        co_await sim.timeout(timeFromSec(0));
         auto job = s->choose_job_to_execute_in(cluster);
         if (job != nullptr) {
             myprintf("[%llu]\tjob %d which requires %d gpus is chosen\n", sim.now(), job->id, job->gpu);

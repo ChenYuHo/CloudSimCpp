@@ -16,6 +16,7 @@
 #include "job_scheduling/first_come_first_served.h"
 #include "job_scheduling/fit_first.h"
 #include "job_placement/random.h"
+#include "job_placement/custom.h"
 #include "job_placement/yarn.h"
 #include "collective_scheduling/first_in_first_out_one_by_one.h"
 #include "collective_scheduling/ready_and_go.h"
@@ -58,8 +59,10 @@ int main() {
         }
     } else {
         printf("JOB_CSV SYNTHETIC\n");
-        jobs.push_back(new Job(0, sim, "alexnet", 5, 2));
-        jobs.push_back(new Job(0, sim, "alexnet", 5, 2));
+//        jobs.push_back(new Job(0, sim, "alexnet", 5, 2));
+//        jobs.push_back(new Job(0, sim, "alexnet", 5, 2));
+        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 2));
+        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 2));
     }
 
     unsigned cnt = 0;
@@ -83,6 +86,10 @@ int main() {
         case "yarn_random"_hash:
             placement_algo = new YARNPlacement(seed, true);
             printf("PLACEMENT YARNPlacementWithFallbackToRandom\n");
+            break;
+        case "custom"_hash:
+            placement_algo = new CustomPlacement();
+            printf("PLACEMENT CustomPlacement\n");
             break;
         case "yarn"_hash:
         default:

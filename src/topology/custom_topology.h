@@ -1,5 +1,5 @@
-#ifndef CLOUDSIMCPP_HIERARCHICAL_TOPOLOGY_H
-#define CLOUDSIMCPP_HIERARCHICAL_TOPOLOGY_H
+#ifndef CLOUDSIMCPP_CUSTOM_TOPOLOGY_H
+#define CLOUDSIMCPP_CUSTOM_TOPOLOGY_H
 
 #include "main.h"
 #include "randomqueue.h"
@@ -18,7 +18,7 @@
 
 class Cluster;
 
-class HierarchicalTopology : public Topology {
+class CustomTopology : public Topology {
 public:
     unique_ptr<Switch> core_switch{};
     vector<Switch*> tor_switches{};
@@ -36,9 +36,9 @@ public:
     Logfile *logfile;
     EventList *eventlist;
 
-    HierarchicalTopology(Cluster *, int no_of_nodes, mem_b queuesize, Logfile *log, EventList *ev, unsigned);
+    CustomTopology(Cluster *, int no_of_nodes, mem_b queuesize, Logfile *log, EventList *ev, unsigned);
 
-    ~HierarchicalTopology() override;
+    ~CustomTopology() override;
 
     void init_network(unsigned);
 
@@ -88,4 +88,4 @@ private:
     std::unordered_map<std::string, Route*> routes{};
 };
 
-#endif // CLOUDSIMCPP_HIERARCHICAL_TOPOLOGY_H
+#endif // CLOUDSIMCPP_CUSTOM_TOPOLOGY_H
