@@ -17,7 +17,6 @@ public:
 
 private:
     std::unordered_map<uint64_t, std::deque<Tensor *>> queue{};
-    std::queue<std::deque<Tensor *>> ready_queue{};
 };
 
 #endif //CLOUDSIMCPP_FIRST_IN_FIRST_OUT_ONE_BY_ONE_H
