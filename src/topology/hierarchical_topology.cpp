@@ -367,13 +367,16 @@ void HierarchicalTopology::set_switch_num_updates(
         // need to involve the core switch
         core_switch->top_level_for_job[job_id] = true;
         bool cleaner_set = false;
+        std::string tors;
         for (auto& tor_id: involved_tors) {
+            tors += ","+std::to_string(tor_id);
             if (!cleaner_set){
                 cleaner_set = true;
                 tor_switches[tor_id]->clean_upper_level_switch_for_job[job_id] = true;
             }
             tor_switches[tor_id]->top_level_for_job[job_id] = false;
         }
+        myprintf("Job %u spans across multiple ToR switches: %s\n", job_id, tors.substr(1).c_str());
         core_switch->num_updates_for_job[job_id] = involved_tors.size();
         core_switch->downward_ids_for_job[job_id].merge(involved_tors);
         myprintf("core Jid %d num_updates %lu\n", job_id, core_switch->num_updates_for_job[job_id]);
@@ -384,11 +387,13 @@ void HierarchicalTopology::set_switch_num_updates(
         str += "\n";
         myprintf(str);
     } else {
-        // need to involve the core switch
         core_switch->top_level_for_job[job_id] = false;
+        std::string tor;
         for (auto& tor_id: involved_tors) {
+            tor+=std::to_string(tor_id);
             tor_switches[tor_id]->top_level_for_job[job_id] = true;
         }
+        myprintf("Job %u spans within ToR switch %s\n", job_id, tor.c_str());
     }
 }
 
