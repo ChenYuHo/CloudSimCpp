@@ -3,7 +3,6 @@
 #include <ranges>
 #include <sstream>
 #include <cstdint>
-#include <algorithm>
 #include <cctype>
 #include <string>
 
@@ -29,46 +28,8 @@
 
 typedef simtime_picosec SIM_UNIT;
 
-//std::map<int, int> v{};
-//simcpp20::event<SIM_UNIT> test1(simcpp20::simulation<SIM_UNIT> &sim) {
-//    v[4]=4;
-//    v[3]=3;
-//    v[2]=2;
-//    v[1]=1;
-//    printf("11\n");
-//    for (unsigned i=0;i<2;i++) {
-//        printf("ppppp\n");
-//        for (auto i=v.begin(); i!=v.end(); ++i) {
-////        for (unsigned j=0;j<v.size();++j) {
-//            printf("vv %d %d %u\n", i->first, i->second, v.size());
-//            co_await sim.timeout(0);
-//        }
-//    }
-//    co_await sim.timeout(0);
-//    printf("12\n");
-//}
-
-//simcpp20::event<SIM_UNIT> test2(simcpp20::simulation<SIM_UNIT> &sim) {
-//    printf("21\n");
-//    co_await sim.timeout(0);
-//    v[5]=5;
-//    co_await sim.timeout(0);
-//    v.erase(3);
-//    printf("22\n");
-//}
-
-
 int main(int argc, char *argv[]) {
-    for (int i = 0; i < argc; ++i) {
-        printf("%s ", argv[i]);
-    }
-    printf("\n");
-
     simcpp20::simulation<SIM_UNIT> sim;
-//    test1(sim);
-//    test2(sim);
-//    sim.run();
-//    return 0;
     auto event_list = EventList(sim);
     auto cluster = Cluster(event_list, SWITCH_PORTS, SWITCH_BUFFER, GPUS_PER_NODE);
 
@@ -76,8 +37,12 @@ int main(int argc, char *argv[]) {
     const char *value = getenv("JOB_CSV");
     // "../HeliosData/data/60_job.csv"
     if (value) {
-        double shrink_factor = std::stod(getenv("SHRINK", "1"));
-        // shrink num of iterations and inter-arrival time by shrink_factor
+        double shrink_iter_factor = std::stod(getenv("SHRINKITER", "1"));
+        if (shrink_iter_factor != 1.) printf("SHRINKITER %f\n", shrink_iter_factor);
+        double shrink_arrival_factor = std::stod(getenv("SHRINKARRIVAL", "1"));
+        if (shrink_arrival_factor != 1.) printf("SHRINKARRIVAL %f\n", shrink_arrival_factor);
+        unsigned gpu_scale_factor = std::stol(getenv("JOB_GPU_SCALE", "1"));
+        if (gpu_scale_factor != 1) printf("JOB_GPU_SCALE %u\n", gpu_scale_factor);
 
         printf("JOB_CSV %s\n", value);
         io::CSVReader<5> in(value);
@@ -88,29 +53,24 @@ int main(int argc, char *argv[]) {
         unsigned iterations = 0;
         std::string model = "vgg19";
         unsigned counter = 0;
-//        double last_submit_time = 0; // in miniseconds
         unsigned max_jobs = std::stol(getenv("MAX_JOBS", "4294967295"));
+        if (max_jobs != 4294967295) printf("MAX_JOBS %u\n", max_jobs);
 
         while (in.read_row(num_gpu, duration, submit_time, iterations, model)) {
-//            auto iters = duration * 1000 / 32;
             if (counter < max_jobs) {
                 counter++;
             } else break;
-            // in miniseconds
-//            double arrival_time = last_submit_time + (submit_time * 1000. - last_submit_time) / shrink_factor;
-            auto iters = unsigned(iterations / shrink_factor);
+            auto iters = unsigned(iterations / shrink_iter_factor);
             if (iters == 0) iters = 1;
-            jobs.push_back(new Job(timeFromSec(submit_time/shrink_factor), sim, "vgg19", iters, num_gpu));
-//            jobs.push_back(new Job(timeFromMs(arrival_time), sim, "vgg19", iters, num_gpu));
-//                    new Job(timeFromSec(int(submit_time)), sim, "vgg19", iterations, num_gpu);
-//            last_submit_time = arrival_time;
+            jobs.push_back(new Job(timeFromSec(submit_time / shrink_arrival_factor), sim, "vgg19", iters,
+                                   num_gpu * gpu_scale_factor));
         }
     } else {
         printf("JOB_CSV SYNTHETIC\n");
 //        jobs.push_back(new Job(0, sim, "alexnet", 5, 2));
 //        jobs.push_back(new Job(0, sim, "alexnet", 5, 2));
-        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 2));
-        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 2));
+        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 8));
+        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 8));
     }
 
     unsigned cnt = 0;

@@ -14,13 +14,19 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                   CollectiveScheduler *cs) {
     while (!cluster.all_jobs_started) {
         co_await sim.timeout(timeFromSec(0));
+        static unsigned choose_job_fail = 0;
+        static unsigned job_placement_fail = 0;
         auto job = s->choose_job_to_execute_in(cluster);
         if (job != nullptr) {
             myprintf("[%llu]\tjob %d which requires %d gpus is chosen\n", sim.now(), job->id, job->gpu);
             auto run_config = cluster.placement->place_job_in(cluster, job);
             if (run_config.empty()) {
-                // TODO: check if stuck
                 myprintf("[%llu]\tplacement failed for task %d requiring %d GPUs\n", sim.now(), job->id, job->gpu);
+                job_placement_fail += 1;
+                if (job_placement_fail > 100000) {
+                    printf("job placement fails too many times, something wrong?\n");
+                    exit(1);
+                }
             } else {
                 auto str = string_format("[%llu]\tjob %d placement: ", sim.now(), job->id);
                 job->num_workers_allocated = run_config.size();
@@ -46,6 +52,12 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                 myprintf(str);
                 sim.timeout(0);
                 continue;
+            }
+        } else {
+            choose_job_fail += 1;
+            if (choose_job_fail > 100000) {
+                printf("job scheduler fails too many times, something wrong?\n");
+                exit(1);
             }
         }
         co_await sim.timeout(timeFromSec(1));
