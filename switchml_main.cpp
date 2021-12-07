@@ -160,8 +160,7 @@ int main(int argc, char *argv[]) {
 
     broker(sim, jobs, cluster);
     cluster_scheduler(sim, cluster, scheduling_algo, cs);
-    sim.run();
-    sim.run_until(2e12);
+    sim.run_until(1e19); // max is 18446744073709551615
     cout << "\nsimulation done at " << sim.now() << endl;
     delete cs;
     delete placement_algo;
