@@ -18,7 +18,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
     myprintf("[%llu]\tmid %u rank %u uses %d out of %d free GPUs for job %d \n", sim.now(), id, rank, gpus_required,
              gpu, job->id);
     gpu -= gpus_required;
-    assert(gpu);  // something wrong with the placement!
+    assert(gpu>=0);  // something wrong with the placement!
 
     std::vector<Tensor *> tensors;
     auto has_timing = job->model.size() == job->forward_pass_time.size();
