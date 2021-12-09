@@ -15,7 +15,7 @@ simcpp20::event<SIM_UNIT>
 Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus_required, CollectiveScheduler *cs) {
     auto rank = rank_for_job[job->id];
     jobs.push_back(job);
-    myprintf("[%llu]\tmid %u rank %u uses %d out of %d free GPUs for job %d \n", sim.now(), id, rank, gpus_required,
+    myprintf(3, "[%llu]\tmid %u rank %u uses %d out of %d free GPUs for job %d \n", sim.now(), id, rank, gpus_required,
              gpu, job->id);
     gpu -= gpus_required;
     assert(gpu>=0);  // something wrong with the placement!
@@ -102,7 +102,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
 //    }
 
     gpu += gpus_required;
-    myprintf(4, "[%lu]\tmachine %d finishes job %d and has %d gpu now\n", sim.now(), id, job->id, gpu);
+    myprintf(3, "[%lu]\tmachine %d finishes job %d and has %d gpu now\n", sim.now(), id, job->id, gpu);
     if (rank_for_job[job->id] == 0) {
         job->finish_time = sim.now();
         cluster->check_if_all_jobs_finished();

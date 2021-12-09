@@ -8,7 +8,7 @@ simcpp20::event<SIM_UNIT> broker(
         Cluster &cluster) {
     for (auto &job:jobs) {
         co_await sim.timeout(job->submit_time - sim.now());
-        myprintf("[%llu]\tjob %u arrived, n_iter: %u\n", sim.now(), job->id, job->n_iter);
+        myprintf(3, "[%llu]\tjob %u arrived, n_iter: %u\n", sim.now(), job->id, job->n_iter);
         cluster.add_job(job);
     }
     cluster.set_all_jobs_submitted();

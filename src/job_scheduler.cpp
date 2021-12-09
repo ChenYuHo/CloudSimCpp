@@ -49,7 +49,7 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                 str.pop_back(); // safe to do since run_config is not empty
                 str.pop_back();
                 str += "\n";
-                myprintf(str);
+                myprintf(3, str.c_str());
                 sim.timeout(0);
                 continue;
             }

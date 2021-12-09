@@ -32,7 +32,7 @@ namespace {
         RTT_impl = std::stoul(getenv("RTT_us", "1"));
         CHUNK_SIZE_impl = std::stoul(getenv("CHUNK_SIZE", "262144"));
         NUM_SLOTS_impl = std::stoul(getenv("NUM_SLOTS", "512"));
-        PRINT_MASK_impl = std::stoul(getenv("PRINT_MASK", std::to_string(1<<4|1<<7)));
+        PRINT_MASK_impl = std::stoul(getenv("PRINT_MASK", std::to_string(1<<3|1<<7)));
         NUM_UPDATES_impl = (DEFAULTDATASIZE_impl - (8 + 14 + 20 + 8 + 6 + 4 + 12)) / 4;
         printf("MTU %u\nNIC_Gbps %lu\nSWITCH_BUFFER_BYTES %u\n"
                "SWITCH_PORTS %u\nGPUS_PER_NODE %u\nRTT_us %u\nCHUNK_SIZE %u\n"
@@ -55,6 +55,7 @@ const uint32_t &NUM_SLOTS = NUM_SLOTS_impl; // pool size
 const uint32_t &PRINT_MASK = PRINT_MASK_impl;
 // 1
 // 2 worker.cpp lock for tensors
+// 3 job arrive, start, finish, placement
 // 4 forward backward allreduce timestamp
 // 7 collective scheduler logs
 // 8 packet tracing
