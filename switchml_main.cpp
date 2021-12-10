@@ -163,22 +163,10 @@ int main(int argc, char *argv[]) {
     }
 
     if (cs) cs->collective_scheduler(sim, cluster);
-    auto submit_all_jobs = getenv("SUBMIT_ALL_JOBS", "false");
-    switch (hash_compile_time(submit_all_jobs.c_str())) {
-        case "True"_hash:
-        case "true"_hash:
-        case "1"_hash:
-        case "Yes"_hash:
-        case "yes"_hash:
-        case "Y"_hash:
-        case "y"_hash:
-            printf("SUBMIT_ALL_JOBS_IN_BEGINNING true\n");
-            broker(sim, jobs, cluster, true);
-            break;
-        default:
-            broker(sim, jobs, cluster, false);
-            break;
-    }
+    auto submit_all_jobs = strtobool(getenv("SUBMIT_ALL_JOBS", "false"));
+    if (submit_all_jobs) printf("SUBMIT_ALL_JOBS_IN_THE_BEGINNING true\n");
+    broker(sim, jobs, cluster, submit_all_jobs);
+
     cout << "==========================================================================\n";
     cout << cluster._topo->no_of_nodes() << " nodes in total. Each node has " << GPUS_PER_NODE << " GPUs" << endl;
 

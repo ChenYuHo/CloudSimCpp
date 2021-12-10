@@ -21,6 +21,7 @@ namespace {
     uint32_t NUM_SLOTS_impl; // pool size
     uint32_t PRINT_MASK_impl;
     uint32_t NUM_UPDATES_impl;
+    bool COLLECTIVE_STATISTICS_impl;
 
     bool read_env_and_print() noexcept {
         DEFAULTDATASIZE_impl = std::stoul(getenv("MTU", "9000"));
@@ -34,6 +35,7 @@ namespace {
         NUM_SLOTS_impl = std::stoul(getenv("NUM_SLOTS", "512"));
         PRINT_MASK_impl = std::stoul(getenv("PRINT_MASK", std::to_string(1<<3|1<<7)));
         NUM_UPDATES_impl = (DEFAULTDATASIZE_impl - (8 + 14 + 20 + 8 + 6 + 4 + 12)) / 4;
+        COLLECTIVE_STATISTICS_impl = strtobool(getenv("COLLECTIVE_STATISTICS", "0"));
         printf("MTU %u\nNIC_Gbps %lu\nSWITCH_BUFFER_BYTES %u\n"
                "SWITCH_PORTS %u\nGPUS_PER_NODE %u\nRTT_us %u\nCHUNK_SIZE %u\n"
                "NUM_SLOTS %u\nNUM_UPDATES %u\nPRINT_MASK %u\n", DEFAULTDATASIZE_impl, gbps,
@@ -61,6 +63,7 @@ const uint32_t &PRINT_MASK = PRINT_MASK_impl;
 // 8 packet tracing
 const uint32_t &SWITCHML_PKT_SIZE = DEFAULTDATASIZE;
 const uint32_t &NUM_UPDATES = NUM_UPDATES_impl;
+const bool &COLLECTIVE_STATISTICS = COLLECTIVE_STATISTICS_impl;
 
 
 uint64_t get_key(uint64_t job_id, uint64_t tensor_id) {
@@ -133,4 +136,19 @@ Tensor::Tensor(uint64_t id, uint64_t f, uint64_t b, uint64_t size, Worker *machi
         : size(size), forward_pass_time(f), backward_pass_time{b}, machine(machine), job(job),
           tensor_id(id) {
     key = get_key(job->id, tensor_id);
+}
+
+bool strtobool(const std::string& s) {
+    switch (hash_compile_time(s.c_str())) {
+        case "True"_hash:
+        case "true"_hash:
+        case "1"_hash:
+        case "Yes"_hash:
+        case "yes"_hash:
+        case "Y"_hash:
+        case "y"_hash:
+            return true;
+        default:
+            return false;
+    }
 }

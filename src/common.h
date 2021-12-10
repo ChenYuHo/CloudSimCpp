@@ -25,6 +25,7 @@ extern const uint32_t& SWITCHML_PKT_SIZE;
 extern const uint32_t& CHUNK_SIZE;
 extern const uint32_t& NUM_SLOTS; // pool size
 extern const uint32_t& NUM_UPDATES;
+extern const bool& COLLECTIVE_STATISTICS;
 
 extern CppProgressBar cpb;
 
@@ -35,6 +36,8 @@ int myprintf(const char *, ...);
 int myprintf(uint32_t, const char *, ...);
 
 int myprintf(const char *, va_list, int);
+
+bool strtobool(const std::string&);
 
 
 class Worker;
@@ -64,6 +67,8 @@ public:
     uint64_t forward_pass_time{};
     uint64_t backward_pass_time{};
     SIM_UNIT allreduce_start{};
+    std::vector<SIM_UNIT> collective_timings{};
+    // first element is schedule time, others execution time
 
     Tensor(uint64_t, Worker *, Job *, simcpp20::simulation<SIM_UNIT> &);
 

@@ -10,6 +10,14 @@
 #include "topology/hierarchical_topology.h"
 #include "packet.h"
 
+const char *to_string(const std::vector<SIM_UNIT> &collective_timings) {
+    std::ostringstream out;
+    std::copy(collective_timings.begin(),
+              collective_timings.end() - 1,
+              std::ostream_iterator<SIM_UNIT>(out, ","));
+    out << collective_timings.back();
+    return out.str().c_str();
+}
 
 simcpp20::event<SIM_UNIT>
 Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus_required, CollectiveScheduler *cs) {
@@ -57,6 +65,14 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
                      iter, job->id, id, rank, tensor->tensor_id, tensor->size, backward_begin, bptime, sim.now());
             if (job->num_workers_allocated > 1) {
                 if (cs) {
+                    if (COLLECTIVE_STATISTICS && rank_for_job[job->id]==0) {
+                        if (!tensor->collective_timings.empty()) {
+                            myprintf("#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, iter,
+                                     to_string(tensor->collective_timings));
+                            tensor->collective_timings.clear();
+                        }
+                        tensor->collective_timings.push_back(sim.now());
+                    }
                     cs->enqueue(sim, tensor);
                 } else {
                     myprintf(2, "L67 mid %u rank %u tid %u jid %u calling allreduce\n", id, rank, tensor->tensor_id,
@@ -79,6 +95,10 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
     }
     for (auto &tensor: tensors) {
         co_await fp_locks[tensor->key]->request(); // wait until final allreduces are done
+        if (COLLECTIVE_STATISTICS && rank_for_job[job->id] == 0) {
+            myprintf("#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, job->n_iter,
+                     to_string(tensor->collective_timings));
+        }
         fp_locks[tensor->key]->release();
         delete fp_locks[tensor->key];
         delete allreduce_locks[tensor->key];
@@ -172,6 +192,9 @@ void Worker::sendPacket(unsigned start, unsigned ver,
 simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
                                             Tensor *tensor,
                                             unsigned chunk_size) {
+    if (COLLECTIVE_STATISTICS && rank_for_job[tensor->job->id]==0) {
+        tensor->collective_timings.push_back(sim.now());
+    }
     auto rank = rank_for_job[tensor->job->id];
     // assuming a chunked tensor does not concurrently invoke allreduce
     // i.e., at most one allreduce going on for a tensor
