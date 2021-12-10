@@ -91,6 +91,14 @@ int main(int argc, char *argv[]) {
             placement_algo = new RandomPlacement(seed);
             printf("PLACEMENT RandomPlacement\n");
             break;
+        case "random_distributed"_hash:
+            placement_algo = new RandomPlacement(seed, true);
+            printf("PLACEMENT RandomPlacementForceDistributed\n");
+            break;
+        case "random_multi_rack"_hash:
+            placement_algo = new RandomPlacement(seed, true, true);
+            printf("PLACEMENT RandomPlacementForceMultiRacks\n");
+            break;
         case "yarn_random"_hash:
             placement_algo = new YARNPlacement(seed, true);
             printf("PLACEMENT YARNPlacementWithFallbackToRandom\n");

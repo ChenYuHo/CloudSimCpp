@@ -498,7 +498,7 @@ HierarchicalTopology::~HierarchicalTopology() {
         }
     }
 
-    for (const auto& pair: routes) {
+    for (const auto &pair: routes) {
         delete pair.second;
     }
     routes.clear();
