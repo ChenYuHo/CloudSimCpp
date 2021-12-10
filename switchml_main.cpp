@@ -163,10 +163,25 @@ int main(int argc, char *argv[]) {
     }
 
     if (cs) cs->collective_scheduler(sim, cluster);
+    auto submit_all_jobs = getenv("SUBMIT_ALL_JOBS", "false");
+    switch (hash_compile_time(submit_all_jobs.c_str())) {
+        case "True"_hash:
+        case "true"_hash:
+        case "1"_hash:
+        case "Yes"_hash:
+        case "yes"_hash:
+        case "Y"_hash:
+        case "y"_hash:
+            printf("SUBMIT_ALL_JOBS_IN_BEGINNING true\n");
+            broker(sim, jobs, cluster, true);
+            break;
+        default:
+            broker(sim, jobs, cluster, false);
+            break;
+    }
     cout << "==========================================================================\n";
     cout << cluster._topo->no_of_nodes() << " nodes in total. Each node has " << GPUS_PER_NODE << " GPUs" << endl;
 
-    broker(sim, jobs, cluster);
     cluster_scheduler(sim, cluster, scheduling_algo, cs);
     sim.run_until(1e19); // max is 18446744073709551615
     cout << "\nsimulation done at " << sim.now() << endl;
