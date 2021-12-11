@@ -10,13 +10,13 @@
 #include "topology/hierarchical_topology.h"
 #include "packet.h"
 
-const char *to_string(const std::vector<SIM_UNIT> &collective_timings) {
+std::string to_string(const std::vector<SIM_UNIT> &collective_timings) {
     std::ostringstream out;
     std::copy(collective_timings.begin(),
               collective_timings.end() - 1,
               std::ostream_iterator<SIM_UNIT>(out, ","));
     out << collective_timings.back();
-    return out.str().c_str();
+    return out.str();
 }
 
 simcpp20::event<SIM_UNIT>
@@ -68,7 +68,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
                     if (COLLECTIVE_STATISTICS && rank_for_job[job->id]==0) {
                         if (!tensor->collective_timings.empty()) {
                             myprintf("#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, iter,
-                                     to_string(tensor->collective_timings));
+                                     to_string(tensor->collective_timings).c_str());
                             tensor->collective_timings.clear();
                         }
                         tensor->collective_timings.push_back(sim.now());
@@ -97,7 +97,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
         co_await fp_locks[tensor->key]->request(); // wait until final allreduces are done
         if (COLLECTIVE_STATISTICS && rank_for_job[job->id] == 0) {
             myprintf("#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, job->n_iter,
-                     to_string(tensor->collective_timings));
+                     to_string(tensor->collective_timings).c_str());
         }
         fp_locks[tensor->key]->release();
         delete fp_locks[tensor->key];
