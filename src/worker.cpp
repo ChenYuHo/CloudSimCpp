@@ -11,6 +11,7 @@
 #include "packet.h"
 
 std::string to_string(const std::vector<SIM_UNIT> &collective_timings) {
+    if (collective_timings.empty()) return "";
     std::ostringstream out;
     std::copy(collective_timings.begin(),
               collective_timings.end() - 1,
