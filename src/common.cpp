@@ -65,13 +65,16 @@ const uint32_t &SWITCHML_PKT_SIZE = DEFAULTDATASIZE;
 const uint32_t &NUM_UPDATES = NUM_UPDATES_impl;
 const bool &COLLECTIVE_STATISTICS = COLLECTIVE_STATISTICS_impl;
 
+std::hash<std::string> hasher;
 
 uint64_t get_key(uint64_t job_id, uint64_t tensor_id) {
-    return job_id * 1000000 + tensor_id;
+    auto str = "jid" + std::to_string(job_id) + "tid" + std::to_string(tensor_id);
+    return hasher(str);
 }
 
 uint64_t get_key(Tensor *tensor) {
-    return tensor->job->id * 1000000 + tensor->tensor_id;
+    auto str = "jid" + std::to_string(tensor->job->id) + "tid" + std::to_string(tensor->tensor_id);
+    return hasher(str);
 }
 
 int myprintf(std::string format, ...) {
