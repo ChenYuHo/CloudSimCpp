@@ -17,7 +17,7 @@ public:
     struct CustomCompare {
         bool
         operator()(const std::vector<Tensor *> &lhs,
-                const std::vector<Tensor *> &rhs) {
+                   const std::vector<Tensor *> &rhs) {
             auto &l = lhs.front();
             auto &r = rhs.front();
             return l->iter == r->iter ? l->tensor_id > r->tensor_id : l->iter > r->iter;
@@ -25,8 +25,13 @@ public:
     };
 
     std::unordered_map<uint64_t, std::vector<Tensor *>> queue;
-    std::map<unsigned, std::priority_queue<std::vector<Tensor *>,
-        std::vector<std::vector<Tensor *>>, CustomCompare>> ready_pqueues{};
+    std::deque<
+            std::priority_queue<
+                    std::vector<Tensor *>,
+                    std::vector<std::vector<Tensor *>>,
+                    CustomCompare
+            >
+    > ready_pqueues{}; // each pq: a job
 //    std::map<unsigned, std::priority_queue<std::vector<Tensor *>,
 //        std::vector<std::vector<Tensor *>>, CustomCompare>> ready_pqueues{};
 
@@ -37,7 +42,8 @@ public:
 
     void cleanup_for_job(unsigned) override;
 
-    std::unordered_map<unsigned, unsigned> vector_idx;
+    std::unordered_map<unsigned, unsigned> jid_to_deque_idx;
+    std::unordered_map<unsigned, unsigned> deque_idx_to_jid;
 
     bool loop_is_running = true;
 };
