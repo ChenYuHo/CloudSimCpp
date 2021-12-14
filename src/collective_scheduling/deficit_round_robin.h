@@ -26,10 +26,13 @@ public:
 
     std::unordered_map<uint64_t, std::vector<Tensor *>> queue;
     std::deque<
-            std::priority_queue<
-                    std::vector<Tensor *>,
-                    std::vector<std::vector<Tensor *>>,
-                    CustomCompare
+            std::pair<
+                    unsigned,
+                    std::priority_queue<
+                            std::vector<Tensor *>,
+                            std::vector<std::vector<Tensor *>>,
+                            CustomCompare
+                    >
             >
     > ready_pqueues{}; // each pq: a job
 //    std::map<unsigned, std::priority_queue<std::vector<Tensor *>,
@@ -40,12 +43,18 @@ public:
     simcpp20::event<SIM_UNIT> collective_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                                                    Cluster &cluster) override;
 
+
     void cleanup_for_job(unsigned) override;
 
     std::unordered_map<unsigned, unsigned> jid_to_deque_idx;
-    std::unordered_map<unsigned, unsigned> deque_idx_to_jid;
 
     bool loop_is_running = true;
+
+    void update_maps();
+
+    void print_ready_pqueues_info();
+
+    bool ready_pqueues_all_empty() const;
 };
 
 
