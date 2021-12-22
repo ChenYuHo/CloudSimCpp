@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
         unsigned duration;
         unsigned submit_time; // originally in seconds
         unsigned iterations = 0;
-        std::string model = "vgg19";
+        std::string model = "resnet50";
         unsigned counter = 0;
         unsigned max_jobs = std::stol(getenv("MAX_JOBS", "4294967295"));
         if (max_jobs != 4294967295) printf("MAX_JOBS %u\n", max_jobs);
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
             } else break;
             auto iters = unsigned(iterations / shrink_iter_factor);
             if (iters == 0) iters = 1;
-            jobs.push_back(new Job(timeFromSec(submit_time / shrink_arrival_factor), sim, "vgg19", iters,
+            jobs.push_back(new Job(timeFromSec(submit_time / shrink_arrival_factor), sim, model, iters,
                                    num_gpu * gpu_scale_factor));
         }
     } else {
