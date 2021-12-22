@@ -96,7 +96,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
     }
     for (auto &tensor: tensors) {
         co_await fp_locks[tensor->key]->request(); // wait until final allreduces are done
-        if (COLLECTIVE_STATISTICS && rank_for_job[job->id] == 0) {
+        if (job->num_workers_allocated > 1 && COLLECTIVE_STATISTICS && rank_for_job[job->id] == 0) {
             myprintf("#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, job->n_iter,
                      to_string(tensor->collective_timings).c_str());
         }
