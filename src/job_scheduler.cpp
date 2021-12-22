@@ -53,12 +53,6 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                 sim.timeout(0);
                 continue;
             }
-        } else {
-            choose_job_fail += 1;
-            if (choose_job_fail > 100000) {
-                printf("job scheduler fails too many times, something wrong?\n");
-                exit(1);
-            }
         }
         co_await sim.timeout(timeFromSec(1));
     }
