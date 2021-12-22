@@ -8,14 +8,18 @@
 
 bool multi_racks_placement(const std::vector<Worker *> &selected) {
     std::set<unsigned> placed_tors;
-    for (auto &machine: selected) {
+    for (const auto &machine: selected) {
         placed_tors.insert(machine->tor->id);
     }
     return placed_tors.size() > 1;
 }
 
-inline bool distributed_placement(const std::vector<Worker *> &selected) {
-    return selected.size() > 1;
+bool distributed_placement(const std::vector<Worker *> &selected) {
+    std::set<unsigned> machines{};
+    for (const auto &machine: selected) {
+        machines.insert(machine->id);
+    }
+    return machines.size() > 1;
 }
 
 std::map<unsigned, unsigned> RandomPlacement::place_job_in(Cluster &cluster, Job *job) {
