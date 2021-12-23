@@ -21,7 +21,7 @@ ByteScheduler::enqueue(simcpp20::simulation<SIM_UNIT> &sim, Tensor *tensor) {
 
 simcpp20::event<SIM_UNIT> ByteScheduler::kick_off(simcpp20::simulation<SIM_UNIT> &sim, unsigned jid) {
     auto &pq = ready_queue.at(jid);
-    while (!pq.empty()) {
+    while (!pq.empty() && active_jobs.contains(jid)) {
         const auto &tensor = pq.top();
         const auto key = tensor->key;
         std::vector<simcpp20::event<SIM_UNIT>> allreduce_events{};

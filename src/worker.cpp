@@ -101,15 +101,11 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
                      to_string(tensor->collective_timings).c_str());
         }
         fp_locks[tensor->key]->release();
-        delete fp_locks[tensor->key];
-        delete allreduce_locks[tensor->key];
-        delete tensor;
     }
-    tensors.clear();
 
+    co_await sim.timeout(0);
     // job is done! clean a bit...
     // clean collective scheduler
-    co_await sim.timeout(0);
     if (cs) cs->cleanup_for_job(job->id);
 
 //    // clean Switch status
@@ -128,6 +124,13 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
         job->finish_time = sim.now();
         cluster->check_if_all_jobs_finished();
     }
+
+    for (auto &tensor: tensors) {
+        delete fp_locks[tensor->key];
+        delete allreduce_locks[tensor->key];
+        delete tensor;
+    }
+    tensors.clear();
 }
 
 void Worker::doNextEvent() {
