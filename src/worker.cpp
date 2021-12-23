@@ -68,7 +68,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
                 if (cs) {
                     if (COLLECTIVE_STATISTICS && rank_for_job[job->id]==0) {
                         if (!tensor->collective_timings.empty()) {
-                            myprintf("#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, iter,
+                            myprintf("#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, iter-1,
                                      to_string(tensor->collective_timings).c_str());
                             tensor->collective_timings.clear();
                         }
