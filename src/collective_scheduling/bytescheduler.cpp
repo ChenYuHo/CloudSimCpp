@@ -31,11 +31,11 @@ simcpp20::event<SIM_UNIT> ByteScheduler::kick_off(simcpp20::simulation<SIM_UNIT>
         auto total_cid = tensor->size % CHUNK_SIZE ? tensor->size / CHUNK_SIZE + 1 : tensor->size / CHUNK_SIZE;
         myprintf(7, "%llu invoking allreduce for jid %u tid %u iter %u cid %u/%u\n", sim.now(),
                  jid, tid, iter, cid, total_cid);
-        for (const auto &t: queue[key]) {
+        for (auto t: queue[key]) {
             allreduce_events.push_back(std::move(t->machine->allreduce(sim, t, CHUNK_SIZE)));
         }
         if (cid >= total_cid) {
-            myprintf(7, "popping jid %u tid %u\n", jid, tensor->tensor_id);
+            myprintf(7, "popping jid %u tid %u\n", jid, tid);
             pq.pop();
             queue[key].clear();
         }

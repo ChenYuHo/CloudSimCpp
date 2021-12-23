@@ -47,28 +47,32 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
             co_await fp_locks[tensor->key]->request(); // will block if last step's allreduce is not completed yet
             myprintf(2, "L40 mid %u rank %u tid %u jid %u forward got lock\n",
                      id, rank, tensor->tensor_id, job->id);
-            if (tensor->tensor_id == 0) { // mark iteration start
+            if (tensor->tensor_id == 0 && rank_for_job[tensor->job->id] == 0) { // mark iteration start
                 myprintf(4, "[%u,%u]<stdout>:SYNTHETIC ITERATION START PROFILE %llu\n",
                          job->id, rank, sim.now());
             }
             auto fptime = tensor->forward_pass_time;
             auto forward_begin = sim.now();
             co_await sim.timeout(fptime);
-            myprintf(4, "[forward] iter %d jid %d mid %d rank %u tid %u size %llu start %llu duration %llu end %llu\n",
-                     iter, job->id, id, rank, tensor->tensor_id, tensor->size, forward_begin, fptime, sim.now());
+            if (rank_for_job[tensor->job->id] == 0)
+                myprintf(4,
+                         "[forward] iter %d jid %d mid %d rank %u tid %u size %llu start %llu duration %llu end %llu\n",
+                         iter, job->id, id, rank, tensor->tensor_id, tensor->size, forward_begin, fptime, sim.now());
         }
         std::ranges::reverse_view reversed{tensors};
         for (auto &tensor: reversed) {
             auto bptime = tensor->backward_pass_time;
             auto backward_begin = sim.now();
             co_await sim.timeout(bptime);
-            myprintf(4, "[backward] iter %d jid %d mid %d rank %u tid %d size %d start %llu duration %llu end %llu\n",
-                     iter, job->id, id, rank, tensor->tensor_id, tensor->size, backward_begin, bptime, sim.now());
+            if (rank_for_job[tensor->job->id] == 0)
+                myprintf(4,
+                         "[backward] iter %d jid %d mid %d rank %u tid %d size %d start %llu duration %llu end %llu\n",
+                         iter, job->id, id, rank, tensor->tensor_id, tensor->size, backward_begin, bptime, sim.now());
             if (job->num_workers_allocated > 1) {
                 if (cs) {
-                    if (COLLECTIVE_STATISTICS && rank_for_job[job->id]==0) {
+                    if (COLLECTIVE_STATISTICS && rank_for_job[job->id] == 0) {
                         if (!tensor->collective_timings.empty()) {
-                            myprintf("#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, iter-1,
+                            myprintf("#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, iter - 1,
                                      to_string(tensor->collective_timings).c_str());
                             tensor->collective_timings.clear();
                         }
@@ -82,7 +86,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
                 }
             } else {
                 fp_locks[tensor->key]->release();
-                if (tensor->tensor_id == 0) { // mark iteration end
+                if (tensor->tensor_id == 0 && rank_for_job[tensor->job->id] == 0) { // mark iteration end
                     myprintf(4, "[%u,%u]<stdout>:SYNTHETIC ITERATION END PROFILE %llu\n", job->id, rank, sim.now());
                 }
                 myprintf(2, "L72 mid %u rank %u tid %u jid %u released lock\n", id, rank, tensor->tensor_id, job->id);
@@ -107,16 +111,6 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
     // job is done! clean a bit...
     // clean collective scheduler
     if (cs) cs->cleanup_for_job(job->id);
-
-//    // clean Switch status
-//    if (clean_ToR_for_job[job->id] && tor) {
-//        tor->count_for_job.erase(job->id);
-//        tor->seen_for_job.erase(job->id);
-//        if (tor->clean_upper_level_switch_for_job[job->id] && tor->upper_level_switch) {
-//            tor->upper_level_switch->count_for_job.erase(job->id);
-//            tor->upper_level_switch->seen_for_job.erase(job->id);
-//        }
-//    }
 
     gpu += gpus_required;
     myprintf(3, "[%lu]\tmachine %d finishes job %d and has %d gpu now\n", sim.now(), id, job->id, gpu);
@@ -222,7 +216,8 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
         auto start = slot * NUM_UPDATES;
         if (start >= grad_size) break;
         sendPacket(start, 0, slot, grad_size, tensor);
-        myprintf(8, "[%llu] mid %u tid %u jid %u allreduce send packet %d/%d for tensor size %llu iter %d to slot %d offset %u\n",
+        myprintf(8,
+                 "[%llu] mid %u tid %u jid %u allreduce send packet %d/%d for tensor size %llu iter %d to slot %d offset %u\n",
                  eventlist().now(), id, tensor->tensor_id, tensor->job->id, slot, tensor->num_pkts_expected,
                  grad_size, tensor->iter, slot, slot * NUM_SLOTS);
     }
@@ -231,9 +226,10 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
     myprintf(2, "L231 mid %u tid %u jid %u allreduce got lock\n", id, tensor->tensor_id, tensor->job->id);
     tensor->allreduced_size += grad_size;
     auto end = sim.now();
-    myprintf(4, "[allreduce] iter %d jid %d mid %d rank %u tid %d size %d start %llu duration %llu end %llu\n",
-             tensor->iter, tensor->job->id, id, rank, tensor->tensor_id, grad_size, tensor->allreduce_start,
-             end - tensor->allreduce_start, end);
+    if (rank_for_job[tensor->job->id] == 0)
+        myprintf(4, "[allreduce] iter %d jid %d mid %d rank %u tid %d size %d start %llu duration %llu end %llu\n",
+                 tensor->iter, tensor->job->id, id, rank, tensor->tensor_id, grad_size, tensor->allreduce_start,
+                 end - tensor->allreduce_start, end);
     allreduce_counter[tensor->iter % 2]++;
     if (allreduce_counter[tensor->iter % 2] == tensor->job->model.size()) {
         allreduce_counter[1 - tensor->iter % 2] = 0;
@@ -247,7 +243,7 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
         tensor->allreduced_size = 0;
         tensor->chunk_id = 0;
         fp_locks[tensor->key]->release();
-        myprintf(2, "L316 mid %u tid %u jid %u release lock locks_fp %d\n", id, tensor->tensor_id, tensor->job->id);
+        myprintf(2, "L316 mid %u tid %u jid %u release lock locks_fp\n", id, tensor->tensor_id);
         if (rank == 0) {
             myprintf(8, "incrementing cpb from %d\n", id);
             cpb.cntIncrement();

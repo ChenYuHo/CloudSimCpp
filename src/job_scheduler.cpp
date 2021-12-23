@@ -42,9 +42,8 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                 unsigned rank = 0;
                 for (const auto &pair: run_config) {
                     str += string_format("mid %d rank %u -> %d gpu, ", pair.first, rank, pair.second);
-                    cluster.worker_map[pair.first]->rank_for_job[job->id] = rank;
+                    cluster.worker_map[pair.first]->rank_for_job[job->id] = rank++;
                     cluster.worker_map[pair.first]->execute_job(sim, job, pair.second, cs);
-                    ++rank;
                 }
                 str.pop_back(); // safe to do since run_config is not empty
                 str.pop_back();
