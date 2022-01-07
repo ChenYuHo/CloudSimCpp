@@ -5,6 +5,8 @@
 #include <algorithm>
 #include "main.h"
 #include "queue.h"
+#include "job.h"
+#include <cfloat>
 
 template<typename T>
 string toa(T n) {
@@ -504,6 +506,65 @@ HierarchicalTopology::~HierarchicalTopology() {
     routes.clear();
 //    delete logfile;
 //    delete eventlist;
+}
+
+std::deque<uint64_t> HierarchicalTopology::bssi(std::unordered_map<Tensor *, double> weights) {
+    // coflow (per job) -> weight
+    std::unordered_map<unsigned, std::unordered_map<unsigned, unsigned>> data_port_coflow; // port (per worker), coflow -> data
+    std::vector<unsigned> data_port(_no_of_nodes);
+    std::deque<uint64_t> result{};
+    auto iters = weights.size();
+    for (unsigned i = 0; i < iters; ++i) {
+        if (weights.size() == 1) {
+            for (auto &pair: weights) {
+                result.push_front(pair.first->key);
+            }
+            break;
+        }
+        // Find the most bottlenecked port
+        unsigned bottlenecked; // wid
+        unsigned current_max = 0;
+        for (auto &pair : weights) {
+            auto &tensor = pair.first;
+            for (auto wid : tensor->job->wids_allocated) {
+                auto data = ((CHUNK_SIZE == 0)
+                             ? tensor->size
+                             : (tensor->size - tensor->allreduced_size > CHUNK_SIZE)
+                               ? CHUNK_SIZE
+                               : tensor->size - tensor->allreduced_size);
+                data_port_coflow[wid][tensor->job->id] += data;
+                data_port[wid] += data;
+                if (data_port[wid] >= current_max) {
+                    current_max = data_port[wid];
+                    bottlenecked = wid;
+                }
+            }
+        }
+
+        // Select weighted largest job to schedule last
+        Tensor *weighted_largest;
+        auto current_min = DBL_MAX;
+        double min_weight;
+        for (auto &pair : weights) {
+            auto weight = pair.second / data_port_coflow[bottlenecked][pair.first->job->id];
+            if (weight <= current_min) {
+                current_min = weight;
+                weighted_largest = pair.first;
+                min_weight = pair.second;
+            }
+        }
+        result.push_front(weighted_largest->key);
+
+        // Scale the weights
+        for (auto &pair : weights) {
+            if (pair.first->job->id != weighted_largest->job->id) {
+                pair.second -= (min_weight * data_port_coflow[bottlenecked][pair.first->job->id] /
+                                data_port_coflow[bottlenecked][weighted_largest->job->id]);
+            }
+        }
+        weights.erase(weighted_largest);
+    }
+    return result;
 }
 
 //void HierarchicalTopology::register_switch(Switch *s) {

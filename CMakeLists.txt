@@ -87,6 +87,7 @@ list(APPEND SRCS
         "src/collective_scheduling/deficit_round_robin.cpp"
         "src/collective_scheduling/ready_and_go.cpp"
         "src/collective_scheduling/bytescheduler.cpp"
+        "src/collective_scheduling/sincronia.cpp"
         )
 
 include_directories(htsim)
@@ -98,6 +99,9 @@ add_library(htsim ${HTSIM_SRCS})
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
+
+add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+add_link_options(-fsanitize=address -fno-omit-frame-pointer)
 
 ## for profiling
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -fno-omit-frame-pointer")

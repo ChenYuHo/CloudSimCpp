@@ -28,6 +28,8 @@ public:
     virtual const Route * get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) = 0;
 
     virtual bool accommodate(const std::set<unsigned>&, const std::set<unsigned>&) {return false;};
+
+    virtual std::deque<uint64_t> bssi(std::unordered_map<Tensor *, double>) {return {};};
 };
 
 #endif

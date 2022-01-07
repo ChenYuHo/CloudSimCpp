@@ -88,6 +88,8 @@ private:
     std::unordered_map<std::string, Route*> routes{};
 
     bool accommodate(const std::set<unsigned>&, const std::set<unsigned>&) override;
+
+    std::deque<uint64_t> bssi(std::unordered_map<Tensor *, double> weights) override;
 };
 
 #endif // CLOUDSIMCPP_HIERARCHICAL_TOPOLOGY_H

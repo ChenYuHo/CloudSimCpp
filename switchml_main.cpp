@@ -21,6 +21,7 @@
 #include "collective_scheduling/ready_and_go.h"
 #include "collective_scheduling/bytescheduler.h"
 #include "collective_scheduling/deficit_round_robin.h"
+#include "collective_scheduling/sincronia.h"
 
 #include "cluster.h"
 #include "job.h"
@@ -155,6 +156,11 @@ int main(int argc, char *argv[]) {
         case "4"_hash:
             cs = new DeficitRoundRobin(sim, cluster);
             printf("COLLECTIVE_SCHEDULER DeficitRoundRobin\n");
+            break;
+        case "sincronia"_hash:
+        case "5"_hash:
+            cs = new Sincronia(sim, cluster);
+            printf("COLLECTIVE_SCHEDULER Sincronia\n");
             break;
         case "none"_hash:
         default:
