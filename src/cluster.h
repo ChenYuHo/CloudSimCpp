@@ -43,6 +43,8 @@ public:
 
     void check_if_all_jobs_finished();
 
+    unsigned num_running_jobs() const;
+
 private:
     void doNextEvent() override {};
 };
