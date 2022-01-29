@@ -31,10 +31,18 @@ Sincronia::enqueue(simcpp20::simulation<SIM_UNIT> &sim, Tensor *tensor) {
     co_await sim.timeout(0);
 }
 
+uint64_t get_weight(const Tensor *tensor) {
+    if (tensor->tensor_id > ((1+tensor->job->fp_layer) % tensor->job->model.size())) {
+        return tensor->job->model[tensor->job->fp_layer];
+    } else { // same layer
+        return tensor->job->model[tensor->job->fp_layer] - tensor->allreduced_size;
+    }
+}
+
 simcpp20::event<SIM_UNIT> Sincronia::collective_scheduler(
         simcpp20::simulation<SIM_UNIT> &sim, Cluster &cluster) {
     while (!ready_pqueues_all_empty()) {
-        std::unordered_map<Tensor *, double> weights{};
+        std::unordered_map<Tensor *, uint64_t> weights{};
         for (auto &pair: ready_pqueues) {
             auto &pq = pair.second;
             if (!pq.empty()) {
@@ -52,7 +60,7 @@ simcpp20::event<SIM_UNIT> Sincronia::collective_scheduler(
                     tensor = pq.top();
                 }
                 if (pq.empty()) continue;
-                weights[tensor] = 1; // get_weight(pair.first);
+                weights[tensor] = get_weight(tensor);
             }
         }
 
@@ -86,7 +94,8 @@ simcpp20::event<SIM_UNIT> Sincronia::collective_scheduler(
                 auto &front_tensor = queue[key].front();
                 myprintf(7, "%p jid %u tid %u\n", front_tensor, front_tensor->job->id, front_tensor->tensor_id);
                 if (front_tensor->allreduced_size + CHUNK_SIZE >= front_tensor->size) {
-                    myprintf(7, "can erase %p jid %u tid %u\n", front_tensor, front_tensor->job->id, front_tensor->tensor_id);
+                    myprintf(7, "can erase %p jid %u tid %u\n",
+                             front_tensor, front_tensor->job->id, front_tensor->tensor_id);
                     can_erase.insert(front_tensor->key);
                 }
                 for (auto t: queue[key]) {

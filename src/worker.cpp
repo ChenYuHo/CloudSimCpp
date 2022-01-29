@@ -41,6 +41,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
         allreduce_locks.emplace(tensor->key, new resource<SIM_UNIT>(sim, 1));
     }
     for (unsigned iter = 0; iter < job->n_iter; ++iter) {
+        job->in_iter = iter;
         for (auto &tensor: tensors) {
             myprintf(2, "L38 mid %u rank %u tid %u jid %u forward request lock\n",
                      id, rank, tensor->tensor_id, job->id);
@@ -53,6 +54,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
             }
             auto fptime = tensor->forward_pass_time;
             auto forward_begin = sim.now();
+            job->fp_layer = tensor->tensor_id;
             co_await sim.timeout(fptime);
             if (rank_for_job[tensor->job->id] == 0)
                 myprintf(4,

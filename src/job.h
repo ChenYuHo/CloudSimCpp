@@ -16,6 +16,8 @@ public:
     simtime_picosec start_time{std::numeric_limits<simtime_picosec>::max()};
     simtime_picosec finish_time{std::numeric_limits<simtime_picosec>::max()};
     unsigned n_iter{3};
+    int in_iter{-1};
+    int fp_layer{-1};
     unsigned num_workers_allocated{};
     std::set<unsigned> wids_allocated{};
     unsigned tensor_id{0};

@@ -89,7 +89,7 @@ private:
 
     bool accommodate(const std::set<unsigned>&, const std::set<unsigned>&) override;
 
-    std::deque<uint64_t> bssi(std::unordered_map<Tensor *, double> weights) override;
+    std::deque<uint64_t> bssi(std::unordered_map<Tensor *, uint64_t> weights) override;
 };
 
 #endif // CLOUDSIMCPP_HIERARCHICAL_TOPOLOGY_H

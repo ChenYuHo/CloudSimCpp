@@ -508,7 +508,7 @@ HierarchicalTopology::~HierarchicalTopology() {
 //    delete eventlist;
 }
 
-std::deque<uint64_t> HierarchicalTopology::bssi(std::unordered_map<Tensor *, double> weights) {
+std::deque<uint64_t> HierarchicalTopology::bssi(std::unordered_map<Tensor *, uint64_t> weights) {
     // coflow (per job) -> weight
     std::unordered_map<unsigned, std::unordered_map<unsigned, unsigned>> data_port_coflow; // port (per worker), coflow -> data
     std::vector<unsigned> data_port(_no_of_nodes);
