@@ -61,8 +61,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
                          "[forward] iter %d jid %d mid %d rank %u tid %u size %llu start %llu duration %llu end %llu\n",
                          iter, job->id, id, rank, tensor->tensor_id, tensor->size, forward_begin, fptime, sim.now());
         }
-        std::ranges::reverse_view reversed{tensors};
-        for (auto &tensor: reversed) {
+        for (auto &tensor: tensors | std::ranges::views::reverse) {
             auto bptime = tensor->backward_pass_time;
             auto backward_begin = sim.now();
             co_await sim.timeout(bptime);

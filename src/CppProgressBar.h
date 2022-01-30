@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-#include <sys/ioctl.h>
 #include <cmath>
 
 class CppProgressBar {

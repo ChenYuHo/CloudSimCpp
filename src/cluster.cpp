@@ -12,15 +12,15 @@ class Switch;
 unsigned Cluster::num_running_jobs() const {
     return std::count_if(jobs.cbegin(), jobs.cend(), [](Job *job) {
         // started but not finished
-        return job->start_time != std::numeric_limits<simtime_picosec>::max() &&
-        job->finish_time == std::numeric_limits<simtime_picosec>::max();
+        return job->start_time != (std::numeric_limits<simtime_picosec>::max)() &&
+        job->finish_time == (std::numeric_limits<simtime_picosec>::max)();
     });
 }
 
 void Cluster::check_if_all_jobs_started() {
     if (!all_jobs_submitted) return;
     for (auto j:jobs) {
-        if (j->start_time == std::numeric_limits<simtime_picosec>::max()) return; // at least one job not started yet
+        if (j->start_time == (std::numeric_limits<simtime_picosec>::max)()) return; // at least one job not started yet
     }
     all_jobs_started = true;
 }
@@ -28,7 +28,7 @@ void Cluster::check_if_all_jobs_started() {
 void Cluster::check_if_all_jobs_finished() {
     if (!all_jobs_started) return;
     for (auto j:jobs) {
-        if (j->finish_time == std::numeric_limits<simtime_picosec>::max()) return; // at least one job not finished yet
+        if (j->finish_time == (std::numeric_limits<simtime_picosec>::max)()) return; // at least one job not finished yet
     }
     all_jobs_finished = true;
 }
