@@ -514,13 +514,13 @@ std::deque<uint64_t> HierarchicalTopology::bssi(std::unordered_map<Tensor *, uin
     std::vector<unsigned> data_port(_no_of_nodes);
     std::deque<uint64_t> result{};
     auto iters = weights.size();
-    for (unsigned i = 0; i < iters; ++i) {
-        if (weights.size() == 1) {
-            for (auto &pair: weights) {
-                result.push_front(pair.first->key);
-            }
-            break;
+    if (iters == 1) {
+        for (auto &pair: weights) {
+            result.push_front(pair.first->key);
         }
+        return result;
+    }
+    for (unsigned i = 0; i < iters; ++i) {
         // Find the most bottlenecked port
         unsigned bottlenecked; // wid
         unsigned current_max = 0;
@@ -540,12 +540,12 @@ std::deque<uint64_t> HierarchicalTopology::bssi(std::unordered_map<Tensor *, uin
                 }
             }
         }
-
         // Select weighted largest job to schedule last
         Tensor *weighted_largest;
         auto current_min = DBL_MAX;
         double min_weight;
         for (auto &pair : weights) {
+            if (data_port_coflow[bottlenecked][pair.first->job->id] == 0) continue;
             auto weight = pair.second / data_port_coflow[bottlenecked][pair.first->job->id];
             if (weight <= current_min) {
                 current_min = weight;
