@@ -214,6 +214,7 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
     tensor->num_pkts_expected = grad_size / NUM_UPDATES;
     if (grad_size % NUM_UPDATES) tensor->num_pkts_expected += 1;
 
+#ifndef NOSIMPKT
     // assuming switches have infinite sets of slots
     for (unsigned slot = 0; slot < NUM_SLOTS; ++slot) {
         auto start = slot * NUM_UPDATES;
@@ -224,6 +225,10 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
                  eventlist().now(), id, tensor->tensor_id, tensor->job->id, slot, tensor->num_pkts_expected,
                  grad_size, tensor->iter, slot, slot * NUM_SLOTS);
     }
+#else
+    co_await sim.timeout(grad_size*(32*1000000/HOST_NIC)); // grad_size*32bits*Mbps*1e6/1e12
+    allreduce_locks[tensor->key]->release();
+#endif
     myprintf(2, "L227 mid %u tid %u jid %u allreduce request lock\n", id, tensor->tensor_id, tensor->job->id);
     co_await allreduce_locks[tensor->key]->request();
     myprintf(2, "L231 mid %u tid %u jid %u allreduce got lock\n", id, tensor->tensor_id, tensor->job->id);

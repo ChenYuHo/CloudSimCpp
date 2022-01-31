@@ -109,6 +109,9 @@ add_link_options(-fsanitize=address -fno-omit-frame-pointer)
 
 #add_executable(CloudSimCpp main.cpp ${SRCS})
 add_executable(SwitchML switchml_main.cpp ${SRCS})
+add_executable(SwitchML_NOSIMPKT switchml_main.cpp ${SRCS})
+target_compile_definitions(SwitchML_NOSIMPKT PUBLIC NOSIMPKT)
 #target_link_libraries(CloudSimCpp PUBLIC htsim fschuetz04::simcpp20)
 # Threads::Threads for csvio
 target_link_libraries(SwitchML PUBLIC htsim fschuetz04::simcpp20 Threads::Threads)
+target_link_libraries(SwitchML_NOSIMPKT PUBLIC htsim fschuetz04::simcpp20 Threads::Threads)
