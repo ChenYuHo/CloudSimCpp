@@ -7,21 +7,16 @@
 
 class CppProgressBar {
 private:
-    size_t progress_loop_number_;
-    int preWinSize_;
-    int nowWinSize_;
+    size_t progress_loop_number_{};
     std::string progress_bar_;
-    std::string empty_line_{std::string(140, ' ') + "\r"};
-    size_t percentage_;
-    float oneHundledth_;
+    std::string empty_line_{std::string(200, ' ') + "\r"};
+    double percentage_{};
+    double oneHundredth_{};
     std::string progress_line_;
-    size_t loop_counter_;
+    size_t loop_counter_{};
 public:
     inline void cntSet(size_t first) {
         loop_counter_ = first;
-    }
-    inline size_t cntGet() {
-        return loop_counter_;
     }
     inline void cntIncrement() {
         loop_counter_++;
@@ -29,18 +24,14 @@ public:
     CppProgressBar() noexcept = default;
     void init_variable(size_t loop_number);
     void update_variable();
-    inline void display_progress_bar() {
-        std::clog << "\r" << progress_line_;
-    };
-    inline void finish_progress_bar() {
-        for (size_t j = 0; j < 100 && j < progress_bar_.length() + 1; ++j) {
-            if (progress_bar_[j] != '=') {
-                progress_bar_[j] = '=';
-            }
-        }
-        std::clog << "100% [" << progress_bar_ << ']' << std::endl;
-    };
-//    template <typename T> inline void stdout_in_for_progress (T& e);
+//    inline void finish_progress_bar() {
+//        for (size_t j = 0; j < 100 && j < progress_bar_.length() + 1; ++j) {
+//            if (progress_bar_[j] != '=') {
+//                progress_bar_[j] = '=';
+//            }
+//        }
+//        std::clog << "100% [" << progress_bar_ << ']' << std::endl;
+//    };
     inline void stdout_in_for_progress (std::string& e) {
         std::clog << empty_line_;
         std::cout << e;
