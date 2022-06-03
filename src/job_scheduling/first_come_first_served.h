@@ -5,7 +5,11 @@
 
 class FirstComeFirstServed : public SchedulingAlgo {
 public:
-    Job* choose_job_to_execute_in(Cluster &cluster) override;
+    bool blocking = false;
+
+    explicit FirstComeFirstServed(bool blocking=false) : blocking(blocking) {};
+
+    Job *choose_job_to_execute_in(Cluster &cluster) override;
 };
 
 #endif //CLOUDSIMCPP_FIRST_COME_FIRST_SERVED_H

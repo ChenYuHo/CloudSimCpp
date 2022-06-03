@@ -1,0 +1,6 @@
+[submodule "simcpp20"]
+	path = simcpp20
+	url = git@github.com:ChenYuHo/simcpp20.git
+[submodule "NDP"]
+	path = NDP
+	url = git@github.com:ChenYuHo/NDP.git

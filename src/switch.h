@@ -23,6 +23,8 @@ private:
         return ID++;
     }
 
+    std::string _nodename;
+
 public:
     void multicast_downward(SwitchMLPacket *);
     unsigned layer = 0;
@@ -54,7 +56,9 @@ public:
             cluster(cluster),
             upper_level_switch(upper_level_switch),
             id(get_id()) {
+        _nodename = fmt::format("Switch{}", id);
 //        myprintf("Switch %d constructor invoked\n", id);
+
     }
 
     explicit Switch(unsigned id, EventList &ev, Cluster *cluster, Switch *upper_level_switch) :
@@ -62,6 +66,7 @@ public:
             cluster(cluster),
             upper_level_switch(upper_level_switch),
             id(id) {
+        _nodename = fmt::format("Switch{}", id);
 //        myprintf("Switch %d constructor invoked\n", id);
     }
 
@@ -71,8 +76,7 @@ public:
 
 //    unordered_map<unsigned, unsigned> pkt_counter{};
     const string &nodename() override {
-        static string example = "switch";
-        return example;
+        return _nodename;
     };
 };
 

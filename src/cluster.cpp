@@ -4,6 +4,7 @@
 #include "worker.h"
 #include "switch.h"
 #include "topology/hierarchical_topology.h"
+#include "topology/custom_topology.h"
 
 class Worker;
 class Switch;
@@ -33,15 +34,10 @@ void Cluster::check_if_all_jobs_finished() {
     all_jobs_finished = true;
 }
 
-void Cluster::init_topo(int switch_ports, mem_b switch_buffer, unsigned gpus_per_node) {
-    _topo = (Topology *) new HierarchicalTopology(this, switch_ports, switch_buffer, nullptr,
-                                                  &_eventlist, gpus_per_node);
+void Cluster::init_topo(MyTopology* topo) {
+    _topo = topo;
     workers = _topo->workers();
-    for (const auto &w : workers) worker_map[w->id] = w;
+    for (const auto &w : *workers) worker_map[w->id] = w;
     switches = _topo->switches();
-    for (const auto &s : switches) switch_map[s->id] = s;
-}
-
-Cluster::~Cluster() {
-    delete (HierarchicalTopology *) _topo;
+    for (const auto &s : *switches) switch_map[s->id] = s;
 }

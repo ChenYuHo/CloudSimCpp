@@ -10,7 +10,6 @@
 #include "tcp.h"
 #include "ndp.h"
 #include "mtcp.h"
-//#include "qcn.h"
 #include <list>
 #include <map>
 

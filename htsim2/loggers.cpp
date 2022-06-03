@@ -12,7 +12,7 @@ void QueueLoggerSimple::logQueue(Queue& queue, QueueLogger::QueueEvent ev,
     _logfile->writeRecord(Logger::QUEUE_EVENT,
 			  queue.id, ev, 
 			  (double)queue.queuesize(),
-			  0,
+			  pkt.flow().id,
 			  pkt.id()); 
 }
 
@@ -228,7 +228,7 @@ void TcpTrafficLogger::logTraffic(Packet& pkt, Logged& location,
     _logfile->writeRecord(Logger::TCP_TRAFFIC,
 			  location.id,
 			  ev,
-			  0,
+			  pkt.flow().id,
 			  pkt.id(),
 			  0); 
 }
@@ -299,7 +299,7 @@ void NdpTrafficLogger::logTraffic(Packet& pkt, Logged& location,
     _logfile->writeRecord(Logger::NDP_TRAFFIC,
 			  location.id,
 			  ev,
-			  0,
+			  p.flow().id,
 			  p.id(),
 			  val3); 
 }

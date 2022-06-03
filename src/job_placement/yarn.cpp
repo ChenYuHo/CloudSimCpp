@@ -10,7 +10,7 @@ std::map<unsigned, unsigned> YARNPlacement::place_job_in(Cluster &cluster, Job *
     myprintf(6, "Try allocating on a single worker\n");
     std::vector<unsigned> candidates{};
     std::map<unsigned, unsigned> counter{}; // worker_id -> allocated_GPUs
-    for (auto &machine: cluster.workers) {
+    for (auto &machine: *cluster.workers) {
         if (machine->gpu >= job->gpu) {
             for (unsigned i = 0; i < machine->gpu; ++i) candidates.push_back(machine->id);
         }
@@ -27,7 +27,7 @@ std::map<unsigned, unsigned> YARNPlacement::place_job_in(Cluster &cluster, Job *
     // multi worker, same ToR
     myprintf(6, "Try allocating workers within the same ToR\n");
     candidates.clear();
-    for (auto &tor: cluster.switches) {
+    for (auto &tor: *cluster.switches) {
         unsigned free_gpus_in_tor = 0;
         for (auto &machine: tor->machines) {
             free_gpus_in_tor += machine->gpu;
@@ -61,7 +61,7 @@ std::map<unsigned, unsigned> YARNPlacement::place_job_in(Cluster &cluster, Job *
     if (use_random_when_fail) {
         myprintf(6, "Fallback to random selection\n");
         candidates.clear();
-        for (auto &machine: cluster.workers) {
+        for (auto &machine: *cluster.workers) {
             for (int i = 0; i < machine->gpu; i++) candidates.push_back(machine->id);
         }
         if (job->gpu > candidates.size()) return counter; // not enough GPUs

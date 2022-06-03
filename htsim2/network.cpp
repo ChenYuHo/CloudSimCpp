@@ -48,14 +48,13 @@ Packet::sendOn() {
 	    //assert(_route->size() == _route->reverse()->size());
 	    nextsink = _route->reverse()->at(_nexthop);
 	    _nexthop++;
+	} else {
+	    assert(_nexthop<_route->size());
+	    nextsink = _route->at(_nexthop);
+	    _nexthop++;
+	}
     } else {
-//        myprintf("nexthop %d route size %zu\n", _nexthop, _route->size());
-        assert(_nexthop < _route->size());
-        nextsink = _route->at(_nexthop);
-        _nexthop++;
-    }
-    } else {
-        assert(0);
+	assert(0);
     }
     nextsink->receivePacket(*this);
     return nextsink;

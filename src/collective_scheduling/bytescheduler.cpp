@@ -18,14 +18,52 @@ ByteScheduler::enqueue(simcpp20::simulation<SIM_UNIT> &sim, Tensor *tensor) {
     }
     co_await sim.timeout(0);
 }
+//
+//simcpp20::event<SIM_UNIT>
+//ByteScheduler::allreduce_one_chunk(simcpp20::simulation<SIM_UNIT> &sim,
+//                                   std::priority_queue<Tensor *,
+//                                           std::vector<Tensor *>, CustomCompare> &pq) {
+//    const auto &tensor = pq.top();
+//    const auto key = tensor->key;
+//    std::vector<simcpp20::event<SIM_UNIT>> allreduce_events{};
+//    auto tid = tensor->tensor_id;
+//    auto iter = tensor->iter;
+//    auto cid = (tensor->allreduced_size / CHUNK_SIZE) + 1;
+//    auto total_cid = tensor->size % CHUNK_SIZE ? tensor->size / CHUNK_SIZE + 1 : tensor->size / CHUNK_SIZE;
+//    myprintf(7, "%llu invoking allreduce for jid %u tid %u iter %u cid %u/%u\n", sim.now(),
+//             jid, tid, iter, cid, total_cid);
+//    for (auto t: queue[key]) {
+//        allreduce_events.push_back(std::move(t->machine->allreduce(sim, t, CHUNK_SIZE)));
+//    }
+//    if (cid >= total_cid) {
+//        myprintf(7, "popping jid %u tid %u\n", jid, tid);
+//        pq.pop();
+//        queue[key].clear();
+//    }
+//    co_await sim.all_of(allreduce_events);
+//    myprintf(7, "%llu done allreduce for jid %u tid %u iter %u cid %u/%u\n", sim.now(),
+//             jid, tid, iter, cid, total_cid);
+//}
+//
+//
+//simcpp20::event<SIM_UNIT> ByteScheduler::run_loop(simcpp20::simulation<SIM_UNIT> &sim, unsigned jid) {
+//    auto &pq = ready_queue.at(jid);
+//    while (!pq.empty() && active_jobs.contains(jid)) {
+//        co_await allreduce_one_chunk(sim, pq);
+//    }
+//}
 
 simcpp20::event<SIM_UNIT> ByteScheduler::kick_off(simcpp20::simulation<SIM_UNIT> &sim, unsigned jid) {
     auto &pq = ready_queue.at(jid);
     while (!pq.empty() && active_jobs.contains(jid)) {
         Tensor *tensor = pq.top();
-        while (tensor->allreduced_size >= tensor->size) {
+        while (can_erase.contains(tensor->key)) {
             myprintf(7, "popping jid %u tid %u\n", jid, tensor->tensor_id);
+            can_erase.erase(tensor->key);
             pq.pop();
+            queue[tensor->key].clear();
+            if (pq.empty())
+                goto end;
             tensor = pq.top();
         }
         const auto key = tensor->key;
@@ -39,10 +77,17 @@ simcpp20::event<SIM_UNIT> ByteScheduler::kick_off(simcpp20::simulation<SIM_UNIT>
         for (auto t: queue[key]) {
             allreduce_events.push_back(std::move(t->machine->allreduce(sim, t, CHUNK_SIZE)));
         }
+        if (cid >= total_cid) {
+            can_erase.insert(key);
+//            myprintf(7, "popping jid %u tid %u\n", jid, tid);
+//            pq.pop();
+//            queue[key].clear();
+        }
         co_await sim.all_of(allreduce_events);
         myprintf(7, "%llu done allreduce for jid %u tid %u iter %u cid %u/%u\n", sim.now(),
                  jid, tid, iter, cid, total_cid);
     }
+    end:
     myprintf(7, "%llu jid %d has no tensors at the moment!\n", sim.now(), jid);
     active_jobs.erase(jid);
     co_await sim.timeout(0);

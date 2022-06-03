@@ -31,6 +31,13 @@ public:
     void cleanup_for_job(unsigned) override;
 
     simcpp20::event<SIM_UNIT> kick_off(simcpp20::simulation<SIM_UNIT> &, unsigned);
+
+    std::set<unsigned> can_erase{};
+
+//    simcpp20::event<SIM_UNIT> run_loop(simcpp20::simulation<SIM_UNIT> &sim, unsigned int jid);
+//
+//    simcpp20::event<SIM_UNIT> allreduce_one_chunk(simcpp20::simulation<SIM_UNIT> &sim, std::priority_queue<Tensor *,
+//            std::vector<Tensor *>, CustomCompare> &);
 };
 
 

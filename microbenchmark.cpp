@@ -7,10 +7,9 @@
 #include <glog/logging.h>
 
 #include "config.h"
+#include "topology/hierarchical_topology.h"
 #include "eventlist.h"
 
-#include "topology/hierarchical_topology.h"
-#include "topology/custom_topology.h"
 #include "job_submitter.h"
 #include "job_scheduling/first_come_first_served.h"
 #include "job_scheduling/fit_first.h"
@@ -26,35 +25,23 @@
 #include "cluster.h"
 #include "job.h"
 #include "csv.h"
-#include "common.h"
 
 typedef simtime_picosec SIM_UNIT;
 
 int main(int argc, char *argv[]) {
-    google::InitGoogleLogging("CloudSimCpp");
-    google::InstallFailureSignalHandler();
+    google::InitGoogleLogging("Microbenchmark");
     simcpp20::simulation<SIM_UNIT> sim;
     auto event_list = EventList(sim);
-    auto cluster = Cluster(event_list);
+    auto tor = Switch()
 
-    MyTopology *topo;
-    auto topology = getenv("TOPOLOGY", "custom");
-    std::transform(topology.begin(), topology.end(), topology.begin(), ::tolower);
-    switch (hash_compile_time(topology.c_str())) {
-        case "custom"_hash:
-            topo = new CustomTopology(&cluster, SWITCH_PORTS, SWITCH_BUFFER, &event_list, GPUS_PER_NODE);
-            printf("TOPOLOGY custom\n");
-            break;
-        case "hierarchical"_hash:
-        default:
-            topo = new HierarchicalTopology(&cluster, SWITCH_PORTS, SWITCH_BUFFER, &event_list, GPUS_PER_NODE);
-            printf("TOPOLOGY hierarchical\n");
-            break;
-    }
-    cluster.init_topo(topo);
+
+    auto cluster = Cluster(event_list, SWITCH_PORTS, SWITCH_BUFFER, GPUS_PER_NODE);
+
+    google::InstallFailureSignalHandler();
 
     std::vector<Job *> jobs{};
     const char *value = getenv("JOB_CSV");
+    // "../HeliosData/data/60_job.csv"
     if (value) {
         double shrink_iter_factor = std::stod(getenv("SHRINKITER", "1"));
         if (shrink_iter_factor != 1.) printf("SHRINKITER %f\n", shrink_iter_factor);
@@ -88,8 +75,8 @@ int main(int argc, char *argv[]) {
         printf("JOB_CSV SYNTHETIC\n");
 //        jobs.push_back(new Job(0, sim, "alexnet", 5, 2));
 //        jobs.push_back(new Job(0, sim, "alexnet", 5, 2));
-        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{26214400}, 1, 8));
-//        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 8));
+        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 8));
+        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 8));
     }
 
     std::sort(jobs.begin(), jobs.end(), [](const auto &a, const auto &b){
@@ -210,7 +197,6 @@ int main(int argc, char *argv[]) {
     delete cs;
     delete placement_algo;
     delete scheduling_algo;
-    delete topo;
     for (auto job:jobs) delete job;
     jobs.clear();
     return 0;

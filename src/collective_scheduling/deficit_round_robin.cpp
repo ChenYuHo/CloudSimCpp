@@ -59,7 +59,7 @@ simcpp20::event<SIM_UNIT> DeficitRoundRobin::collective_scheduler(
             while (true) { // work conservation
                 unsigned current_min_quantum = 0xffffffff;
                 auto selected_idx = i;
-                std::set<unsigned> &selected_wids = front->job->wids_allocated;
+                std::set<unsigned> selected_wids = front->job->wids_allocated;
                 for (auto j = i; j < ready_pqueues.size(); ++j) {
                     auto job_id = ready_pqueues[j].first;
                     if (involved_jids.contains(job_id) || ready_pqueues[j].second.empty()) continue;

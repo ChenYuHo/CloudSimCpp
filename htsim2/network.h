@@ -90,9 +90,7 @@ class Packet {
     bool header_only() const {return _is_header;}
     bool bounced() const {return _bounced;}
     PacketFlow& flow() const {return *_flow;}
-    virtual ~Packet() {
-//        delete _route;
-    };
+    virtual ~Packet() {};
     inline const packetid_t id() const {return _id;}
     inline uint32_t flow_id() const {return _flow->flow_id();}
     const Route* route() const {return _route;}
@@ -154,16 +152,15 @@ class PacketSink {
 
 template<class P>
 class PacketDB {
-public:
-    P *allocPacket() {
-        if (_freelist.empty()) {
-            P* p = new P();
-            return p;
-        } else {
-            P *p = _freelist.back();
-            _freelist.pop_back();
-            return p;
-        }
+ public:
+    P* allocPacket() {
+	if (_freelist.empty()) {
+	    return new P();
+	} else {
+	    P* p = _freelist.back();
+	    _freelist.pop_back();
+	    return p;
+	}
     };
 
     ~PacketDB() {
@@ -176,8 +173,8 @@ public:
         _freelist.push_back(pkt);
     };
 
-protected:
-    vector<P *> _freelist; // Irek says it's faster with vector than with list
+ protected:
+    vector<P*> _freelist; // Irek says it's faster with vector than with list
 };
 
 

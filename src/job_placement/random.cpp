@@ -27,7 +27,7 @@ std::map<unsigned, unsigned> RandomPlacement::place_job_in(Cluster &cluster, Job
     std::map<unsigned, unsigned> counter{};
     unsigned available_machines = 0;
     std::set<unsigned> tors_with_available_machines;
-    for (auto &machine:cluster.workers) {
+    for (auto &machine: *cluster.workers) {
         if (machine->gpu > 0) {
             available_machines++;
             tors_with_available_machines.insert(machine->tor->id);

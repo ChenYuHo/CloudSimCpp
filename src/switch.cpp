@@ -1,7 +1,6 @@
 #include "switch.h"
 #include "packet.h"
 #include "cluster.h"
-#include "topology/hierarchical_topology.h"
 
 void Switch::doNextEvent() {}
 
@@ -26,11 +25,10 @@ void Switch::multicast_downward(SwitchMLPacket *p) {
 
 void Switch::receivePacket(Packet &pkt) {
     auto *p = (SwitchMLPacket *) &pkt;
-    auto key = "i" + std::to_string(p->tensor->iter)
-               + "s" + std::to_string(p->slot)
-               + "c" + std::to_string(p->tensor->chunk_id);
-    auto key_of_the_other_slot = key + "v" + std::to_string(1 - p->ver);
-    key += "v" + std::to_string(p->ver);
+    auto key = std::to_string(p->tensor->iter).append("i,s").append(std::to_string(p->slot)).append("c").append(
+            std::to_string(p->tensor->chunk_id));
+    auto key_of_the_other_slot = key + std::string("v").append(std::to_string(1 - p->ver));
+    key += std::string("v").append(std::to_string(p->ver));
     myprintf(8,
              "[%llu] Switch layer %d id %d got packet from id %d ver %d slot %d off %d upward %d tid %llu, iter %llu JID %u NW %u\n",
              eventlist().now(), layer, id, p->id, p->ver, p->slot, p->offset, p->upward,

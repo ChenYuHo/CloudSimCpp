@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include "resource.hpp"
 #include "CppProgressBar.h"
+#include <fmt/core.h>
 
 
 typedef uint64_t simtime_picosec;
@@ -17,7 +18,7 @@ typedef simtime_picosec SIM_UNIT;
 extern const uint32_t& DEFAULTDATASIZE;
 extern const uint32_t& HOST_NIC; // host nic speed in Mbps
 extern const uint32_t& SWITCH_BUFFER; // in bytes, per queue (port)
-extern const uint32_t& SWITCH_PORTS;
+extern const int32_t& SWITCH_PORTS;
 extern const uint32_t& GPUS_PER_NODE;
 extern const uint32_t& PRINT_MASK;
 extern const uint32_t& RTT; // us

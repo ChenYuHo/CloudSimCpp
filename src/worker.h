@@ -24,6 +24,7 @@ private:
         static unsigned ID = 0;
         return ID++;
     }
+    std::string _nodename;
 
 public:
     unsigned id;
@@ -38,14 +39,14 @@ public:
     void receivePacket(Packet &) override;
 
     const string &nodename() override {
-        static string example = "Worker";
-        return example;
+        return _nodename;
     };
 
     explicit Worker(EventList &ev, Cluster *cluster, Switch *tor, unsigned gpus_per_node) :
             EventSource(ev, "worker"),
             id(get_id()), cluster(cluster),
             tor(tor), gpu(gpus_per_node), gpu_capacity(gpus_per_node) {
+        _nodename = fmt::format("Worker{}", id);
 //        myprintf("Worker %d constructor invoked\n", id);
     }
 
