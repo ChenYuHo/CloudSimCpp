@@ -32,7 +32,7 @@ Sincronia::enqueue(simcpp20::simulation<SIM_UNIT> &sim, Tensor *tensor) {
 }
 
 uint64_t get_weight(const Tensor *tensor) {
-    if (tensor->tensor_id > ((1+tensor->job->fp_layer) % tensor->job->model.size())) {
+    if (tensor->tensor_id > ((1 + tensor->job->fp_layer) % tensor->job->model.size())) {
         return tensor->job->model[tensor->job->fp_layer];
     } else { // same layer
         return tensor->job->model[tensor->job->fp_layer] - tensor->allreduced_size;
@@ -81,7 +81,7 @@ simcpp20::event<SIM_UNIT> Sincronia::collective_scheduler(
             result.pop_front();
             std::set<unsigned> involved_wids{tensor->job->wids_allocated};
             std::set<uint64_t> involved_tkeys{tensor->key};
-            for (auto &key : result) { // work conservation
+            for (auto &key: result) { // work conservation
                 auto that = queue[key].front();
                 auto &wids_allocated = that->job->wids_allocated;
                 if (cluster._topo->accommodate(involved_wids, wids_allocated)) {

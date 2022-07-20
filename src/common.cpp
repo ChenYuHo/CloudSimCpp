@@ -98,11 +98,11 @@ const bool &COLLECTIVE_STATISTICS = COLLECTIVE_STATISTICS_impl;
 std::hash<std::string> hasher;
 
 inline uint64_t get_key(uint64_t job_id, uint64_t tensor_id) {
-    return std::hash<std::string>{}(string_format("jid%llutid%llu", job_id, tensor_id));
+    return std::hash<std::string>{}(fmt::format("jid{}tid{}", job_id, tensor_id));
 }
 
 inline uint64_t get_key(Tensor *tensor) {
-    return std::hash<std::string>{}(string_format("jid%llutid%llu", tensor->job->id, tensor->tensor_id));
+    return std::hash<std::string>{}(fmt::format("jid{}tid{}", tensor->job->id, tensor->tensor_id));
 }
 
 int myprintf(std::string format, ...) {
