@@ -27,7 +27,7 @@ public:
 
     void init_network(unsigned);
 
-    const Route *get_worker_to_tor_path(unsigned src) override;
+    Route *get_worker_to_tor_path(unsigned src) override;
 
     std::vector<Switch*> *switches() override { return &tor_switches; };
 
@@ -36,7 +36,7 @@ public:
     void set_switch_num_updates(
             unsigned int job_id, map<unsigned int, unsigned int> run_config) override;
 
-    const Route * get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) override;
+    Route * get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) override;
 
     unsigned no_of_nodes() const override { return _no_of_nodes; };
 private:

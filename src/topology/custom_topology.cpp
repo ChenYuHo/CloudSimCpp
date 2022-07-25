@@ -33,15 +33,6 @@ void CustomTopology::init_network(unsigned gpus_per_node) {
 //            pipes_worker_tor[k][j] = nullptr;
         }
 
-    // instantiate workers and switches
-    tor_switches[0] = new Switch(0, *eventlist, cluster, nullptr);
-    for (int k = 0; k < _no_of_nodes; k++) {
-        _workers[k] = new Worker(*eventlist, cluster, tor_switches[0], gpus_per_node);
-        tor_switches[0]->machines.push_back(_workers[k]);
-    }
-
-
-
     // links from ToR switch to worker
     for (int k = 0; k < _no_of_nodes; ++k) {
         // Downlink
@@ -57,9 +48,20 @@ void CustomTopology::init_network(unsigned gpus_per_node) {
 //        pipes_worker_tor[k][0]->setName(fmt::format("SimplePipe-SERVER{}->ToR0", k));
     }
 
+    // instantiate workers and switches
+    tor_switches[0] = new Switch(0, *eventlist, cluster, nullptr);
+    for (int k = 0; k < _no_of_nodes; k++) {
+        auto route_to_tor = new Route();
+        route_to_tor->push_back(queues_worker_tor[k][0]);
+//    route_out->push_back(pipes_worker_tor[src][dest]);
+        route_to_tor->push_back(tor_switches[0]);
+        route_to_tor->non_null();
+        _workers[k] = new Worker(*eventlist, cluster, tor_switches[0], gpus_per_node, route_to_tor);
+        tor_switches[0]->machines.push_back(_workers[k]);
+    }
 }
 
-const Route *CustomTopology::get_worker_to_tor_path(unsigned src) {
+Route *CustomTopology::get_worker_to_tor_path(unsigned src) {
     auto key = fmt::format("w{}", src);
     if (routes.contains(key)) {
         return routes[key];
@@ -103,7 +105,7 @@ void CustomTopology::set_switch_num_updates(
 
 }
 
-const Route *CustomTopology::get_switch_single_hop_route(unsigned src, unsigned layer,
+Route *CustomTopology::get_switch_single_hop_route(unsigned src, unsigned layer,
                                                          unsigned dest, bool upward) {
     // from ToR to workers
     auto key = fmt::format("s{}l0u0d{}", src, dest);

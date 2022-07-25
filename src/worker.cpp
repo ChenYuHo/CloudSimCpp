@@ -184,8 +184,8 @@ void Worker::sendPacket(unsigned start, unsigned ver,
                         unsigned slot, unsigned grad_size,
                         Tensor *tensor) {
     auto topo = cluster->_topo;
-    auto route = topo->get_worker_to_tor_path(id);
-    auto p = SwitchMLPacket::newpkt(*route);
+//    auto route = topo->get_worker_to_tor_path(id);
+    auto p = SwitchMLPacket::newpkt(*route_to_tor);
 //    p->set_packet_size(SWITCHML_PKT_SIZE);
     p->id = id;
     p->ver = ver;

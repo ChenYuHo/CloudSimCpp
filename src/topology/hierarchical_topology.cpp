@@ -63,19 +63,6 @@ void HierarchicalTopology::init_network(unsigned gpus_per_node) {
 //            pipes_worker_tor[k][j] = nullptr;
         }
 
-    // instantiate workers and switches
-    core_switch = make_unique<Switch>(K, *eventlist, cluster, nullptr);
-    core_switch->layer = 1;
-    for (int j = 0; j < K; j++) {
-        tor_switches[j] = new Switch(j, *eventlist, cluster, core_switch.get());
-//        printf("%p\n", tor_switches[j]);
-        for (int k = 0; k < K - 1; k++) {
-            _workers[k + j * (K - 1)] = new Worker(*eventlist, cluster, tor_switches[j], gpus_per_node);
-            tor_switches[j]->machines.push_back(_workers[k + j * (K - 1)]);
-        }
-    }
-
-
     // links from ToR switch to worker
     for (int j = 0; j < K; j++) {
         for (int l = 0; l < K - 1; l++) {
@@ -110,10 +97,31 @@ void HierarchicalTopology::init_network(unsigned gpus_per_node) {
 //        pipes_core_tor[k][j]->setName("SimplePipe-Core" + toa(k) + "->ToR" + toa(j));
     }
 
+
+    // instantiate workers and switches
+    core_switch = make_unique<Switch>(K, *eventlist, cluster, nullptr);
+    core_switch->layer = 1;
+    for (int j = 0; j < K; j++) {
+        auto route_to_core = new Route();
+        route_to_core->push_back(queues_tor_core[j][0]);
+        route_to_core->push_back(core_switch.get());
+        route_to_core->non_null();
+        tor_switches[j] = new Switch(j, *eventlist, cluster, core_switch.get(), route_to_core);
+//        printf("%p\n", tor_switches[j]);
+        for (int k = 0; k < K - 1; k++) {
+            auto route_to_tor = new Route();
+            route_to_tor->push_back(queues_worker_tor[k + j * (K - 1)][j]);
+//    route_out->push_back(pipes_worker_tor[src][dest]);
+            route_to_tor->push_back(tor_switches[j]);
+            route_to_tor->non_null();
+            _workers[k + j * (K - 1)] = new Worker(*eventlist, cluster, tor_switches[j], gpus_per_node, route_to_tor);
+            tor_switches[j]->machines.push_back(_workers[k + j * (K - 1)]);
+        }
+    }
 }
 
 
-const Route *HierarchicalTopology::get_worker_to_tor_path(unsigned src) {
+Route *HierarchicalTopology::get_worker_to_tor_path(unsigned src) {
     auto dest = HOST_ToR_SWITCH(src);
     auto key = fmt::format("ws{}d{}", src, dest);
     if (routes.contains(key)) {
@@ -192,48 +200,36 @@ void HierarchicalTopology::set_switch_num_updates(
     }
 }
 
-const Route *HierarchicalTopology::get_switch_single_hop_route(unsigned src, unsigned layer,
-                                                               unsigned dest, bool upward) {
+Route *HierarchicalTopology::get_switch_single_hop_route(unsigned src, unsigned layer,
+                                                         unsigned dest, bool upward) {
     // valid layer: 0, 1
     assert(layer == 1 || layer == 0);
 //    auto route_out = new Route();
     if (layer == 1) { // from core to ToRs
         src = 0;
         auto key = fmt::format("{}s,dl1u0{}", src, dest);
-        if (routes.contains(key)) {
-            return routes[key];
-        }
         auto route_out = new Route();
         route_out->push_back(queues_core_tor[src][dest]);
 //        route_out->push_back(pipes_core_tor[src][dest]);
         route_out->push_back(tor_switches[dest]);
         route_out->non_null();
-        routes[key] = route_out;
         return route_out;
     } else if (upward) { // from ToR to core
         dest = 0;
         auto key = fmt::format("{}s,dl0u1{}", src, dest);
-        if (routes.contains(key)) {
-            return routes[key];
-        }
         auto route_out = new Route();
         route_out->push_back(queues_tor_core[src][dest]);
 //        route_out->push_back(pipes_tor_core[src][dest]);
         route_out->push_back(core_switch.get());
         route_out->non_null();
-        routes[key] = route_out;
         return route_out;
     } else { // from ToR to workers
         auto key = fmt::format("{}s,dl0u0{}", src, dest);
-        if (routes.contains(key)) {
-            return routes[key];
-        }
         auto route_out = new Route();
         route_out->push_back(queues_tor_worker[src][dest]);
 //        route_out->push_back(pipes_tor_worker[src][dest]);
         route_out->push_back(_workers[dest]);
         route_out->non_null();
-        routes[key] = route_out;
         return route_out;
     }
 
@@ -292,11 +288,6 @@ HierarchicalTopology::~HierarchicalTopology() {
 //            delete pipes_worker_tor[k][j];
         }
     }
-
-    for (const auto &pair: routes) {
-        delete pair.second;
-    }
-    routes.clear();
 //    delete logfile;
 //    delete eventlist;
 }

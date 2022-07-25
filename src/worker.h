@@ -24,7 +24,9 @@ private:
         static unsigned ID = 0;
         return ID++;
     }
+
     std::string _nodename;
+    Route *route_to_tor;
 
 public:
     unsigned id;
@@ -42,10 +44,10 @@ public:
         return _nodename;
     };
 
-    explicit Worker(EventList &ev, Cluster *cluster, Switch *tor, unsigned gpus_per_node) :
+    explicit Worker(EventList &ev, Cluster *cluster, Switch *tor, unsigned gpus_per_node, Route* route_to_tor=nullptr) :
             EventSource(ev, "worker"),
             id(get_id()), cluster(cluster),
-            tor(tor), gpu(gpus_per_node), gpu_capacity(gpus_per_node) {
+            tor(tor), gpu(gpus_per_node), gpu_capacity(gpus_per_node), route_to_tor(route_to_tor) {
         _nodename = fmt::format("Worker{}", id);
 //        myprintf("Worker %d constructor invoked\n", id);
     }
@@ -74,6 +76,10 @@ public:
     std::unordered_map<uint64_t, resource<SIM_UNIT> *> allreduce_locks{};
     std::unordered_map<unsigned, std::set<unsigned>> received_pkts{};
     unsigned allreduce_counter[2]{0, 0};
+
+    ~Worker() override {
+        delete route_to_tor;
+    }
 };
 
 #endif //CLOUDSIMCPP_WORKER_H

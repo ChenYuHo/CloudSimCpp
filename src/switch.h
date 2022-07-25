@@ -25,14 +25,18 @@ private:
 
     std::string _nodename;
 
+    std::unordered_map<unsigned, Route *> down_routes{};
+    Route *up_route;
+
 public:
     void multicast_downward(SwitchMLPacket *);
+
     unsigned layer = 0;
     unsigned id;
-    std::vector<Worker*> machines;
+    std::vector<Worker *> machines;
     Cluster *cluster;
     Switch *upper_level_switch;
-    std::vector<Switch*> lower_level_switches;
+    std::vector<Switch *> lower_level_switches;
     std::unordered_map<unsigned, bool> clean_upper_level_switch_for_job{};
 //    std::deque<pkt> buffer;
 //    std::unordered_map<unsigned, unsigned> pkt_counter;
@@ -51,21 +55,24 @@ public:
     // p.ver, p.slot_idx, jid, tid, cid, iter
     std::unordered_map<unsigned, std::unordered_map<std::string, std::set<unsigned>>> seen_for_tensor_key{};
 
-    explicit Switch(EventList &ev, Cluster *cluster, Switch *upper_level_switch) :
+    explicit Switch(EventList &ev, Cluster *cluster, Switch *upper_level_switch, Route *up_route = nullptr) :
             EventSource(ev, "Switch"),
             cluster(cluster),
             upper_level_switch(upper_level_switch),
-            id(get_id()) {
+            id(get_id()),
+            up_route(up_route) {
         _nodename = fmt::format("Switch{}", id);
 //        myprintf("Switch %d constructor invoked\n", id);
 
     }
 
-    explicit Switch(unsigned id, EventList &ev, Cluster *cluster, Switch *upper_level_switch) :
+    explicit Switch(unsigned id, EventList &ev, Cluster *cluster, Switch *upper_level_switch, Route *up_route = nullptr)
+            :
             EventSource(ev, "Switch"),
             cluster(cluster),
             upper_level_switch(upper_level_switch),
-            id(id) {
+            id(id),
+            up_route(up_route) {
         _nodename = fmt::format("Switch{}", id);
 //        myprintf("Switch %d constructor invoked\n", id);
     }
@@ -78,6 +85,14 @@ public:
     const string &nodename() override {
         return _nodename;
     };
+
+    ~Switch() override {
+        for (auto &p: down_routes) {
+            delete p.second;
+        }
+        down_routes.clear();
+        delete up_route;
+    }
 };
 
 #endif //CLOUDSIMCPP_SWITCH_H

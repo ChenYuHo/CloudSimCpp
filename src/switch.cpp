@@ -6,7 +6,13 @@ void Switch::doNextEvent() {}
 
 void Switch::multicast_downward(SwitchMLPacket *p) {
     for (auto dest: downward_ids_for_job[p->job_id]) {
-        auto route = cluster->_topo->get_switch_single_hop_route(id, layer, dest, false);
+        Route* route;
+        if (down_routes.contains(dest)) [[likely]] {
+            route = down_routes[dest];
+        } else {
+            route = cluster->_topo->get_switch_single_hop_route(id, layer, dest, false);
+            down_routes[dest] = route;
+        }
         auto multicast_pkt = SwitchMLPacket::newpkt(*route);
         multicast_pkt->job_id = p->job_id;
         multicast_pkt->id = id;
@@ -63,9 +69,10 @@ void Switch::receivePacket(Packet &pkt) {
                 } else {  // upward
                     myprintf(8, "ToR done aggregation, sending to upper level from switch %d\n", id);
                     // when going upward, dest is determined by the topology. put 0 as a placeholder.
-                    auto route = cluster->_topo->get_switch_single_hop_route(id, 0, 0, true);
+//                    auto route = cluster->_topo->get_switch_single_hop_route(id, 0, 0, true);
+
                     // send to upper level
-                    auto unicast_pkt = SwitchMLPacket::newpkt(*route);
+                    auto unicast_pkt = SwitchMLPacket::newpkt(*up_route);
                     unicast_pkt->job_id = p->job_id;
                     unicast_pkt->offset = p->offset;
                     unicast_pkt->id = id; // set to ToR id

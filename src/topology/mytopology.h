@@ -20,8 +20,8 @@ public:
     virtual void set_switch_num_updates(
             unsigned int, std::map<unsigned int, unsigned int>) = 0;
 
-    virtual const Route *get_worker_to_tor_path(unsigned) = 0;
-    virtual const Route * get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) = 0;
+    virtual Route *get_worker_to_tor_path(unsigned) = 0;
+    virtual Route * get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) = 0;
 
     virtual bool accommodate(const std::set<unsigned>&, const std::set<unsigned>&) {return false;};
 
