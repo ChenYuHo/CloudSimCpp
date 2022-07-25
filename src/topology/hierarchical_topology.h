@@ -3,7 +3,7 @@
 
 #include "main.h"
 #include "simplequeue.h"
-#include "simplepipe.h"
+//#include "simplepipe.h"
 #include "config.h"
 #include "network.h"
 #include "mytopology.h"
@@ -25,13 +25,13 @@ public:
     unique_ptr<Switch> core_switch{};
     vector<Switch *> tor_switches{};
     vector<Worker *> _workers{};
-    vector<vector<SimplePipe *> > pipes_core_tor{};
-    vector<vector<SimplePipe *> > pipes_tor_worker{};
+//    vector<vector<SimplePipe *> > pipes_core_tor{};
+//    vector<vector<SimplePipe *> > pipes_tor_worker{};
     vector<vector<SimpleQueue *> > queues_core_tor{};
     vector<vector<SimpleQueue *> > queues_tor_worker{};
 
-    vector<vector<SimplePipe *> > pipes_worker_tor{};
-    vector<vector<SimplePipe *> > pipes_tor_core{};
+//    vector<vector<SimplePipe *> > pipes_worker_tor{};
+//    vector<vector<SimplePipe *> > pipes_tor_core{};
     vector<vector<SimpleQueue *> > queues_worker_tor{};
     vector<vector<SimpleQueue *> > queues_tor_core{};
 

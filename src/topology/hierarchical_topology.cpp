@@ -28,10 +28,10 @@ void HierarchicalTopology::set_params(int switch_ports) {
     K = switch_ports; // Switches with K number of ports, K-ary or K-port Fat tree
     tor_switches.resize(K, nullptr);
     _workers.resize(_no_of_nodes, nullptr);
-    pipes_tor_core.resize(K, vector<SimplePipe *>(1));
-    pipes_core_tor.resize(1, vector<SimplePipe *>(K));
-    pipes_worker_tor.resize(_no_of_nodes, vector<SimplePipe *>(K));
-    pipes_tor_worker.resize(K, vector<SimplePipe *>(_no_of_nodes));
+//    pipes_tor_core.resize(K, vector<SimplePipe *>(1));
+//    pipes_core_tor.resize(1, vector<SimplePipe *>(K));
+//    pipes_worker_tor.resize(_no_of_nodes, vector<SimplePipe *>(K));
+//    pipes_tor_worker.resize(K, vector<SimplePipe *>(_no_of_nodes));
     queues_tor_worker.resize(K, vector<SimpleQueue *>(_no_of_nodes));
     queues_worker_tor.resize(_no_of_nodes, vector<SimpleQueue *>(K));
     queues_tor_core.resize(K, vector<SimpleQueue *>(1));
@@ -46,21 +46,21 @@ void HierarchicalTopology::init_network(unsigned gpus_per_node) {
     for (int j = 0; j < 1; j++)
         for (int k = 0; k < K; k++) {
             queues_core_tor[j][k] = nullptr;
-            pipes_core_tor[j][k] = nullptr;
+//            pipes_core_tor[j][k] = nullptr;
         }
 
     for (int j = 0; j < K; j++)
         for (int k = 0; k < 1; k++) {
             queues_tor_core[j][k] = nullptr;
-            pipes_tor_core[j][k] = nullptr;
+//            pipes_tor_core[j][k] = nullptr;
         }
 
     for (int j = 0; j < K; j++)
         for (int k = 0; k < K * (K - 1); k++) {
             queues_tor_worker[j][k] = nullptr;
-            pipes_tor_worker[j][k] = nullptr;
+//            pipes_tor_worker[j][k] = nullptr;
             queues_worker_tor[k][j] = nullptr;
-            pipes_worker_tor[k][j] = nullptr;
+//            pipes_worker_tor[k][j] = nullptr;
         }
 
     // instantiate workers and switches
@@ -83,14 +83,14 @@ void HierarchicalTopology::init_network(unsigned gpus_per_node) {
             // Downlink
             queues_tor_worker[j][k] = alloc_queue();
             queues_tor_worker[j][k]->setName(fmt::format("ToR0->SERVER{}", k));
-            pipes_tor_worker[j][k] = new SimplePipe(timeFromUs(RTT), *eventlist);
-            pipes_tor_worker[j][k]->setName(fmt::format("SimplePipe-ToR0->SERVER{}", k));
+//            pipes_tor_worker[j][k] = new SimplePipe(timeFromUs(RTT), *eventlist);
+//            pipes_tor_worker[j][k]->setName(fmt::format("SimplePipe-ToR0->SERVER{}", k));
 
             // Uplink
             queues_worker_tor[k][j] = alloc_queue();
             queues_worker_tor[k][j]->setName(fmt::format("SERVER{}->ToR0", k));
-            pipes_worker_tor[k][j] = new SimplePipe(timeFromUs(RTT), *eventlist);
-            pipes_worker_tor[k][j]->setName(fmt::format("SimplePipe-SERVER{}->ToR0", k));
+//            pipes_worker_tor[k][j] = new SimplePipe(timeFromUs(RTT), *eventlist);
+//            pipes_worker_tor[k][j]->setName(fmt::format("SimplePipe-SERVER{}->ToR0", k));
         }
     }
 
@@ -100,14 +100,14 @@ void HierarchicalTopology::init_network(unsigned gpus_per_node) {
         // Downlink
         queues_tor_core[j][k] = alloc_queue();
         queues_tor_core[j][k]->setName("ToR" + toa(j) + "->Core" + toa(k));
-        pipes_tor_core[j][k] = new SimplePipe(timeFromUs(RTT), *eventlist);
-        pipes_tor_core[j][k]->setName("SimplePipe-ToR" + toa(j) + "->Core" + toa(k));
+//        pipes_tor_core[j][k] = new SimplePipe(timeFromUs(RTT), *eventlist);
+//        pipes_tor_core[j][k]->setName("SimplePipe-ToR" + toa(j) + "->Core" + toa(k));
 
         // Uplink
         queues_core_tor[k][j] = alloc_queue();
         queues_core_tor[k][j]->setName("Core" + toa(k) + "->ToR" + toa(j));
-        pipes_core_tor[k][j] = new SimplePipe(timeFromUs(RTT), *eventlist);
-        pipes_core_tor[k][j]->setName("SimplePipe-Core" + toa(k) + "->ToR" + toa(j));
+//        pipes_core_tor[k][j] = new SimplePipe(timeFromUs(RTT), *eventlist);
+//        pipes_core_tor[k][j]->setName("SimplePipe-Core" + toa(k) + "->ToR" + toa(j));
     }
 
 }
@@ -115,13 +115,13 @@ void HierarchicalTopology::init_network(unsigned gpus_per_node) {
 
 const Route *HierarchicalTopology::get_worker_to_tor_path(unsigned src) {
     auto dest = HOST_ToR_SWITCH(src);
-    auto key = string_format("ws%ud%u", src, dest);
+    auto key = fmt::format("ws{}d{}", src, dest);
     if (routes.contains(key)) {
         return routes[key];
     }
     auto route_out = new Route();
     route_out->push_back(queues_worker_tor[src][dest]);
-    route_out->push_back(pipes_worker_tor[src][dest]);
+//    route_out->push_back(pipes_worker_tor[src][dest]);
     route_out->push_back(tor_switches[dest]);
     route_out->non_null();
     routes[key] = route_out;
@@ -151,9 +151,9 @@ void HierarchicalTopology::set_switch_num_updates(
         auto &map = tor_switches[tor_id]->num_updates_for_job;
         auto &map_ids = tor_switches[tor_id]->downward_ids_for_job;
         myprintf("ToR %d Jid %d num_updates %d\n", tor_id, job_id, map[job_id]);
-        auto str = string_format("ToR %d Jid %d downward: ", tor_id, job_id);
+        auto str = fmt::format("ToR {} Jid {} downward: ", tor_id, job_id);
         for (const auto &p: map_ids[job_id]) {
-            str += string_format("%d ", p);
+            str += fmt::format("{} ", p);
         }
         str += "\n";
         myprintf(str);
@@ -175,9 +175,9 @@ void HierarchicalTopology::set_switch_num_updates(
         core_switch->num_updates_for_job[job_id] = involved_tors.size();
         core_switch->downward_ids_for_job[job_id].merge(involved_tors);
         myprintf("core Jid %d num_updates %lu\n", job_id, core_switch->num_updates_for_job[job_id]);
-        auto str = string_format("core Jid %d downward: ", job_id);
+        auto str = fmt::format("core Jid {} downward: ", job_id);
         for (const auto &p: core_switch->downward_ids_for_job[job_id]) {
-            str += string_format("%d ", p);
+            str += fmt::format("{} ", p);
         }
         str += "\n";
         myprintf(str);
@@ -199,38 +199,38 @@ const Route *HierarchicalTopology::get_switch_single_hop_route(unsigned src, uns
 //    auto route_out = new Route();
     if (layer == 1) { // from core to ToRs
         src = 0;
-        auto key = string_format("%us,dl1u0%u", src, dest);
+        auto key = fmt::format("{}s,dl1u0{}", src, dest);
         if (routes.contains(key)) {
             return routes[key];
         }
         auto route_out = new Route();
         route_out->push_back(queues_core_tor[src][dest]);
-        route_out->push_back(pipes_core_tor[src][dest]);
+//        route_out->push_back(pipes_core_tor[src][dest]);
         route_out->push_back(tor_switches[dest]);
         route_out->non_null();
         routes[key] = route_out;
         return route_out;
     } else if (upward) { // from ToR to core
         dest = 0;
-        auto key = string_format("%us,dl0u1%u", src, dest);
+        auto key = fmt::format("{}s,dl0u1{}", src, dest);
         if (routes.contains(key)) {
             return routes[key];
         }
         auto route_out = new Route();
         route_out->push_back(queues_tor_core[src][dest]);
-        route_out->push_back(pipes_tor_core[src][dest]);
+//        route_out->push_back(pipes_tor_core[src][dest]);
         route_out->push_back(core_switch.get());
         route_out->non_null();
         routes[key] = route_out;
         return route_out;
     } else { // from ToR to workers
-        auto key = string_format("%us,dl0u0%u", src, dest);
+        auto key = fmt::format("{}s,dl0u0{}", src, dest);
         if (routes.contains(key)) {
             return routes[key];
         }
         auto route_out = new Route();
         route_out->push_back(queues_tor_worker[src][dest]);
-        route_out->push_back(pipes_tor_worker[src][dest]);
+//        route_out->push_back(pipes_tor_worker[src][dest]);
         route_out->push_back(_workers[dest]);
         route_out->non_null();
         routes[key] = route_out;
@@ -273,23 +273,23 @@ HierarchicalTopology::~HierarchicalTopology() {
     for (int j = 0; j < 1; j++) {
         for (int k = 0; k < K; k++) {
             delete queues_core_tor[j][k];
-            delete pipes_core_tor[j][k];
+//            delete pipes_core_tor[j][k];
         }
     }
 
     for (int j = 0; j < K; j++) {
         for (int k = 0; k < 1; k++) {
             delete queues_tor_core[j][k];
-            delete pipes_tor_core[j][k];
+//            delete pipes_tor_core[j][k];
         }
     }
 
     for (int j = 0; j < K; j++) {
         for (int k = 0; k < K * (K - 1); k++) {
             delete queues_tor_worker[j][k];
-            delete pipes_tor_worker[j][k];
+//            delete pipes_tor_worker[j][k];
             delete queues_worker_tor[k][j];
-            delete pipes_worker_tor[k][j];
+//            delete pipes_worker_tor[k][j];
         }
     }
 

@@ -25,7 +25,7 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                 }
 //                myprintf("[%llu]\tplacement failed for task %d requiring %d GPUs\n", sim.now(), job->id, job->gpu);
             } else {
-                auto str = string_format("[%llu]\tjob %d placement: ", sim.now(), job->id);
+                auto str = fmt::format("[{}]\tjob {} placement: ", sim.now(), job->id);
                 job->num_workers_allocated = run_config.size();
                 for (auto const& it: run_config) {
                     job->wids_allocated.insert(it.first);
@@ -38,7 +38,7 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                 cluster.check_if_all_jobs_started();
                 unsigned rank = 0;
                 for (const auto &pair: run_config) {
-                    str += string_format("mid %d rank %u -> %d gpu, ", pair.first, rank, pair.second);
+                    str += fmt::format("mid {} rank {} -> {} gpu, ", pair.first, rank, pair.second);
                     cluster.worker_map[pair.first]->rank_for_job[job->id] = rank++;
                     cluster.worker_map[pair.first]->execute_job(sim, job, pair.second, cs);
                 }

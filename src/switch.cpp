@@ -18,17 +18,16 @@ void Switch::multicast_downward(SwitchMLPacket *p) {
         multicast_pkt->set_ts(eventlist().now());
         multicast_pkt->upward = false;
         multicast_pkt->tensor = p->tensor;
-        multicast_pkt->sendOn();
+        multicast_pkt->sendOnSimple();
     }
 }
 
 
 void Switch::receivePacket(Packet &pkt) {
     auto *p = (SwitchMLPacket *) &pkt;
-    auto key = std::to_string(p->tensor->iter).append("i,s").append(std::to_string(p->slot)).append("c").append(
-            std::to_string(p->tensor->chunk_id));
-    auto key_of_the_other_slot = key + std::string("v").append(std::to_string(1 - p->ver));
-    key += std::string("v").append(std::to_string(p->ver));
+    auto key = fmt::format("{}i,s{}c{}", p->tensor->iter, p->slot, p->tensor->chunk_id);
+    auto key_of_the_other_slot = fmt::format("{}v{}", key, 1 - p->ver);
+    key += fmt::format("v{}", p->ver);
     myprintf(8,
              "[%llu] Switch layer %d id %d got packet from id %d ver %d slot %d off %d upward %d tid %llu, iter %llu JID %u NW %u\n",
              eventlist().now(), layer, id, p->id, p->ver, p->slot, p->offset, p->upward,
@@ -36,7 +35,7 @@ void Switch::receivePacket(Packet &pkt) {
     if (p->upward) {
         auto &seen = seen_for_tensor_key[p->tensor->key];
         auto &count = count_for_tensor_key[p->tensor->key];
-        if (seen[key].contains(p->id)) {
+        if (seen[key].contains(p->id)) [[unlikely]] {
             myprintf(8, "SHADOW BUFFER\n");
             assert(false);
             // shadow buffer
@@ -81,7 +80,7 @@ void Switch::receivePacket(Packet &pkt) {
 //                    print_route(*route);
 //                    cout<<"switch unicast:"<<p->cnt<<endl;
 //                    unicast_pkt->cnt = p->cnt;
-                    unicast_pkt->sendOn();
+                    unicast_pkt->sendOnSimple();
                 }
             }
         }

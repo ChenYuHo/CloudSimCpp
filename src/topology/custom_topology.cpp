@@ -12,8 +12,8 @@ CustomTopology::CustomTopology
         : cluster(c), _queuesize(queuesize), eventlist(ev), _no_of_nodes(switch_ports) {
     tor_switches.resize(1, nullptr);
     _workers.resize(_no_of_nodes, nullptr);
-    pipes_worker_tor.resize(_no_of_nodes, vector<SimplePipe *>(1));
-    pipes_tor_worker.resize(1, vector<SimplePipe *>(_no_of_nodes));
+//    pipes_worker_tor.resize(_no_of_nodes, vector<SimplePipe *>(1));
+//    pipes_tor_worker.resize(1, vector<SimplePipe *>(_no_of_nodes));
     queues_tor_worker.resize(1, vector<SimpleQueue *>(_no_of_nodes));
     queues_worker_tor.resize(_no_of_nodes, vector<SimpleQueue *>(1));
     init_network(gpus_per_node);
@@ -28,9 +28,9 @@ void CustomTopology::init_network(unsigned gpus_per_node) {
     for (int j = 0; j < 1; j++)
         for (int k = 0; k < _no_of_nodes; k++) {
             queues_tor_worker[j][k] = nullptr;
-            pipes_tor_worker[j][k] = nullptr;
+//            pipes_tor_worker[j][k] = nullptr;
             queues_worker_tor[k][j] = nullptr;
-            pipes_worker_tor[k][j] = nullptr;
+//            pipes_worker_tor[k][j] = nullptr;
         }
 
     // instantiate workers and switches
@@ -47,14 +47,14 @@ void CustomTopology::init_network(unsigned gpus_per_node) {
         // Downlink
         queues_tor_worker[0][k] = alloc_queue();
         queues_tor_worker[0][k]->setName(fmt::format("ToR0->SERVER{}", k));
-        pipes_tor_worker[0][k] = new SimplePipe(timeFromUs(RTT), *eventlist);
-        pipes_tor_worker[0][k]->setName(fmt::format("SimplePipe-ToR0->SERVER{}", k));
+//        pipes_tor_worker[0][k] = new SimplePipe(timeFromUs(RTT), *eventlist);
+//        pipes_tor_worker[0][k]->setName(fmt::format("SimplePipe-ToR0->SERVER{}", k));
 
         // Uplink
         queues_worker_tor[k][0] = alloc_queue();
         queues_worker_tor[k][0]->setName(fmt::format("SERVER{}->ToR0", k));
-        pipes_worker_tor[k][0] = new SimplePipe(timeFromUs(RTT), *eventlist);
-        pipes_worker_tor[k][0]->setName(fmt::format("SimplePipe-SERVER{}->ToR0", k));
+//        pipes_worker_tor[k][0] = new SimplePipe(timeFromUs(RTT), *eventlist);
+//        pipes_worker_tor[k][0]->setName(fmt::format("SimplePipe-SERVER{}->ToR0", k));
     }
 
 }
@@ -66,7 +66,7 @@ const Route *CustomTopology::get_worker_to_tor_path(unsigned src) {
     }
     auto route_out = new Route();
     route_out->push_back(queues_worker_tor[src][0]);
-    route_out->push_back(pipes_worker_tor[src][0]);
+//    route_out->push_back(pipes_worker_tor[src][0]);
     route_out->push_back(tor_switches[0]);
     route_out->non_null();
     routes[key] = route_out;
@@ -112,7 +112,7 @@ const Route *CustomTopology::get_switch_single_hop_route(unsigned src, unsigned 
     }
     auto route_out = new Route();
     route_out->push_back(queues_tor_worker[src][dest]);
-    route_out->push_back(pipes_tor_worker[src][dest]);
+//    route_out->push_back(pipes_tor_worker[src][dest]);
     route_out->push_back(_workers[dest]);
     route_out->non_null();
     routes[key] = route_out;
@@ -135,9 +135,9 @@ CustomTopology::~CustomTopology() {
 
     for (int k = 0; k < _no_of_nodes; k++) {
         delete queues_tor_worker[0][k];
-        delete pipes_tor_worker[0][k];
+//        delete pipes_tor_worker[0][k];
         delete queues_worker_tor[k][0];
-        delete pipes_worker_tor[k][0];
+//        delete pipes_worker_tor[k][0];
     }
 
     for (const auto &pair: routes) {

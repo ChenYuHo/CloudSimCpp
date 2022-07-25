@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 //        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 8));
     }
 
-    std::sort(jobs.begin(), jobs.end(), [](const auto &a, const auto &b){
+    std::sort(jobs.begin(), jobs.end(), [](const auto &a, const auto &b) {
         return a->submit_time < b->submit_time;
     });
 
@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
     delete placement_algo;
     delete scheduling_algo;
     delete topo;
-    for (auto job:jobs) delete job;
+    for (auto job: jobs) delete job;
     jobs.clear();
     return 0;
 }

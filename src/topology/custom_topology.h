@@ -44,10 +44,10 @@ private:
 
     vector<Switch*> tor_switches{};
     vector<Worker*> _workers{};
-    vector<vector<SimplePipe *> > pipes_tor_worker{};
+//    vector<vector<SimplePipe *> > pipes_tor_worker{};
     vector<vector<SimpleQueue *> > queues_tor_worker{};
 
-    vector<vector<SimplePipe *> > pipes_worker_tor{};
+//    vector<vector<SimplePipe *> > pipes_worker_tor{};
     vector<vector<SimpleQueue *> > queues_worker_tor{};
 
     EventList *eventlist; // for constructing worker and switch

@@ -202,7 +202,7 @@ void Worker::sendPacket(unsigned start, unsigned ver,
 //    cout << fmt::format("Worker{} ", id);
 //    print_route(*route);
 //    myprintf("worker sent pkt\n");
-    p->sendOn();
+    p->sendOnSimple();
 }
 
 simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
