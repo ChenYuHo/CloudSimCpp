@@ -138,7 +138,7 @@ Route *HierarchicalTopology::get_worker_to_tor_path(unsigned src) {
 
 void HierarchicalTopology::set_switch_num_updates(
         unsigned int job_id, map<unsigned int, unsigned int> run_config) {
-    std::set<unsigned> involved_tors{};
+    std::unordered_set<unsigned> involved_tors{};
     unordered_map<unsigned, bool> cleaner_worker_set{};
     for (const auto &pair: run_config) {
         auto tor_id = HOST_ToR_SWITCH(pair.first);

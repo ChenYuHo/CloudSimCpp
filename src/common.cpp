@@ -125,8 +125,9 @@ int myprintf(const char *format, ...) {
     std::string s(size + 1, '\0');
     va_start(args, format);
     auto r = std::vsprintf(&s[0], format, args);
-    cpb.update_variable();
-    cpb.stdout_in_for_progress(s);
+//    cpb.update_variable();
+//    cpb.stdout_in_for_progress(s);
+    cout << s;
     va_end(args);
     return r;
 }
@@ -134,8 +135,9 @@ int myprintf(const char *format, ...) {
 int myprintf(const char *format, va_list args, int size) {
     std::string s(size + 1, '\0');
     auto r = std::vsprintf(&s[0], format, args);
-    cpb.update_variable();
-    cpb.stdout_in_for_progress(s);
+//    cpb.update_variable();
+//    cpb.stdout_in_for_progress(s);
+    cout << s;
     return r;
 }
 

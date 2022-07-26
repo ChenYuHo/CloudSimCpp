@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(CloudSimCpp)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_VERBOSE_MAKEFILE ON CACHE BOOL "ON" FORCE)
 
 set(HTSIM_SRCS)
 list(APPEND HTSIM_SRCS
@@ -27,7 +28,6 @@ list(APPEND SRCS
         "src/simplequeue.cpp"
         "src/switch.cpp"
         "src/worker.cpp"
-        "src/collective_scheduler.cpp"
         "src/job_placement/random.cpp"
         "src/job_placement/custom.cpp"
         "src/job_placement/yarn.cpp"
@@ -50,17 +50,20 @@ find_package(Threads REQUIRED)
 find_package(glog 0.6.0 REQUIRED)
 find_package(fmt REQUIRED)
 
-add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
-add_link_options(-fsanitize=address -fno-omit-frame-pointer)
+add_compile_options(-march=native $<$<CONFIG:RelWithDebInfo>:-Ofast>)
+#add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+#add_link_options(-fsanitize=address -fno-omit-frame-pointer)
 
 add_subdirectory(simcpp20)
 ## for profiling
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -fno-omit-frame-pointer")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer")
 
+#add_executable(Microbenchmark microbenchmark.cpp ${HTSIM_SRCS} ${SRCS})
 add_executable(SwitchML switchml_main.cpp ${HTSIM_SRCS} ${SRCS})
 add_executable(SwitchML_NOSIMPKT switchml_main.cpp ${HTSIM_SRCS} ${SRCS})
 target_compile_definitions(SwitchML_NOSIMPKT PUBLIC NOSIMPKT)
 # Threads::Threads for csvio
+#target_link_libraries(Microbenchmark PUBLIC glog::glog fmt::fmt fschuetz04_simcpp20)
 target_link_libraries(SwitchML PUBLIC glog::glog fmt::fmt fschuetz04_simcpp20 Threads::Threads)
 target_link_libraries(SwitchML_NOSIMPKT glog::glog fmt::fmt fschuetz04_simcpp20 Threads::Threads)

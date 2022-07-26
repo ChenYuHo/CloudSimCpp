@@ -6,6 +6,7 @@
 #include "collective_scheduler.h"
 #include "eventlist.h"
 #include "network.h"
+#include <unordered_set>
 //#include "switch.h"
 
 class Job;
@@ -74,7 +75,7 @@ public:
 
     std::unordered_map<uint64_t, resource<SIM_UNIT> *> fp_locks{};
     std::unordered_map<uint64_t, resource<SIM_UNIT> *> allreduce_locks{};
-    std::unordered_map<unsigned, std::set<unsigned>> received_pkts{};
+    std::unordered_map<unsigned, std::unordered_set<unsigned>> received_pkts{};
     unsigned allreduce_counter[2]{0, 0};
 
     ~Worker() override {

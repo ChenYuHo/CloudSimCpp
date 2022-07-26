@@ -2,7 +2,7 @@
 #include "job.h"
 #include "cluster.h"
 #include "worker.h"
-#include "topology.h"
+#include <glog/logging.h>
 
 //void Sincronia::print_ready_pqueues_info() {
 //    for (unsigned i = 0; i < ready_pqueues.size(); ++i) {
@@ -19,8 +19,8 @@ simcpp20::event<SIM_UNIT>
 Sincronia::enqueue(simcpp20::simulation<SIM_UNIT> &sim, Tensor *tensor) {
     queue[tensor->key].push_back(tensor);
     if (queue[tensor->key].size() % tensor->job->num_workers_allocated == 0) {
-        myprintf(7, "putting jid %u tid %u size %u into ready queue %d\n",
-                 tensor->job->id, tensor->tensor_id, tensor->size, loop_is_running);
+        DVLOG(1) << fmt::format("putting jid {} tid {} size {} into ready queue {}\n",
+                                tensor->job->id, tensor->tensor_id, tensor->size, loop_is_running);
         ready_pqueues[tensor->job->id].push(tensor);
 //        print_ready_pqueues_info();
         if (!loop_is_running) {
@@ -28,6 +28,7 @@ Sincronia::enqueue(simcpp20::simulation<SIM_UNIT> &sim, Tensor *tensor) {
             collective_scheduler(sim, cluster);
         }
     }
+//    co_return ;
     co_await sim.timeout(0);
 }
 

@@ -6,7 +6,7 @@
 #include "eventlist.h"
 #include "network.h"
 #include <tuple>
-#include <set>
+#include <unordered_set>
 #include <string>
 #include <unordered_map>
 
@@ -46,14 +46,14 @@ public:
 //    std::shared_ptr<resource<SIM_UNIT>> pkt_lock;
 
 
-    std::unordered_map<unsigned, std::set<unsigned>> downward_ids_for_job{}; // JID, IDs (worker or switch) to send downward
+    std::unordered_map<unsigned, std::unordered_set<unsigned>> downward_ids_for_job{}; // JID, IDs (worker or switch) to send downward
     std::unordered_map<unsigned, unsigned> num_updates_for_job{}; // JID, num_updates
     std::unordered_map<unsigned, bool> top_level_for_job{}; // JID, top_level
     // set when placement is determined, via topology, erase when job is done
 
     std::unordered_map<unsigned, std::unordered_map<std::string, unsigned>> count_for_tensor_key{}; // jid, hash
     // p.ver, p.slot_idx, jid, tid, cid, iter
-    std::unordered_map<unsigned, std::unordered_map<std::string, std::set<unsigned>>> seen_for_tensor_key{};
+    std::unordered_map<unsigned, std::unordered_map<std::string, std::unordered_set<unsigned>>> seen_for_tensor_key{};
 
     explicit Switch(EventList &ev, Cluster *cluster, Switch *upper_level_switch, Route *up_route = nullptr) :
             EventSource(ev, "Switch"),
