@@ -9,7 +9,7 @@ class CppProgressBar {
 private:
     size_t progress_loop_number_{};
     std::string progress_bar_;
-    std::string empty_line_{std::string(200, ' ') + "\r"};
+    std::string empty_line_{std::string(200, ' ')+"\r"};
     double percentage_{};
     double oneHundredth_{};
     size_t one{};

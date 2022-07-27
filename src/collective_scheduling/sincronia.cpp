@@ -41,7 +41,7 @@ double get_weight(const Tensor *tensor) {
 
 simcpp20::event<SIM_UNIT> Sincronia::collective_scheduler(
         simcpp20::simulation<SIM_UNIT> &sim, Cluster &cluster) {
-    co_await sim.timeout(timeFromMs(20)); // 20 ms interval
+//    co_await sim.timeout(timeFromMs(20)); // 20 ms interval
     while (!ready_pqueues_all_empty()) {
         std::unordered_map<Tensor *, double> weights{}; // to be scheduled on
         for (auto &pair: ready_pqueues) { // pair: jid -> pq

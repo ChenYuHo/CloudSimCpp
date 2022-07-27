@@ -86,9 +86,9 @@ int main(int argc, char *argv[]) {
         }
     } else {
         printf("JOB_CSV SYNTHETIC\n");
-//        jobs.push_back(new Job(0, sim, "alexnet", 5, 2));
-//        jobs.push_back(new Job(0, sim, "alexnet", 5, 2));
-        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{26214400}, 1, 8));
+        jobs.push_back(new Job(0, sim, "vgg19", 2, 8));
+        jobs.push_back(new Job(0, sim, "vgg19", 2, 8));
+//        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{26214400}, 1, 8));
 //        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 8));
     }
 
@@ -213,5 +213,6 @@ int main(int argc, char *argv[]) {
     delete topo;
     for (auto job: jobs) delete job;
     jobs.clear();
+    std::clog << std::endl;
     return 0;
 }
