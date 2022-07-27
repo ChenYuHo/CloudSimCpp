@@ -15,7 +15,7 @@ public:
     explicit YARNPlacement(unsigned seed, bool fallback_to_random = false)
             : gen(std::mt19937(seed)), use_random_when_fail(fallback_to_random) {};
 
-    std::map<unsigned, unsigned> place_job_in(Cluster &cluster, Job *job) override;
+    std::unordered_map<unsigned, unsigned> place_job_in(Cluster &cluster, Job *job) override;
 
 private:
     bool use_random_when_fail;

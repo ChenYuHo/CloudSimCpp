@@ -4,8 +4,8 @@
 #include "worker.h"
 #include "job.h"
 
-std::map<unsigned, unsigned> CustomPlacement::place_job_in(Cluster &cluster, Job *job) {
-    std::map<unsigned, unsigned> counter{};
+std::unordered_map<unsigned, unsigned> CustomPlacement::place_job_in(Cluster &cluster, Job *job) {
+    std::unordered_map<unsigned, unsigned> counter{};
     // counter: wid: num_gpus_allocated
     for (unsigned i=0; i<SWITCH_PORTS; ++i)
         counter[i] = 1;

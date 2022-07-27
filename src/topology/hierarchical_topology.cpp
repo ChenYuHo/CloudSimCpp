@@ -6,6 +6,7 @@
 #include "job.h"
 #include <cfloat>
 #include <glog/logging.h>
+#include <algorithm>
 
 template<typename T>
 string toa(T n) {
@@ -124,20 +125,20 @@ void HierarchicalTopology::init_network(unsigned gpus_per_node) {
 Route *HierarchicalTopology::get_worker_to_tor_path(unsigned src) {
     auto dest = HOST_ToR_SWITCH(src);
     auto key = fmt::format("ws{}d{}", src, dest);
-    if (routes.contains(key)) {
-        return routes[key];
-    }
+//    if (routes.contains(key)) {
+//        return routes[key];
+//    }
     auto route_out = new Route();
     route_out->push_back(queues_worker_tor[src][dest]);
 //    route_out->push_back(pipes_worker_tor[src][dest]);
     route_out->push_back(tor_switches[dest]);
     route_out->non_null();
-    routes[key] = route_out;
+//    routes[key] = route_out;
     return route_out;
 }
 
 void HierarchicalTopology::set_switch_num_updates(
-        unsigned int job_id, map<unsigned int, unsigned int> run_config) {
+        unsigned int job_id, unordered_map<unsigned int, unsigned int> run_config) {
     std::unordered_set<unsigned> involved_tors{};
     unordered_map<unsigned, bool> cleaner_worker_set{};
     for (const auto &pair: run_config) {
@@ -235,13 +236,13 @@ Route *HierarchicalTopology::get_switch_single_hop_route(unsigned src, unsigned 
 
 }
 
-bool HierarchicalTopology::accommodate(const std::set<unsigned> &these, const std::set<unsigned> &those) {
-    std::set<unsigned> tors_these;
+bool HierarchicalTopology::accommodate(const std::unordered_set<unsigned> &these, const std::unordered_set<unsigned> &those) {
+    std::unordered_set<unsigned> tors_these;
     for (auto wid: these) tors_these.insert(HOST_ToR_SWITCH(wid));
     if (tors_these.size() == 1) { // don't need core
         tors_these.clear();
     }
-    std::set<unsigned> tors_those;
+    std::unordered_set<unsigned> tors_those;
     for (auto wid: those) {
         if (these.contains(wid))
             return false;
@@ -292,58 +293,41 @@ HierarchicalTopology::~HierarchicalTopology() {
 //    delete eventlist;
 }
 
-std::deque<uint64_t> HierarchicalTopology::bssi(std::unordered_map<Tensor *, uint64_t> weights) {
-//    myprintf("before ordering: ");
-//    for (auto& pair: weights) {
-//        myprintf("jid %u tkey %u ", pair.first->job->id, pair.first->key);
-//    }
-//    myprintf("\n");
+struct DoubleDefaultedToOne {
+    double d = 1;
+};
+
+std::deque<uint64_t> HierarchicalTopology::bssi(std::unordered_map<Tensor *, double> weights) {
     // coflow (per job) -> weight
-    std::unordered_map<unsigned, std::unordered_map<unsigned, unsigned>> data_port_coflow; // port (per worker), coflow -> data
-    std::vector<unsigned> data_port(_no_of_nodes);
     std::deque<uint64_t> result{};
     auto iters = weights.size();
-    if (iters == 1) {
-        for (auto &pair: weights) {
-            result.push_front(pair.first->key);
-        }
-        return result;
-    }
-    for (unsigned i = 0; i < iters; ++i) {
-//        myprintf("iter %u/%u\n", i+1, iters);
+    for (unsigned i = 0; i < iters - 1; ++i) {
+        std::unordered_map<unsigned, std::unordered_map<unsigned, DoubleDefaultedToOne>> data_port_coflow{};
+        // port (per worker), coflow -> data
+        std::vector<DoubleDefaultedToOne> data_port(_no_of_nodes);
         // Find the most bottlenecked port
         unsigned bottlenecked; // wid
-        unsigned current_max = 0;
+        double current_max = 0;
         for (auto &pair: weights) {
             auto &tensor = pair.first;
             for (auto wid: tensor->job->wids_allocated) {
-                auto data = ((CHUNK_SIZE == 0)
-                             ? tensor->size
-                             : (tensor->size - tensor->allreduced_size > CHUNK_SIZE)
-                               ? CHUNK_SIZE
-                               : tensor->size - tensor->allreduced_size);
-                data_port_coflow[wid][tensor->job->id] += data;
-                data_port[wid] += data;
-                if (data_port[wid] >= current_max) {
-                    current_max = data_port[wid];
+                auto data = double((CHUNK_SIZE == 0) ? tensor->size
+                                                     : std::min(tensor->size - tensor->allreduced_size, CHUNK_SIZE));
+                data_port_coflow[wid][tensor->job->id].d += data;
+                data_port[wid].d += data;
+                if (data_port[wid].d >= current_max) {
+                    current_max = data_port[wid].d;
                     bottlenecked = wid;
                 }
             }
         }
-//        for (auto& p: data_port_coflow) {
-//            for (auto & pp: p.second) {
-//                myprintf("port %u coflow %u data %u\n", p.first, pp.first, pp.second);
-//            }
-//        }
-//        myprintf("bottleneck port %u\n", bottlenecked);
+        DVLOG(3) << "bottlenecked port " << bottlenecked;
         // Select weighted largest job to schedule last
         Tensor *weighted_largest;
         auto current_min = DBL_MAX;
         double min_weight;
         for (auto &pair: weights) {
-//            myprintf("tid %llu bport %u jid %u dpc %u\n", pair.second, bottlenecked, pair.first->job->id, data_port_coflow[bottlenecked][pair.first->job->id]);
-            if (data_port_coflow[bottlenecked][pair.first->job->id] == 0) continue;
-            auto weight = pair.second / data_port_coflow[bottlenecked][pair.first->job->id];
+            auto weight = pair.second / data_port_coflow[bottlenecked][pair.first->job->id].d;
             if (weight <= current_min) {
                 current_min = weight;
                 weighted_largest = pair.first;
@@ -353,30 +337,12 @@ std::deque<uint64_t> HierarchicalTopology::bssi(std::unordered_map<Tensor *, uin
         result.push_front(weighted_largest->key);
 
         // Scale the weights
-        for (auto &pair: weights) {
-            if (pair.first->job->id != weighted_largest->job->id) {
-                pair.second -= (min_weight * data_port_coflow[bottlenecked][pair.first->job->id] /
-                                data_port_coflow[bottlenecked][weighted_largest->job->id]);
-            }
-        }
+        auto s = data_port_coflow[bottlenecked][weighted_largest->job->id].d;
         weights.erase(weighted_largest);
+        for (auto &pair: weights) {
+            pair.second -= (min_weight * data_port_coflow[bottlenecked][pair.first->job->id].d / s);
+        }
     }
-//    myprintf("result:");
-//    for (auto i: result) myprintf("%u ", i);
-//    myprintf("\n");
+    result.push_front(weights.begin()->first->key);
     return result;
 }
-
-//void HierarchicalTopology::register_switch(Switch *s) {
-//    myprintf("register %d %p\n", s->id(), s);
-////    cout<<s->id<<s;
-//    tor_switches[s->id()] = s;
-//}
-//
-//void HierarchicalTopology::register_core_switch(Switch *s) {
-//    core_switch[s->id()] = s;
-//}
-//
-//void HierarchicalTopology::register_worker(Worker *w) {
-//    _workers[w->id()] = w;
-//}

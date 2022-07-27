@@ -43,7 +43,7 @@ public:
 
     bool ready_pqueues_all_empty() const;
 
-    std::set<unsigned> can_erase{};
+    std::unordered_set<unsigned> can_erase{};
 };
 
 

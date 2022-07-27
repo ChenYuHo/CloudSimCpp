@@ -32,7 +32,7 @@ namespace {
         SWITCH_PORTS_impl = std::stoi(getenv("SWITCH_PORTS", "8"));
         GPUS_PER_NODE_impl = std::stoul(getenv("GPUS_PER_NODE", "4"));
         RTT_impl = std::stoul(getenv("RTT_us", "1"));
-        CHUNK_SIZE_impl = std::stoul(getenv("CHUNK_SIZE", "262144"));
+        CHUNK_SIZE_impl = std::stoul(getenv("CHUNK_SIZE", "262144")); // 1MB
 
         // SwitchML paper states use 128 and 512 as the pool size for 10 and 100 Gbps, respectively (and 128 otherwise)
         const char *n = getenv("NUM_SLOTS");
@@ -82,7 +82,7 @@ const uint32_t &SWITCH_BUFFER = SWITCH_BUFFER_impl; // in bytes, per queue (port
 const int32_t &SWITCH_PORTS = SWITCH_PORTS_impl;
 const uint32_t &GPUS_PER_NODE = GPUS_PER_NODE_impl;
 const uint32_t &RTT = RTT_impl; // us
-const uint32_t &CHUNK_SIZE = CHUNK_SIZE_impl;
+const uint64_t &CHUNK_SIZE = CHUNK_SIZE_impl;
 const uint32_t &NUM_SLOTS = NUM_SLOTS_impl; // pool size
 const uint32_t &PRINT_MASK = PRINT_MASK_impl;
 // 1
@@ -142,7 +142,7 @@ int myprintf(const char *format, va_list args, int size) {
 }
 
 int myprintf(uint32_t type, const char *format, ...) {
-    if ((1 << type) & PRINT_MASK) {
+    if ((1 << type) & PRINT_MASK) [[unlikely]] {
         va_list args;
         va_start(args, format);
         auto size = std::vsnprintf(nullptr, 0, format, args);

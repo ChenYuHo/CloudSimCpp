@@ -7,7 +7,7 @@
 #include "job.h"
 
 bool multi_racks_placement(const std::vector<Worker *> &selected) {
-    std::set<unsigned> placed_tors;
+    std::unordered_set<unsigned> placed_tors;
     for (const auto &machine: selected) {
         placed_tors.insert(machine->tor->id);
     }
@@ -15,18 +15,18 @@ bool multi_racks_placement(const std::vector<Worker *> &selected) {
 }
 
 bool distributed_placement(const std::vector<Worker *> &selected) {
-    std::set<unsigned> machines{};
+    std::unordered_set<unsigned> machines{};
     for (const auto &machine: selected) {
         machines.insert(machine->id);
     }
     return machines.size() > 1;
 }
 
-std::map<unsigned, unsigned> RandomPlacement::place_job_in(Cluster &cluster, Job *job) {
+std::unordered_map<unsigned, unsigned> RandomPlacement::place_job_in(Cluster &cluster, Job *job) {
     std::vector<Worker *> candidates;
-    std::map<unsigned, unsigned> counter{};
+    std::unordered_map<unsigned, unsigned> counter{};
     unsigned available_machines = 0;
-    std::set<unsigned> tors_with_available_machines;
+    std::unordered_set<unsigned> tors_with_available_machines;
     for (auto &machine: *cluster.workers) {
         if (machine->gpu > 0) {
             available_machines++;

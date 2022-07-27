@@ -16,7 +16,7 @@ public:
 
 class PlacementAlgo {
 public:
-    virtual std::map<unsigned, unsigned> place_job_in(Cluster &, Job *) = 0;
+    virtual std::unordered_map<unsigned, unsigned> place_job_in(Cluster &, Job *) = 0;
     virtual ~PlacementAlgo() = default;
 };
 

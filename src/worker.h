@@ -45,12 +45,12 @@ public:
         return _nodename;
     };
 
-    explicit Worker(EventList &ev, Cluster *cluster, Switch *tor, unsigned gpus_per_node, Route* route_to_tor=nullptr) :
+    explicit Worker(EventList &ev, Cluster *cluster, Switch *tor, unsigned gpus_per_node, Route *route_to_tor = nullptr)
+            :
             EventSource(ev, "worker"),
             id(get_id()), cluster(cluster),
             tor(tor), gpu(gpus_per_node), gpu_capacity(gpus_per_node), route_to_tor(route_to_tor) {
         _nodename = fmt::format("Worker{}", id);
-//        myprintf("Worker %d constructor invoked\n", id);
     }
 
     //TODO: model forward pass
@@ -66,7 +66,7 @@ public:
     simcpp20::event<SIM_UNIT>
     execute_job(simcpp20::simulation<SIM_UNIT> &, Job *, unsigned, CollectiveScheduler *);
 
-    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, Tensor *, unsigned= 0);
+    simcpp20::event<SIM_UNIT> allreduce(simcpp20::simulation<SIM_UNIT> &, Tensor *, uint64_t= 0);
 
     void sendPacket(unsigned, unsigned, unsigned, unsigned, Tensor *);
 

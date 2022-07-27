@@ -5,11 +5,11 @@
 #include "job.h"
 #include <algorithm>
 
-std::map<unsigned, unsigned> YARNPlacement::place_job_in(Cluster &cluster, Job *job) {
+std::unordered_map<unsigned, unsigned> YARNPlacement::place_job_in(Cluster &cluster, Job *job) {
     // single worker
     myprintf(6, "Try allocating on a single worker\n");
     std::vector<unsigned> candidates{};
-    std::map<unsigned, unsigned> counter{}; // worker_id -> allocated_GPUs
+    std::unordered_map<unsigned, unsigned> counter{}; // worker_id -> allocated_GPUs
     for (auto &machine: *cluster.workers) {
         if (machine->gpu >= job->gpu) {
             for (unsigned i = 0; i < machine->gpu; ++i) candidates.push_back(machine->id);

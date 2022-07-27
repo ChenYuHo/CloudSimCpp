@@ -31,7 +31,7 @@
 typedef simtime_picosec SIM_UNIT;
 
 int main(int argc, char *argv[]) {
-    google::InitGoogleLogging("CloudSimCpp");
+    google::InitGoogleLogging("CloudSimCpp"); // without this, log to stderr
     google::InstallFailureSignalHandler();
     simcpp20::simulation<SIM_UNIT> sim;
     auto event_list = EventList(sim);

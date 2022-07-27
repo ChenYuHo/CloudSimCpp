@@ -54,12 +54,12 @@ simcpp20::event<SIM_UNIT> DeficitRoundRobin::collective_scheduler(
             auto &tensors = pq.top();
             auto &front = tensors.front();
             auto jid = ready_pqueues[i].first;
-            std::set<unsigned> involved_wids{front->job->wids_allocated};
-            std::set<unsigned> involved_jids{jid};
+            std::unordered_set<unsigned> involved_wids{front->job->wids_allocated};
+            std::unordered_set<unsigned> involved_jids{jid};
             while (true) { // work conservation
                 unsigned current_min_quantum = 0xffffffff;
                 auto selected_idx = i;
-                std::set<unsigned> selected_wids = front->job->wids_allocated;
+                std::unordered_set<unsigned> selected_wids = front->job->wids_allocated;
                 for (auto j = i; j < ready_pqueues.size(); ++j) {
                     auto job_id = ready_pqueues[j].first;
                     if (involved_jids.contains(job_id) || ready_pqueues[j].second.empty()) continue;

@@ -11,7 +11,7 @@ public:
     bool force_distributed;
     bool force_multi_racks;
 
-    std::map<unsigned, unsigned> place_job_in(Cluster &cluster, Job *job) override;
+    std::unordered_map<unsigned, unsigned> place_job_in(Cluster &cluster, Job *job) override;
 
     explicit RandomPlacement(bool force_distributed = false,
                              bool force_multi_racks = false) : gen(std::mt19937(rd())),

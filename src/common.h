@@ -5,7 +5,7 @@
 #include <cstdarg>
 #include <memory>
 #include <utility>
-#include <set>
+#include <unordered_set>
 #include <string>
 #include <stdexcept>
 #include "resource.hpp"
@@ -23,7 +23,7 @@ extern const uint32_t& GPUS_PER_NODE;
 extern const uint32_t& PRINT_MASK;
 extern const uint32_t& RTT; // us
 extern const uint32_t& SWITCHML_PKT_SIZE;
-extern const uint32_t& CHUNK_SIZE;
+extern const uint64_t& CHUNK_SIZE;
 extern const uint32_t& NUM_SLOTS; // pool size
 extern const uint32_t& NUM_UPDATES;
 extern const bool& COLLECTIVE_STATISTICS;
@@ -68,8 +68,9 @@ public:
     uint64_t forward_pass_time{};
     uint64_t backward_pass_time{};
     SIM_UNIT allreduce_start{};
-    std::vector<SIM_UNIT> collective_timings{};
+
     // first element is schedule time, others execution time
+    std::vector<SIM_UNIT> collective_timings{};
 
     Tensor(uint64_t, Worker *, Job *, simcpp20::simulation<SIM_UNIT> &);
 

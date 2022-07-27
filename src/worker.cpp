@@ -9,6 +9,11 @@
 #include "cluster.h"
 #include "packet.h"
 #include <glog/logging.h>
+#include <algorithm>
+
+// verbose loggings:
+// 2: iterations
+// 3: (DEBUG) forward backward allreduce times
 
 std::string to_string(const std::vector<SIM_UNIT> &collective_timings) {
     if (collective_timings.empty()) return "";
@@ -144,9 +149,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
     tensors.clear();
 }
 
-void Worker::doNextEvent() {
-
-}
+void Worker::doNextEvent() {}
 
 void Worker::receivePacket(Packet &pkt) {
     auto p = (SwitchMLPacket *) &pkt;
@@ -207,7 +210,7 @@ void Worker::sendPacket(unsigned start, unsigned ver,
 
 simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
                                             Tensor *tensor,
-                                            unsigned chunk_size) {
+                                            uint64_t chunk_size) {
     if (rank_for_job[tensor->job->id] == 0) {
         // allreduce start
         myprintf(5, "{\t%lu\t%u\t%u\n", sim.now(), tensor->job->id, tensor->tensor_id);
@@ -225,9 +228,7 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
     tensor->allreduce_start = sim.now();
     auto grad_size = (chunk_size == 0)
                      ? tensor->size
-                     : (tensor->size - tensor->allreduced_size > chunk_size)
-                       ? chunk_size
-                       : tensor->size - tensor->allreduced_size;
+                     : std::min(tensor->size - tensor->allreduced_size, chunk_size);
     myprintf(8, "[%llu] mid %u tid %u jid %u allreduce size %llu iter %d\n", eventlist().now(), id,
              tensor->tensor_id, tensor->job->id, grad_size, tensor->iter);
     tensor->num_pkts_expected = grad_size / NUM_UPDATES;
@@ -261,8 +262,9 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
                  end - tensor->allreduce_start, end);
     }
     allreduce_counter[tensor->iter % 2]++;
-    if (allreduce_counter[tensor->iter % 2] == tensor->job->model.size()) {
+    if (allreduce_counter[tensor->iter % 2] == tensor->job->model.size()) { // all allreduces done, mark iteration end
         allreduce_counter[1 - tensor->iter % 2] = 0;
+//        co_await sim.timeout(0); // TODO: post allreduce processing time: weight update etc
         myprintf(4, "[%u,%u]<stdout>:SYNTHETIC ITERATION END PROFILE %llu\n",
                  tensor->job->id, rank, sim.now());
     }

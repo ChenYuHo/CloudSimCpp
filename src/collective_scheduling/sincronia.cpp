@@ -28,60 +28,56 @@ Sincronia::enqueue(simcpp20::simulation<SIM_UNIT> &sim, Tensor *tensor) {
             collective_scheduler(sim, cluster);
         }
     }
-//    co_return ;
     co_await sim.timeout(0);
 }
 
-uint64_t get_weight(const Tensor *tensor) {
+double get_weight(const Tensor *tensor) {
     if (tensor->tensor_id > ((1 + tensor->job->fp_layer) % tensor->job->model.size())) {
-        return tensor->job->model[tensor->job->fp_layer];
+        return double(tensor->job->model[tensor->job->fp_layer]);
     } else { // same layer
-        return tensor->job->model[tensor->job->fp_layer] - tensor->allreduced_size;
+        return double(tensor->job->model[tensor->job->fp_layer] - tensor->allreduced_size);
     }
 }
 
 simcpp20::event<SIM_UNIT> Sincronia::collective_scheduler(
         simcpp20::simulation<SIM_UNIT> &sim, Cluster &cluster) {
+    co_await sim.timeout(timeFromMs(20)); // 20 ms interval
     while (!ready_pqueues_all_empty()) {
-        std::unordered_map<Tensor *, uint64_t> weights{};
-        for (auto &pair: ready_pqueues) {
+        std::unordered_map<Tensor *, double> weights{}; // to be scheduled on
+        for (auto &pair: ready_pqueues) { // pair: jid -> pq
             auto &pq = pair.second;
-            if (!pq.empty()) {
+            // clean out can_erase
+            while (!pq.empty() && can_erase.contains(pq.top()->key)) {
                 Tensor *tensor = pq.top();
-                while (can_erase.contains(tensor->key)) {
-                    myprintf(7, "popping jid %u tid %u\n", tensor->job->id, tensor->tensor_id);
-                    can_erase.erase(tensor->key);
-                    pq.pop();
-                    for (unsigned i = 0; i < tensor->job->wids_allocated.size(); ++i) {
-                        queue[tensor->key].pop_front();
-                    }
-                    if (pq.empty()) {
-                        break;
-                    }
-                    tensor = pq.top();
+                DVLOG(1) << fmt::format("popping jid {} tid {}", tensor->job->id, tensor->tensor_id);
+                can_erase.erase(tensor->key);
+                pq.pop();
+                for (unsigned i = 0; i < tensor->job->num_workers_allocated; ++i) {
+                    queue[tensor->key].pop_front();
                 }
-                if (pq.empty()) continue;
-                weights[tensor] = get_weight(tensor);
             }
+            if (pq.empty()) continue;
+            // take one into weights
+            weights[pq.top()] = get_weight(pq.top());
         }
+        if (weights.empty()) continue;
 
-        // bssi order, sequential with work conservation
+        // bssi order
         auto result = (weights.size() == 1) ? std::deque<uint64_t>{weights.cbegin()->first->key}
                                             : cluster._topo->bssi(weights);
-
-        static unsigned counter = 0;
-        while (!result.empty()) {
-            myprintf(7, "while %u\n", counter++);
+        while (!result.empty()) { // sequentially, with work conservation
+#ifndef NDEBUG
             for (auto &key: result) {
                 auto &tensor = queue[key].front();
                 myprintf(7, "result jid %u tid %u\n", tensor->job->id, tensor->tensor_id);
             }
+#endif
             std::vector<simcpp20::event<SIM_UNIT>> allreduce_events{};
             auto front_tkey = result.front();
             auto tensor = queue[front_tkey].front();
             result.pop_front();
-            std::set<unsigned> involved_wids{tensor->job->wids_allocated};
-            std::set<uint64_t> involved_tkeys{tensor->key};
+            std::unordered_set<unsigned> involved_wids{tensor->job->wids_allocated};
+            std::unordered_set<uint64_t> involved_tkeys{tensor->key};
             for (auto &key: result) { // work conservation
                 auto that = queue[key].front();
                 auto &wids_allocated = that->job->wids_allocated;
@@ -109,7 +105,6 @@ simcpp20::event<SIM_UNIT> Sincronia::collective_scheduler(
     co_await sim.timeout(0);
     loop_is_running = false;
 }
-
 
 void Sincronia::cleanup_for_job(unsigned jid) {
     std::erase_if(ready_pqueues, [jid](auto &pair) { return pair.first == jid; });

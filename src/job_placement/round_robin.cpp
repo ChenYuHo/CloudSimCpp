@@ -5,7 +5,7 @@
 #include "worker.h"
 #include "job.h"
 
-std::map<unsigned, unsigned> RoundRobinPlacement::place_job_in(Cluster &cluster, Job *job) {
+std::unordered_map<unsigned, unsigned> RoundRobinPlacement::place_job_in(Cluster &cluster, Job *job) {
     for (auto &entry: some_map) {
         auto &tor = entry.first;
         auto &workers = entry.second;
@@ -13,7 +13,7 @@ std::map<unsigned, unsigned> RoundRobinPlacement::place_job_in(Cluster &cluster,
 
 
     std::vector<unsigned> candidates;
-    std::map<unsigned, unsigned> counter{};
+    std::unordered_map<unsigned, unsigned> counter{};
     unsigned available_machines = 0;
     for (auto &machine:cluster.workers) {
         if (machine->gpu > 0) available_machines++;

@@ -5,7 +5,7 @@
 
 class RoundRobinPlacement : public PlacementAlgo {
 public:
-    std::map<unsigned, unsigned> place_job_in(Cluster &cluster, Job *job) override;
+    std::unordered_map<unsigned, unsigned> place_job_in(Cluster &cluster, Job *job) override;
 };
 
 #endif //CLOUDSIMCPP_ROUND_ROBIN_H

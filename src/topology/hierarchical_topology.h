@@ -53,7 +53,7 @@ public:
     std::vector<Worker *> *workers() override { return &_workers; };
 
     void set_switch_num_updates(
-            unsigned int job_id, map<unsigned int, unsigned int> run_config) override;
+            unsigned int job_id, unordered_map<unsigned int, unsigned int> run_config) override;
 
     Route *get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) override;
 
@@ -61,7 +61,7 @@ public:
 private:
     Cluster *cluster;
 
-    map<SimpleQueue *, int> _link_usage;
+    unordered_map<SimpleQueue *, int> _link_usage;
 
     void set_params(int no_of_nodes);
 
@@ -70,11 +70,11 @@ private:
     unsigned num_layers;
     mem_b _queuesize;
 
-    std::unordered_map<std::string, Route *> routes{};
+//    std::unordered_map<std::string, Route *> routes{};
 
-    bool accommodate(const std::set<unsigned> &, const std::set<unsigned> &) override;
+    bool accommodate(const std::unordered_set<unsigned> &, const std::unordered_set<unsigned> &) override;
 
-    std::deque<uint64_t> bssi(std::unordered_map<Tensor *, uint64_t> weights) override;
+    std::deque<uint64_t> bssi(std::unordered_map<Tensor *, double> weights) override;
 
     SimpleQueue *alloc_queue(uint64_t speed) const;
 };

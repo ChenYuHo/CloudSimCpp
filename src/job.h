@@ -19,14 +19,14 @@ public:
     int in_iter{-1};
     int fp_layer{-1};
     unsigned num_workers_allocated{};
-    std::set<unsigned> wids_allocated{};
+    std::unordered_set<unsigned> wids_allocated{};
     unsigned tensor_id{0};
     unsigned master_mid{};
     std::vector<uint64_t> model{};
     std::vector<uint64_t> forward_pass_time{};
     std::vector<uint64_t> backward_pass_time{};
     explicit Job(simtime_picosec t, simcpp20::simulation<SIM_UNIT> &sim) : submit_time(t), id(get_id()) {
-        myprintf("Job %d constructor invoked\n", this->id);
+//        myprintf("Job %d constructor invoked\n", this->id);
     }
 
     explicit Job(simtime_picosec t, simcpp20::simulation<SIM_UNIT> &sim,

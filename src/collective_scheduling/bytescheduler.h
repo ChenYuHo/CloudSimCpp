@@ -26,13 +26,13 @@ public:
     simcpp20::event<SIM_UNIT> collective_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                                                    Cluster &cluster) override;
 
-    std::set<unsigned> active_jobs{};
+    std::unordered_set<unsigned> active_jobs{};
 
     void cleanup_for_job(unsigned) override;
 
     simcpp20::event<SIM_UNIT> kick_off(simcpp20::simulation<SIM_UNIT> &, unsigned);
 
-    std::set<unsigned> can_erase{};
+    std::unordered_set<unsigned> can_erase{};
 
 //    simcpp20::event<SIM_UNIT> run_loop(simcpp20::simulation<SIM_UNIT> &sim, unsigned int jid);
 //
