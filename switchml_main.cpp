@@ -86,9 +86,10 @@ int main(int argc, char *argv[]) {
         }
     } else {
         printf("JOB_CSV SYNTHETIC\n");
-        jobs.push_back(new Job(0, sim, "vgg19", 2, 8));
-        jobs.push_back(new Job(0, sim, "vgg19", 2, 8));
-//        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{26214400}, 1, 8));
+//        jobs.push_back(new Job(0, sim, "vgg19", 2, 8));
+//        jobs.push_back(new Job(0, sim, "vgg19", 2, 8));
+        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440, 2621440}, 2, 8));
+        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440, 2621440}, 2, 8));
 //        jobs.push_back(new Job(0, sim, std::vector<uint64_t>{2621440, 2621440}, 5, 8));
     }
 

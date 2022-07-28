@@ -31,9 +31,8 @@ void Switch::multicast_downward(SwitchMLPacket *p) {
 
 void Switch::receivePacket(Packet &pkt) {
     auto *p = (SwitchMLPacket *) &pkt;
-    auto key = fmt::format("{}i,s{}c{}", p->tensor->iter, p->slot, p->tensor->chunk_id);
-    auto key_of_the_other_slot = fmt::format("{}v{}", key, 1 - p->ver);
-    key += fmt::format("v{}", p->ver);
+    auto key = fmt::format("s{}v{}", p->slot, p->ver);
+    auto key_of_the_other_slot = fmt::format("s{}v{}", p->slot, 1-p->ver);
     myprintf(8,
              "[%llu] Switch layer %d id %d got packet from id %d ver %d slot %d off %d upward %d tid %llu, iter %llu JID %u NW %u\n",
              eventlist().now(), layer, id, p->id, p->ver, p->slot, p->offset, p->upward,

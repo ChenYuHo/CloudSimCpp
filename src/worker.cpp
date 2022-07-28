@@ -280,18 +280,18 @@ simcpp20::event<SIM_UNIT> Worker::allreduce(simcpp20::simulation<SIM_UNIT> &sim,
             myprintf(8, "incrementing cpb from %d\n", id);
             cpb.cntIncrement();
         }
-        // clean Switch status
-        if (clean_ToR_for_job[tensor->job->id] && tor) {
-            tor->count_for_tensor_key.erase(tensor->key);
-            tor->seen_for_tensor_key.erase(tensor->key);
-            if (tor->clean_upper_level_switch_for_job[tensor->job->id] && tor->upper_level_switch) {
-                tor->upper_level_switch->count_for_tensor_key.erase(tensor->key);
-                tor->upper_level_switch->seen_for_tensor_key.erase(tensor->key);
-            }
-        }
     } else {
         tensor->chunk_id++;
         myprintf(8, "RANK %u mid %u tid %u jid %u allreduced %u\n", rank, id, tensor->tensor_id, tensor->job->id,
                  tensor->allreduced_size);
+    }
+    // clean Switch status
+    if (clean_ToR_for_job[tensor->job->id] && tor) {
+        tor->count_for_tensor_key.erase(tensor->key);
+        tor->seen_for_tensor_key.erase(tensor->key);
+        if (tor->clean_upper_level_switch_for_job[tensor->job->id] && tor->upper_level_switch) {
+            tor->upper_level_switch->count_for_tensor_key.erase(tensor->key);
+            tor->upper_level_switch->seen_for_tensor_key.erase(tensor->key);
+        }
     }
 }
