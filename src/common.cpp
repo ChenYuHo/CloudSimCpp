@@ -109,7 +109,7 @@ int myprintf(std::string format, ...) {
     va_list args;
     va_start(args, format);
     auto size = std::vsnprintf(nullptr, 0, format.c_str(), args);
-    std::string s(size + 1, '\0');
+    std::string s(size, '\0');
     va_start(args, format);
     auto r = std::vsprintf(&s[0], format.c_str(), args);
     cpb.update_variable();
@@ -118,31 +118,29 @@ int myprintf(std::string format, ...) {
     return r;
 }
 
-int myprintf(const char *format, ...) {
+int myprintf(const char* format, ...) {
     va_list args;
     va_start(args, format);
     auto size = std::vsnprintf(nullptr, 0, format, args);
-    std::string s(size + 1, '\0');
+    std::string s(size, '\0');
     va_start(args, format);
     auto r = std::vsprintf(&s[0], format, args);
-//    cpb.update_variable();
-//    cpb.stdout_in_for_progress(s);
-    cout << s;
+    cpb.update_variable();
+    cpb.stdout_in_for_progress(s);
     va_end(args);
     return r;
 }
 
-int myprintf(const char *format, va_list args, int size) {
-    std::string s(size + 1, '\0');
+int myprintf(const char* format, va_list args, int size) {
+    std::string s(size, '\0');
     auto r = std::vsprintf(&s[0], format, args);
-//    cpb.update_variable();
-//    cpb.stdout_in_for_progress(s);
-    cout << s;
+    cpb.update_variable();
+    cpb.stdout_in_for_progress(s);
     return r;
 }
 
-int myprintf(uint32_t type, const char *format, ...) {
-    if ((1 << type) & PRINT_MASK) [[unlikely]] {
+int myprintf(uint32_t type, const char* format, ...) {
+    if ((1<<type) & PRINT_MASK) {
         va_list args;
         va_start(args, format);
         auto size = std::vsnprintf(nullptr, 0, format, args);

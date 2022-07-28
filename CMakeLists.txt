@@ -50,7 +50,7 @@ find_package(Threads REQUIRED)
 find_package(glog 0.6.0 REQUIRED)
 find_package(fmt REQUIRED)
 
-add_compile_options(-march=native $<$<CONFIG:RelWithDebInfo>:-Ofast>)
+add_compile_options($<$<CONFIG:RelWithDebInfo>:-march=native> $<$<CONFIG:RelWithDebInfo>:-Ofast>)
 #add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
 #add_link_options(-fsanitize=address -fno-omit-frame-pointer)
 

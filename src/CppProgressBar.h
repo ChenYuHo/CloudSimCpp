@@ -9,10 +9,9 @@ class CppProgressBar {
 private:
     size_t progress_loop_number_{};
     std::string progress_bar_;
-    std::string empty_line_{std::string(200, ' ')+"\r"};
+    std::string empty_line_{std::string(200, ' ') + "\r"};
     double percentage_{};
     double oneHundredth_{};
-    size_t one{};
     std::string progress_line_;
     size_t loop_counter_{};
 public:
@@ -21,7 +20,6 @@ public:
     }
     inline void cntIncrement() {
         loop_counter_++;
-        update_variable();
     }
     CppProgressBar() noexcept = default;
     void init_variable(size_t loop_number);
