@@ -60,10 +60,12 @@ add_subdirectory(simcpp20)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer")
 
 #add_executable(Microbenchmark microbenchmark.cpp ${HTSIM_SRCS} ${SRCS})
+add_executable(simple simple.cpp ${HTSIM_SRCS} ${SRCS})
 add_executable(SwitchML switchml_main.cpp ${HTSIM_SRCS} ${SRCS})
 add_executable(SwitchML_NOSIMPKT switchml_main.cpp ${HTSIM_SRCS} ${SRCS})
 target_compile_definitions(SwitchML_NOSIMPKT PUBLIC NOSIMPKT)
 # Threads::Threads for csvio
 #target_link_libraries(Microbenchmark PUBLIC glog::glog fmt::fmt fschuetz04_simcpp20)
+target_link_libraries(simple PUBLIC glog::glog fmt::fmt fschuetz04_simcpp20 Threads::Threads)
 target_link_libraries(SwitchML PUBLIC glog::glog fmt::fmt fschuetz04_simcpp20 Threads::Threads)
 target_link_libraries(SwitchML_NOSIMPKT glog::glog fmt::fmt fschuetz04_simcpp20 Threads::Threads)
