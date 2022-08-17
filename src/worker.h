@@ -37,7 +37,7 @@ public:
     Cluster *cluster;
     Switch *tor;
 
-    void doNextEvent() override;
+    void doNextEvent() override {};
 
     void receivePacket(Packet &) override;
 

@@ -149,8 +149,6 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
     tensors.clear();
 }
 
-void Worker::doNextEvent() {}
-
 void Worker::receivePacket(Packet &pkt) {
     auto p = (SwitchMLPacket *) &pkt;
     myprintf(8, "[%lu] worker %d got aggregated pkt iter %u JID %d tid %u slot %d offset %d\n",

@@ -2,6 +2,7 @@
 #include "job.h"
 #include "cluster.h"
 #include "worker.h"
+#include "common.h"
 #include <glog/logging.h>
 
 //void Sincronia::print_ready_pqueues_info() {
@@ -41,8 +42,8 @@ double get_weight(const Tensor *tensor) {
 
 simcpp20::event<SIM_UNIT> Sincronia::collective_scheduler(
         simcpp20::simulation<SIM_UNIT> &sim, Cluster &cluster) {
-//    co_await sim.timeout(timeFromMs(20)); // 20 ms interval
     while (!ready_pqueues_all_empty()) {
+        co_await sim.timeout(timeFromUs(8000000u/HOST_NIC)); // time for ~1000KB transfer
         std::unordered_map<Tensor *, double> weights{}; // to be scheduled on
         for (auto &pair: ready_pqueues) { // pair: jid -> pq
             auto &pq = pair.second;
@@ -102,7 +103,7 @@ simcpp20::event<SIM_UNIT> Sincronia::collective_scheduler(
             co_await sim.all_of(allreduce_events);
         }
     }
-    co_await sim.timeout(0);
+//    co_await sim.timeout(0);
     loop_is_running = false;
 }
 

@@ -129,10 +129,10 @@ int main(int argc, char *argv[]) {
             placement_algo = new YARNPlacement(seed, true);
             printf("PLACEMENT YARNPlacementWithFallbackToRandom\n");
             break;
-        case "custom"_hash:
-            placement_algo = new CustomPlacement();
-            printf("PLACEMENT CustomPlacement\n");
-            break;
+//        case "custom"_hash:
+//            placement_algo = new CustomPlacement();
+//            printf("PLACEMENT CustomPlacement\n");
+//            break;
         case "yarn"_hash:
         default:
             placement_algo = new YARNPlacement(seed);
