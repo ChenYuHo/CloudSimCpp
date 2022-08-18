@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cctype>
 #include <string>
+#include <csignal>
 #include <glog/logging.h>
 
 #include "config.h"
@@ -29,6 +30,10 @@
 #include "common.h"
 
 typedef simtime_picosec SIM_UNIT;
+
+void signal_handler(int signal) {
+    cpb.show_progress_bar();
+}
 
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging("CloudSimCpp"); // without this, log to stderr
@@ -105,6 +110,7 @@ int main(int argc, char *argv[]) {
     }
     cpb.init_variable(cnt);
     cpb.cntSet(0);
+    std::signal(SIGUSR1, signal_handler);
 
     unsigned seed = std::stol(getenv("SEED", "0"));
     printf("SEED %u\n", seed);

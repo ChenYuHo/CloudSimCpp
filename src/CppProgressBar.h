@@ -37,5 +37,11 @@ public:
         std::cout << e;
         std::clog << progress_line_;
     }
+
+    inline void show_progress_bar() {
+        update_variable();
+        std::clog << empty_line_;
+        std::clog << progress_line_;
+    }
 };
 #endif /* CPP_PROGRESS_BAR_H */
