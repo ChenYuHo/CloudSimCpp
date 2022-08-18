@@ -18,12 +18,17 @@ public:
     inline void cntSet(size_t first) {
         loop_counter_ = first;
     }
+
     inline void cntIncrement() {
         loop_counter_++;
     }
+
     CppProgressBar() noexcept = default;
+
     void init_variable(size_t loop_number);
+
     void update_variable();
+
 //    inline void finish_progress_bar() {
 //        for (size_t j = 0; j < 100 && j < progress_bar_.length() + 1; ++j) {
 //            if (progress_bar_[j] != '=') {
@@ -32,7 +37,7 @@ public:
 //        }
 //        std::clog << "100% [" << progress_bar_ << ']' << std::endl;
 //    };
-    inline void stdout_in_for_progress (std::string& e) {
+    inline void stdout_in_for_progress(std::string &e) {
         std::clog << empty_line_;
         std::cout << e;
         std::clog << progress_line_;
@@ -44,4 +49,5 @@ public:
         std::clog << progress_line_;
     }
 };
+
 #endif /* CPP_PROGRESS_BAR_H */

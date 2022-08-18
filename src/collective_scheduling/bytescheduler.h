@@ -2,6 +2,7 @@
 #define CLOUDSIMCPP_BYTESCHEDULER_H
 
 #include "collective_scheduler.h"
+#include <unordered_set>
 #include <queue>
 
 class ByteScheduler : public CollectiveScheduler {

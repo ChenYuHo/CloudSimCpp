@@ -1,5 +1,6 @@
 #ifndef CLOUDSIMCPP_JOB_H
 #define CLOUDSIMCPP_JOB_H
+#include <unordered_set>
 
 class Job {
 private:
@@ -26,15 +27,11 @@ public:
     std::vector<uint64_t> forward_pass_time{};
     std::vector<uint64_t> backward_pass_time{};
     std::vector<uint64_t> weight_update_time{};
-    explicit Job(simtime_picosec t, simcpp20::simulation<SIM_UNIT> &sim) : submit_time(t), id(get_id()) {
-//        myprintf("Job %d constructor invoked\n", this->id);
-    }
+    explicit Job(simtime_picosec t, simcpp20::simulation<SIM_UNIT> &sim) : submit_time(t), id(get_id()) {}
 
     explicit Job(simtime_picosec t, simcpp20::simulation<SIM_UNIT> &sim,
                  std::vector<uint64_t> model) : submit_time(
-            t), id(get_id()), model(std::move(model)) {
-//        myprintf("Job %d constructor invoked\n", this->id);
-    }
+            t), id(get_id()), model(std::move(model)) {}
 
     Job(simtime_picosec t, simcpp20::simulation<SIM_UNIT> &sim,
         std::vector<uint64_t> model, unsigned iter, unsigned gpu) : gpu(gpu), submit_time(t), id(get_id()),

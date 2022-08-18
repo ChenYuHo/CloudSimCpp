@@ -1,6 +1,7 @@
 #ifndef MYTOPOLOGY
 #define MYTOPOLOGY
 #include "network.h"
+#include <unordered_set>
 #include <memory>
 #include <map>
 

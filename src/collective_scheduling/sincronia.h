@@ -2,7 +2,8 @@
 #define CLOUDSIMCPP_SINCRONIA_H
 
 
-#include <collective_scheduler.h>
+#include "collective_scheduler.h"
+#include <unordered_set>
 #include <map>
 
 class Sincronia : public CollectiveScheduler {

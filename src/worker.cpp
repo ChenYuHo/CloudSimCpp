@@ -184,10 +184,7 @@ void Worker::receivePacket(Packet &pkt) {
 void Worker::sendPacket(unsigned start, unsigned ver,
                         unsigned slot, unsigned grad_size,
                         Tensor *tensor) {
-    auto topo = cluster->_topo;
-//    auto route = topo->get_worker_to_tor_path(id);
     auto p = SwitchMLPacket::newpkt(*route_to_tor);
-//    p->set_packet_size(SWITCHML_PKT_SIZE);
     p->id = id;
     p->ver = ver;
     p->slot = slot;
@@ -198,11 +195,6 @@ void Worker::sendPacket(unsigned start, unsigned ver,
     p->job_id = tensor->job->id;
     p->tensor = tensor;
     p->set_ts(eventlist().now());
-//    p->print_info(0, eventlist().now(), 0);
-//    p->cnt+=1;
-//    cout << fmt::format("Worker{} ", id);
-//    print_route(*route);
-//    myprintf("worker sent pkt\n");
     p->sendOnSimple();
 }
 

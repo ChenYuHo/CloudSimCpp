@@ -5,12 +5,12 @@
 #include <cstdarg>
 #include <memory>
 #include <utility>
-#include <unordered_set>
 #include <string>
 #include <stdexcept>
 #include "resource.hpp"
 #include "CppProgressBar.h"
 #include <fmt/core.h>
+#include <glog/logging.h>
 
 // 0 always print
 // 1
@@ -23,18 +23,18 @@
 
 typedef uint64_t simtime_picosec;
 typedef simtime_picosec SIM_UNIT;
-extern const uint32_t& DEFAULTDATASIZE;
-extern const uint32_t& HOST_NIC; // host nic speed in Mbps
-extern const uint32_t& SWITCH_BUFFER; // in bytes, per queue (port)
-extern const int32_t& SWITCH_PORTS;
-extern const uint32_t& GPUS_PER_NODE;
-extern const uint32_t& PRINT_MASK;
-extern const uint32_t& RTT; // us
-extern const uint32_t& SWITCHML_PKT_SIZE;
-extern const uint64_t& CHUNK_SIZE;
-extern const uint32_t& NUM_SLOTS; // pool size
-extern const uint32_t& NUM_UPDATES;
-extern const bool& COLLECTIVE_STATISTICS;
+extern const uint32_t &DEFAULTDATASIZE;
+extern const uint32_t &HOST_NIC; // host nic speed in Mbps
+extern const uint32_t &SWITCH_BUFFER; // in bytes, per queue (port)
+extern const int32_t &SWITCH_PORTS;
+extern const uint32_t &GPUS_PER_NODE;
+extern const uint32_t &PRINT_MASK;
+extern const uint32_t &RTT; // us
+extern const uint32_t &SWITCHML_PKT_SIZE;
+extern const uint64_t &CHUNK_SIZE;
+extern const uint32_t &NUM_SLOTS; // pool size
+extern const uint32_t &NUM_UPDATES;
+extern const bool &COLLECTIVE_STATISTICS;
 
 extern CppProgressBar cpb;
 
@@ -80,9 +80,10 @@ public:
 };
 
 uint64_t get_key(uint64_t job_id, uint64_t tensor_id);
-uint64_t get_key(Tensor*);
 
-std::string getenv(const std::string& variable_name, const std::string& default_value) noexcept;
+uint64_t get_key(Tensor *);
+
+std::string getenv(const std::string &variable_name, const std::string &default_value) noexcept;
 
 typedef std::uint64_t hash_t;
 constexpr hash_t prime = 0x100000001B3ull;
