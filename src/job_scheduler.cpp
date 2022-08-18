@@ -16,14 +16,13 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
         co_await sim.timeout(timeFromSec(0));
         auto job = s->choose_job_to_execute_in(cluster);
         if (job != nullptr) {
-            myprintf("[%llu]\tjob %d which requires %d gpus is chosen\n", sim.now(), job->id, job->gpu);
+            myprintf(0, "[%llu]\tjob %d which requires %d gpus is chosen\n", sim.now(), job->id, job->gpu);
             auto run_config = cluster.placement->place_job_in(cluster, job);
             if (run_config.empty()) {
                 if (cluster.num_running_jobs() == 0) {
-                    myprintf("Job %d cannot be placed in the cluster.\n", job->id);
+                    myprintf(0, "Job %d cannot be placed in the cluster.\n", job->id);
                     exit(1);
                 }
-//                myprintf("[%llu]\tplacement failed for task %d requiring %d GPUs\n", sim.now(), job->id, job->gpu);
             } else {
                 auto str = fmt::format("[{}]\tjob {} placement: ", sim.now(), job->id);
                 job->num_workers_allocated = run_config.size();

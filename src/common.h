@@ -12,6 +12,14 @@
 #include "CppProgressBar.h"
 #include <fmt/core.h>
 
+// 0 always print
+// 1
+// 2 worker.cpp lock for tensors
+// 3 job arrive, start, finish, placement
+// 4 forward backward allreduce timestamp
+// 7 collective scheduler logs
+// 8 packet tracing
+#define myprintf(type, args...) if ((1 << type) & (PRINT_MASK | 1)) std::printf(args)
 
 typedef uint64_t simtime_picosec;
 typedef simtime_picosec SIM_UNIT;
@@ -30,15 +38,7 @@ extern const bool& COLLECTIVE_STATISTICS;
 
 extern CppProgressBar cpb;
 
-int myprintf(std::string , ...);
-
-int myprintf(const char *, ...);
-
-int myprintf(uint32_t, const char *, ...);
-
-int myprintf(const char *, va_list, int);
-
-bool strtobool(const std::string&);
+bool strtobool(const std::string &);
 
 
 class Worker;

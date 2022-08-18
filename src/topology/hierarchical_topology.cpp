@@ -159,13 +159,12 @@ void HierarchicalTopology::set_switch_num_updates(
     for (auto &tor_id: involved_tors) {
         auto &map = tor_switches[tor_id]->num_updates_for_job;
         auto &map_ids = tor_switches[tor_id]->downward_ids_for_job;
-        myprintf("ToR %d Jid %d num_updates %d\n", tor_id, job_id, map[job_id]);
+        myprintf(0, "ToR %d Jid %d num_updates %d\n", tor_id, job_id, map[job_id]);
         auto str = fmt::format("ToR {} Jid {} downward: ", tor_id, job_id);
         for (const auto &p: map_ids[job_id]) {
             str += fmt::format("{} ", p);
         }
-        str += "\n";
-        myprintf(str);
+        myprintf(0, "%s\n", str);
     }
     if (involved_tors.size() > 1) {
         // need to involve the core switch
@@ -180,16 +179,15 @@ void HierarchicalTopology::set_switch_num_updates(
             }
             tor_switches[tor_id]->top_level_for_job[job_id] = false;
         }
-        myprintf("Job %u spans across multiple ToR switches: %s\n", job_id, tors.substr(1).c_str());
+        myprintf(0, "Job %u spans across multiple ToR switches: %s\n", job_id, tors.substr(1).c_str());
         core_switch->num_updates_for_job[job_id] = involved_tors.size();
         core_switch->downward_ids_for_job[job_id].merge(involved_tors);
-        myprintf("core Jid %d num_updates %lu\n", job_id, core_switch->num_updates_for_job[job_id]);
+        myprintf(0, "core Jid %d num_updates %lu\n", job_id, core_switch->num_updates_for_job[job_id]);
         auto str = fmt::format("core Jid {} downward: ", job_id);
         for (const auto &p: core_switch->downward_ids_for_job[job_id]) {
             str += fmt::format("{} ", p);
         }
-        str += "\n";
-        myprintf(str);
+        myprintf(0, "%s\n", str);
     } else {
         core_switch->top_level_for_job[job_id] = false;
         std::string tor;
@@ -197,7 +195,7 @@ void HierarchicalTopology::set_switch_num_updates(
             tor += std::to_string(tor_id);
             tor_switches[tor_id]->top_level_for_job[job_id] = true;
         }
-        myprintf("Job %u spans within ToR switch %s\n", job_id, tor.c_str());
+        myprintf(0, "Job %u spans within ToR switch %s\n", job_id, tor.c_str());
     }
 }
 

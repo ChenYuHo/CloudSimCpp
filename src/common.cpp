@@ -1,8 +1,8 @@
 #include "common.h"
 #include <string>
+#include <sstream>
 #include "CppProgressBar.h"
 #include "job.h"
-#include "network.h"
 #include <glog/logging.h>
 
 CppProgressBar cpb;
@@ -39,7 +39,22 @@ namespace {
         if (n) NUM_SLOTS_impl = std::stoul(n);
         else NUM_SLOTS_impl = (gbps == 100) ? 512 : 128;
 
-        PRINT_MASK_impl = std::stoul(getenv("PRINT_MASK", std::to_string(1 << 3 | 1 << 7)));
+        const char *pm = getenv("PRINT_MASK");
+        const char *pt = getenv("PRINT_TYPES");
+        if (pt) {
+            if (pm) LOG(WARNING) << "PRINT_TYPES overwrites PRINT_MASK";
+            std::stringstream ss(pt);
+            std::string item;
+            PRINT_MASK_impl = 0;
+            while (std::getline(ss, item, ',')) {
+                PRINT_MASK_impl |= 1 << std::stoul(item);
+            }
+        } else if (pm) {
+            PRINT_MASK_impl = std::stoul(pm);
+        } else {
+            // use default
+            PRINT_MASK_impl = 1 << 3;
+        }
 
         const char *m = getenv("MTU");
         const char *u = getenv("NUM_UPDATES");
@@ -85,70 +100,18 @@ const uint32_t &RTT = RTT_impl; // us
 const uint64_t &CHUNK_SIZE = CHUNK_SIZE_impl;
 const uint32_t &NUM_SLOTS = NUM_SLOTS_impl; // pool size
 const uint32_t &PRINT_MASK = PRINT_MASK_impl;
-// 1
-// 2 worker.cpp lock for tensors
-// 3 job arrive, start, finish, placement
-// 4 forward backward allreduce timestamp
-// 7 collective scheduler logs
-// 8 packet tracing
 const uint32_t &SWITCHML_PKT_SIZE = DEFAULTDATASIZE;
 const uint32_t &NUM_UPDATES = NUM_UPDATES_impl;
 const bool &COLLECTIVE_STATISTICS = COLLECTIVE_STATISTICS_impl;
 
-std::hash<std::string> hasher;
+std::hash<std::string> hasher{};
 
 inline uint64_t get_key(uint64_t job_id, uint64_t tensor_id) {
-    return std::hash<std::string>{}(fmt::format("jid{}tid{}", job_id, tensor_id));
+    return hasher(fmt::format("jid{}tid{}", job_id, tensor_id));
 }
 
 inline uint64_t get_key(Tensor *tensor) {
-    return std::hash<std::string>{}(fmt::format("jid{}tid{}", tensor->job->id, tensor->tensor_id));
-}
-
-int myprintf(std::string format, ...) {
-    va_list args;
-    va_start(args, format);
-    auto size = std::vsnprintf(nullptr, 0, format.c_str(), args);
-    std::string s(size, '\0');
-    va_start(args, format);
-    auto r = std::vsprintf(&s[0], format.c_str(), args);
-    cpb.update_variable();
-    cpb.stdout_in_for_progress(s);
-    va_end(args);
-    return r;
-}
-
-int myprintf(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    auto size = std::vsnprintf(nullptr, 0, format, args);
-    std::string s(size, '\0');
-    va_start(args, format);
-    auto r = std::vsprintf(&s[0], format, args);
-    cpb.update_variable();
-    cpb.stdout_in_for_progress(s);
-    va_end(args);
-    return r;
-}
-
-int myprintf(const char* format, va_list args, int size) {
-    std::string s(size, '\0');
-    auto r = std::vsprintf(&s[0], format, args);
-    cpb.update_variable();
-    cpb.stdout_in_for_progress(s);
-    return r;
-}
-
-int myprintf(uint32_t type, const char* format, ...) {
-    if ((1<<type) & PRINT_MASK) {
-        va_list args;
-        va_start(args, format);
-        auto size = std::vsnprintf(nullptr, 0, format, args);
-        va_start(args, format);
-        auto r = myprintf(format, args, size);
-        va_end(args);
-        return r;
-    } else return 0;
+    return hasher(fmt::format("jid{}tid{}", tensor->job->id, tensor->tensor_id));
 }
 
 Tensor::Tensor(uint64_t size, Worker *machine, Job *job, simcpp20::simulation<SIM_UNIT> &sim)

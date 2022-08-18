@@ -93,15 +93,14 @@ void CustomTopology::set_switch_num_updates(
     }
     auto &map = tor_switches[0]->num_updates_for_job;
     auto &map_ids = tor_switches[0]->downward_ids_for_job;
-    myprintf("ToR %d Jid %d num_updates %d\n", 0, job_id, map[job_id]);
+    myprintf(0, "ToR %d Jid %d num_updates %d\n", 0, job_id, map[job_id]);
     auto str = fmt::format("ToR 0 Jid {} downward: ", job_id);
     for (const auto &p: map_ids[job_id]) {
         str += fmt::format("{} ", p);
     }
-    str += "\n";
-    myprintf(str);
+    myprintf(0, "%s\n", str);
     tor_switches[0]->top_level_for_job[job_id] = true;
-    myprintf("Job %u spans within ToR switch 0\n", job_id);
+    myprintf(0, "Job %u spans within ToR switch 0\n", job_id);
 
 }
 

@@ -88,7 +88,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
 //                        myprintf(5, "&\t%lu\n", sim.now());
                         if (COLLECTIVE_STATISTICS) {
                             if (!tensor->collective_timings.empty()) {
-                                myprintf("#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, iter - 1,
+                                myprintf(0, "#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, iter - 1,
                                          to_string(tensor->collective_timings).c_str());
                                 tensor->collective_timings.clear();
                             }
@@ -122,7 +122,7 @@ Worker::execute_job(simcpp20::simulation<SIM_UNIT> &sim, Job *job, unsigned gpus
         co_await fp_locks[tensor->key]->request(); // wait until final allreduces are done
         co_await allreduce_locks[tensor->key]->request();
         if (job->num_workers_allocated > 1 && COLLECTIVE_STATISTICS && rank_for_job[job->id] == 0) {
-            myprintf("#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, job->n_iter,
+            myprintf(0, "#CT j %u t %u i %u %s\n", job->id, tensor->tensor_id, job->n_iter,
                      to_string(tensor->collective_timings).c_str());
         }
         fp_locks[tensor->key]->release();
