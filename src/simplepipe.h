@@ -11,6 +11,7 @@ public:
     SimplePipe(simtime_picosec delay, EventList &eventlist) : EventSource(eventlist, "pipe"), _delay(delay) {};
 
     void receivePacket(Packet &pkt) override; // inherited from PacketSink
+    void receivePacket(SwitchMLPacket &pkt) override;
     void doNextEvent() override; // inherited from EventSource
     const string &nodename() override { return _nodename; };
 private:

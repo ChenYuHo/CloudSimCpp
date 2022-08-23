@@ -18,7 +18,7 @@ std::unordered_map<unsigned, unsigned> YARNPlacement::place_job_in(Cluster &clus
     if (!candidates.empty()) {
         std::vector<unsigned> selected;
         // workers with more GPUs is more likely to be selected
-        std::ranges::sample(candidates, std::back_inserter(selected), 1, gen);
+        std::ranges::sample(candidates, std::back_inserter(selected), 1, RNG::eng);
         counter[selected[0]] = job->gpu;
         return counter;
     }
@@ -41,7 +41,7 @@ std::unordered_map<unsigned, unsigned> YARNPlacement::place_job_in(Cluster &clus
     if (!candidates.empty()) {
         // choose tor
         std::vector<unsigned> selected;
-        std::ranges::sample(candidates, std::back_inserter(selected), 1, gen);
+        std::ranges::sample(candidates, std::back_inserter(selected), 1, RNG::eng);
         candidates.clear();
         auto &tor = cluster.switch_map[selected[0]];
         // choose within tor
@@ -50,7 +50,7 @@ std::unordered_map<unsigned, unsigned> YARNPlacement::place_job_in(Cluster &clus
         }
         selected.clear();
         // without replacement
-        std::ranges::sample(candidates, std::back_inserter(selected), job->gpu, gen);
+        std::ranges::sample(candidates, std::back_inserter(selected), job->gpu, RNG::eng);
         for (auto machine_id: selected) {
             counter[machine_id] += 1;
         }
@@ -67,7 +67,7 @@ std::unordered_map<unsigned, unsigned> YARNPlacement::place_job_in(Cluster &clus
         if (job->gpu > candidates.size()) return counter; // not enough GPUs
         std::vector<unsigned> selected;
         // without replacement
-        std::ranges::sample(candidates, std::back_inserter(selected), job->gpu, gen);
+        std::ranges::sample(candidates, std::back_inserter(selected), job->gpu, RNG::eng);
         for (auto machine_id: selected) {
             counter[machine_id] += 1;
         }

@@ -7,6 +7,7 @@
 #include <utility>
 #include <string>
 #include <stdexcept>
+#include <random>
 #include "resource.hpp"
 #include "CppProgressBar.h"
 #include <fmt/core.h>
@@ -17,9 +18,21 @@
 // 2 worker.cpp lock for tensors
 // 3 job arrive, start, finish, placement
 // 4 forward backward allreduce timestamp
+// 5 allreduce start/end (rank 0)
+// 6 (worker.cpp) iteration start, finish
 // 7 collective scheduler logs
 // 8 packet tracing
-#define myprintf(type, args...) if ((1 << type) & (PRINT_MASK | 1)) std::printf(args)
+// 9 increment progress count
+// 10 packet retransmission
+// 11 shadow buffer packet
+// 12 destructor, cleaning
+#ifndef NDEBUG
+#define __FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#define myprintf(type, args...) if ((1 << type) & (PRINT_MASK | 1)) [[likely]] \
+std::printf("%s:%d T_%d ", __FILENAME__, __LINE__, type) & std::printf(args)
+#else
+#define myprintf(type, args...) if ((1 << type) & (PRINT_MASK | 1)) [[unlikely]] std::printf(args)
+#endif
 
 typedef uint64_t simtime_picosec;
 typedef simtime_picosec SIM_UNIT;
@@ -39,6 +52,19 @@ extern const bool &COLLECTIVE_STATISTICS;
 extern CppProgressBar cpb;
 
 bool strtobool(const std::string &);
+
+
+class RNG {
+public:
+    static std::mt19937 eng;
+    static void seed(uint32_t s) { eng.seed(s); }
+    static std::uniform_int_distribution<SIM_UNIT> rand_1us;
+    static SIM_UNIT gen_rand_1us();
+    static std::uniform_int_distribution<SIM_UNIT> rand_1ns;
+    static SIM_UNIT gen_rand_1ns();
+};
+
+extern RNG rng;
 
 
 class Worker;

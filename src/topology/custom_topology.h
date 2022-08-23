@@ -21,7 +21,7 @@ class Cluster;
 class CustomTopology : public MyTopology {
 public:
     CustomTopology(Cluster *, int no_of_nodes, mem_b queuesize, EventList *ev,
-                         unsigned gpus_per_node);
+                   unsigned gpus_per_node);
 
     ~CustomTopology() override;
 
@@ -29,21 +29,21 @@ public:
 
     Route *get_worker_to_tor_path(unsigned src) override;
 
-    std::vector<Switch*> *switches() override { return &tor_switches; };
+    std::vector<Switch *> *switches() override { return &tor_switches; };
 
-    std::vector<Worker*> *workers() override { return &_workers; };
+    std::vector<Worker *> *workers() override { return &_workers; };
 
     void set_switch_num_updates(
             unsigned int job_id, unordered_map<unsigned int, unsigned int> run_config) override;
 
-    Route * get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) override;
+    Route *get_switch_single_hop_route(unsigned, unsigned, unsigned, bool) override;
 
     unsigned no_of_nodes() const override { return _no_of_nodes; };
 private:
     Cluster *cluster;
 
-    vector<Switch*> tor_switches{};
-    vector<Worker*> _workers{};
+    vector<Switch *> tor_switches{};
+    vector<Worker *> _workers{};
 //    vector<vector<SimplePipe *> > pipes_tor_worker{};
     vector<vector<SimpleQueue *> > queues_tor_worker{};
 
@@ -60,11 +60,11 @@ private:
 
 //    std::unordered_map<std::string, Route*> routes{};
 
-    bool accommodate(const std::unordered_set<unsigned>&, const std::unordered_set<unsigned>&) override;
+    bool accommodate(const std::unordered_set<unsigned> &, const std::unordered_set<unsigned> &) override;
 
     std::deque<uint64_t> bssi(std::unordered_map<Tensor *, double> weights) override;
 
-    SimpleQueue *alloc_queue(uint64_t speed) const;
+    SimpleQueue *alloc_queue(bool to_worker = false, uint64_t speed = HOST_NIC) const;
 };
 
 #endif // CLOUDSIMCPP_CUSTOM_TOPOLOGY_H

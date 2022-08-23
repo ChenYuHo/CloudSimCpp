@@ -41,7 +41,7 @@ std::unordered_map<unsigned, unsigned> RandomPlacement::place_job_in(Cluster &cl
     do {
         do {
             selected.clear();
-            std::ranges::sample(candidates, std::back_inserter(selected), job->gpu, gen);
+            std::ranges::sample(candidates, std::back_inserter(selected), job->gpu, RNG::eng);
         } while (must_place_distributed && !distributed_placement(selected));
     } while (must_place_multi_racks && !multi_racks_placement(selected));
     for (auto machine: selected) {

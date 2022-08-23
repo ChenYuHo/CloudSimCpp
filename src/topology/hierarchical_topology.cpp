@@ -6,7 +6,6 @@
 #include "job.h"
 #include <cfloat>
 #include <glog/logging.h>
-#include <algorithm>
 
 template<typename T>
 string toa(T n) {
@@ -39,8 +38,8 @@ void HierarchicalTopology::set_params(int switch_ports) {
     queues_core_tor.resize(1, vector<SimpleQueue *>(K));
 }
 
-inline SimpleQueue *HierarchicalTopology::alloc_queue(uint64_t speed = HOST_NIC) const {
-    return new SimpleQueue(speedFromMbps(speed), _queuesize, *eventlist);
+inline SimpleQueue *HierarchicalTopology::alloc_queue(bool to_worker, uint64_t speed) const {
+    return new SimpleQueue(speedFromMbps(speed), _queuesize, *eventlist, to_worker);
 }
 
 void HierarchicalTopology::init_network(unsigned gpus_per_node) {
@@ -69,7 +68,7 @@ void HierarchicalTopology::init_network(unsigned gpus_per_node) {
         for (int l = 0; l < K - 1; l++) {
             int k = j * (K - 1) + l;
             // Downlink
-            queues_tor_worker[j][k] = alloc_queue();
+            queues_tor_worker[j][k] = alloc_queue(true);
             queues_tor_worker[j][k]->setName(fmt::format("ToR0->SERVER{}", k));
 //            pipes_tor_worker[j][k] = new SimplePipe(timeFromUs(RTT), *eventlist);
 //            pipes_tor_worker[j][k]->setName(fmt::format("SimplePipe-ToR0->SERVER{}", k));
@@ -112,7 +111,7 @@ void HierarchicalTopology::init_network(unsigned gpus_per_node) {
         for (int k = 0; k < K - 1; k++) {
             auto route_to_tor = new Route();
             route_to_tor->push_back(queues_worker_tor[k + j * (K - 1)][j]);
-//    route_out->push_back(pipes_worker_tor[src][dest]);
+//            route_to_tor->push_back(pipes_worker_tor[k + j * (K - 1)][j]);
             route_to_tor->push_back(tor_switches[j]);
             route_to_tor->non_null();
             _workers[k + j * (K - 1)] = new Worker(*eventlist, cluster, tor_switches[j], gpus_per_node, route_to_tor);
@@ -164,7 +163,7 @@ void HierarchicalTopology::set_switch_num_updates(
         for (const auto &p: map_ids[job_id]) {
             str += fmt::format("{} ", p);
         }
-        myprintf(0, "%s\n", str);
+        myprintf(0, "%s\n", str.c_str());
     }
     if (involved_tors.size() > 1) {
         // need to involve the core switch
@@ -182,12 +181,12 @@ void HierarchicalTopology::set_switch_num_updates(
         myprintf(0, "Job %u spans across multiple ToR switches: %s\n", job_id, tors.substr(1).c_str());
         core_switch->num_updates_for_job[job_id] = involved_tors.size();
         core_switch->downward_ids_for_job[job_id].merge(involved_tors);
-        myprintf(0, "core Jid %d num_updates %lu\n", job_id, core_switch->num_updates_for_job[job_id]);
+        myprintf(0, "core Jid %d num_updates %u\n", job_id, core_switch->num_updates_for_job[job_id]);
         auto str = fmt::format("core Jid {} downward: ", job_id);
         for (const auto &p: core_switch->downward_ids_for_job[job_id]) {
             str += fmt::format("{} ", p);
         }
-        myprintf(0, "%s\n", str);
+        myprintf(0, "%s\n", str.c_str());
     } else {
         core_switch->top_level_for_job[job_id] = false;
         std::string tor;
@@ -234,7 +233,8 @@ Route *HierarchicalTopology::get_switch_single_hop_route(unsigned src, unsigned 
 
 }
 
-bool HierarchicalTopology::accommodate(const std::unordered_set<unsigned> &these, const std::unordered_set<unsigned> &those) {
+bool HierarchicalTopology::accommodate(const std::unordered_set<unsigned> &these,
+                                       const std::unordered_set<unsigned> &those) {
     std::unordered_set<unsigned> tors_these;
     for (auto wid: these) tors_these.insert(HOST_ToR_SWITCH(wid));
     if (tors_these.size() == 1) { // don't need core
@@ -257,6 +257,7 @@ bool HierarchicalTopology::accommodate(const std::unordered_set<unsigned> &these
 }
 
 HierarchicalTopology::~HierarchicalTopology() {
+    myprintf(12, "HierarchicalTopology destructor\n");
     for (auto p: tor_switches) {
 //        printf("%p\n", p);
         delete p;

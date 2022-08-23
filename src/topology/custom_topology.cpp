@@ -20,8 +20,8 @@ CustomTopology::CustomTopology
 }
 
 
-inline SimpleQueue *CustomTopology::alloc_queue(uint64_t speed = HOST_NIC) const {
-    return new SimpleQueue(speedFromMbps(speed), _queuesize, *eventlist);
+inline SimpleQueue *CustomTopology::alloc_queue(bool to_worker, uint64_t speed) const {
+    return new SimpleQueue(speedFromMbps(speed), _queuesize, *eventlist, to_worker);
 }
 
 void CustomTopology::init_network(unsigned gpus_per_node) {
@@ -36,13 +36,13 @@ void CustomTopology::init_network(unsigned gpus_per_node) {
     // links from ToR switch to worker
     for (int k = 0; k < _no_of_nodes; ++k) {
         // Downlink
-        queues_tor_worker[0][k] = alloc_queue();
+        queues_tor_worker[0][k] = alloc_queue(true);
         queues_tor_worker[0][k]->setName(fmt::format("ToR0->SERVER{}", k));
 //        pipes_tor_worker[0][k] = new SimplePipe(timeFromUs(RTT), *eventlist);
 //        pipes_tor_worker[0][k]->setName(fmt::format("SimplePipe-ToR0->SERVER{}", k));
 
         // Uplink
-        queues_worker_tor[k][0] = alloc_queue();
+        queues_worker_tor[k][0] = alloc_queue(false);
         queues_worker_tor[k][0]->setName(fmt::format("SERVER{}->ToR0", k));
 //        pipes_worker_tor[k][0] = new SimplePipe(timeFromUs(RTT), *eventlist);
 //        pipes_worker_tor[k][0]->setName(fmt::format("SimplePipe-SERVER{}->ToR0", k));
@@ -98,7 +98,7 @@ void CustomTopology::set_switch_num_updates(
     for (const auto &p: map_ids[job_id]) {
         str += fmt::format("{} ", p);
     }
-    myprintf(0, "%s\n", str);
+    myprintf(0, "%s\n", str.c_str());
     tor_switches[0]->top_level_for_job[job_id] = true;
     myprintf(0, "Job %u spans within ToR switch 0\n", job_id);
 

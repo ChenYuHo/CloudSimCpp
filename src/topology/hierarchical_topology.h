@@ -76,7 +76,7 @@ private:
 
     std::deque<uint64_t> bssi(std::unordered_map<Tensor *, double> weights) override;
 
-    SimpleQueue *alloc_queue(uint64_t speed) const;
+    SimpleQueue *alloc_queue(bool to_worker = false, uint64_t speed = HOST_NIC) const;
 };
 
 #endif // CLOUDSIMCPP_HIERARCHICAL_TOPOLOGY_H

@@ -6,22 +6,13 @@
 
 class RandomPlacement : public PlacementAlgo {
 public:
-    std::random_device rd{};
-    std::mt19937 gen;
     bool force_distributed;
     bool force_multi_racks;
 
     std::unordered_map<unsigned, unsigned> place_job_in(Cluster &cluster, Job *job) override;
 
     explicit RandomPlacement(bool force_distributed = false,
-                             bool force_multi_racks = false) : gen(std::mt19937(rd())),
-                                                               force_distributed(force_distributed),
-                                                               force_multi_racks(force_multi_racks) {};
-
-    explicit RandomPlacement(unsigned seed,
-                             bool force_distributed = false,
-                             bool force_multi_racks = false) : gen(std::mt19937(seed)),
-                                                               force_distributed(force_distributed),
+                             bool force_multi_racks = false) : force_distributed(force_distributed),
                                                                force_multi_racks(force_multi_racks) {};
 };
 

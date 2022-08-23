@@ -70,7 +70,7 @@ simcpp20::event<SIM_UNIT> Sincronia::collective_scheduler(
 #ifndef NDEBUG
             for (auto &key: result) {
                 auto &tensor = queue[key].front();
-                myprintf(7, "result jid %u tid %u\n", tensor->job->id, tensor->tensor_id);
+                myprintf(7, "result jid %u tid %lu\n", tensor->job->id, tensor->tensor_id);
             }
 #endif
             std::vector<simcpp20::event<SIM_UNIT>> allreduce_events{};
@@ -90,9 +90,9 @@ simcpp20::event<SIM_UNIT> Sincronia::collective_scheduler(
             std::erase_if(result, [&involved_tkeys](uint64_t key) { return involved_tkeys.contains(key); });
             for (auto key: involved_tkeys) {
                 auto &front_tensor = queue[key].front();
-                myprintf(7, "%p jid %u tid %u\n", front_tensor, front_tensor->job->id, front_tensor->tensor_id);
+                myprintf(7, "%p jid %u tid %lu\n", front_tensor, front_tensor->job->id, front_tensor->tensor_id);
                 if (front_tensor->allreduced_size + CHUNK_SIZE >= front_tensor->size) {
-                    myprintf(7, "can erase %p jid %u tid %u\n",
+                    myprintf(7, "can erase %p jid %u tid %lu\n",
                              front_tensor, front_tensor->job->id, front_tensor->tensor_id);
                     can_erase.insert(front_tensor->key);
                 }

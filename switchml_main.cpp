@@ -112,27 +112,24 @@ int main(int argc, char *argv[]) {
     cpb.cntSet(0);
     std::signal(SIGUSR1, signal_handler);
 
-    unsigned seed = std::stol(getenv("SEED", "0"));
-    printf("SEED %u\n", seed);
-
     PlacementAlgo *placement_algo;
     auto placement_type = getenv("PLACEMENT", "yarn");
     std::transform(placement_type.begin(), placement_type.end(), placement_type.begin(), ::tolower);
     switch (hash_compile_time(placement_type.c_str())) {
         case "random"_hash:
-            placement_algo = new RandomPlacement(seed);
+            placement_algo = new RandomPlacement();
             printf("PLACEMENT RandomPlacement\n");
             break;
         case "random_distributed"_hash:
-            placement_algo = new RandomPlacement(seed, true);
+            placement_algo = new RandomPlacement(true);
             printf("PLACEMENT RandomPlacementForceDistributed\n");
             break;
         case "random_multi_rack"_hash:
-            placement_algo = new RandomPlacement(seed, true, true);
+            placement_algo = new RandomPlacement(true, true);
             printf("PLACEMENT RandomPlacementForceMultiRacks\n");
             break;
         case "yarn_random"_hash:
-            placement_algo = new YARNPlacement(seed, true);
+            placement_algo = new YARNPlacement(true);
             printf("PLACEMENT YARNPlacementWithFallbackToRandom\n");
             break;
 //        case "custom"_hash:
@@ -141,7 +138,7 @@ int main(int argc, char *argv[]) {
 //            break;
         case "yarn"_hash:
         default:
-            placement_algo = new YARNPlacement(seed);
+            placement_algo = new YARNPlacement();
             printf("PLACEMENT YARNPlacement\n");
             break;
     }
@@ -213,13 +210,23 @@ int main(int argc, char *argv[]) {
 
     cluster_scheduler(sim, cluster, scheduling_algo, cs);
     sim.run_until(1e19); // max is 18446744073709551615
-    cout << "\nsimulation done at " << sim.now() << endl;
+//    for (auto worker: *cluster.workers) {
+//        for (auto &pair: worker->tensors_for_job) {
+//            for (auto tensor: pair.second) {
+//                if (tensor->allreduced_size != tensor->size) {
+//                    fmt::print("worker {} tensor {} size {} allreduced {} \n",
+//                               worker->id, tensor->tensor_id, tensor->size, tensor->allreduced_size);
+//                }
+//            }
+//        }
+//    }
     delete cs;
     delete placement_algo;
     delete scheduling_algo;
     delete topo;
     for (auto job: jobs) delete job;
     jobs.clear();
+    cout << "\nsimulation done at " << sim.now() << endl;
     std::clog << std::endl;
     return 0;
 }

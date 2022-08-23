@@ -13,7 +13,6 @@ public:
     unsigned id{};
     unsigned gpu{8};
     simtime_picosec submit_time{};
-    simtime_picosec submitted_time{};
     simtime_picosec start_time{(std::numeric_limits<simtime_picosec>::max)()};
     simtime_picosec finish_time{(std::numeric_limits<simtime_picosec>::max)()};
     unsigned n_iter{3};

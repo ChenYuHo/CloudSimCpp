@@ -33,7 +33,7 @@ public:
 
     unsigned layer = 0;
     unsigned id;
-    std::vector<Worker *> machines;
+    std::vector<Worker *> machines{};
     Cluster *cluster;
     Switch *upper_level_switch;
     std::vector<Switch *> lower_level_switches;
@@ -66,14 +66,19 @@ public:
 
     void doNextEvent() override;
 
-    void receivePacket(Packet &) override;
+    void receivePacket(Packet &) override { LOG(FATAL) << "not receiving SwitchMLPacket"; };
+
+    void receivePacket(SwitchMLPacket &pkt) override;
+
+    SwitchMLPacket* copy_pkt(SwitchMLPacket* p, Route* route, bool upward) const;
 
     const string &nodename() override {
         return _nodename;
     };
 
     ~Switch() override {
-        for (auto &p: down_routes) {
+        myprintf(12, "Switch %s destructor\n", _nodename.c_str());
+        for (auto &p: down_routes) { // delete routes
             delete p.second;
         }
         down_routes.clear();

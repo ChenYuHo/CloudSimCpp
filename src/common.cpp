@@ -6,6 +6,17 @@
 #include <glog/logging.h>
 
 CppProgressBar cpb;
+std::mt19937 RNG::eng;
+std::uniform_int_distribution<SIM_UNIT> RNG::rand_1us(0, 1000000);
+std::uniform_int_distribution<SIM_UNIT> RNG::rand_1ns(0, 1000);
+
+SIM_UNIT RNG::gen_rand_1us() {
+    return RNG::rand_1us(RNG::eng);
+}
+
+SIM_UNIT RNG::gen_rand_1ns() {
+    return RNG::rand_1ns(RNG::eng);
+}
 
 std::string getenv(const std::string &variable_name, const std::string &default_value) noexcept {
     const char *value = getenv(variable_name.c_str());
@@ -23,12 +34,17 @@ namespace {
     uint32_t NUM_SLOTS_impl; // pool size
     uint32_t PRINT_MASK_impl;
     uint32_t NUM_UPDATES_impl;
+    uint32_t SEED;
     bool COLLECTIVE_STATISTICS_impl;
 
     bool read_env_and_print() noexcept {
+        SEED = std::stoul(getenv("SEED", "0"));
+        RNG::seed(SEED);
+
         auto gbps = std::stoul(getenv("NIC_Gbps", "100"));
         HOST_NIC_impl = 1000 * gbps;
-        SWITCH_BUFFER_impl = std::stoul(getenv("SWITCH_BUFFER_BYTES", "100000000"));
+        // 50ms of line-rate sized buffer https://fasterdata.es.net/network-tuning/router-switch-buffer-size-issues/
+        SWITCH_BUFFER_impl = std::stoul(getenv("SWITCH_BUFFER_BYTES", fmt::format("{}", HOST_NIC_impl*6250)));
         SWITCH_PORTS_impl = std::stoi(getenv("SWITCH_PORTS", "8"));
         GPUS_PER_NODE_impl = std::stoul(getenv("GPUS_PER_NODE", "4"));
         RTT_impl = std::stoul(getenv("RTT_us", "1"));
@@ -43,11 +59,14 @@ namespace {
         const char *pt = getenv("PRINT_TYPES");
         if (pt) {
             if (pm) LOG(WARNING) << "PRINT_TYPES overwrites PRINT_MASK";
-            std::stringstream ss(pt);
-            std::string item;
-            PRINT_MASK_impl = 0;
-            while (std::getline(ss, item, ',')) {
-                PRINT_MASK_impl |= 1 << std::stoul(item);
+            if (std::strcmp(pt, "all") == 0) PRINT_MASK_impl = 0xffffffff;
+            else {
+                std::stringstream ss(pt);
+                std::string item;
+                PRINT_MASK_impl = 0;
+                while (std::getline(ss, item, ',')) {
+                    PRINT_MASK_impl |= 1 << std::stoul(item);
+                }
             }
         } else if (pm) {
             PRINT_MASK_impl = std::stoul(pm);
@@ -83,9 +102,9 @@ namespace {
         COLLECTIVE_STATISTICS_impl = strtobool(getenv("COLLECTIVE_STATISTICS", "0"));
         printf("MTU %u\nNIC_Gbps %lu\nSWITCH_BUFFER_BYTES %u\n"
                "SWITCH_PORTS %u\nGPUS_PER_NODE %u\nRTT_us %u\nCHUNK_SIZE %u\n"
-               "NUM_SLOTS %u\nNUM_UPDATES %u\nPRINT_MASK %u\n", DEFAULTDATASIZE_impl, gbps,
+               "NUM_SLOTS %u\nNUM_UPDATES %u\nPRINT_MASK %u\nSEED %u\n", DEFAULTDATASIZE_impl, gbps,
                SWITCH_BUFFER_impl, SWITCH_PORTS_impl, GPUS_PER_NODE_impl, RTT_impl,
-               CHUNK_SIZE_impl, NUM_SLOTS_impl, NUM_UPDATES_impl, PRINT_MASK_impl);
+               CHUNK_SIZE_impl, NUM_SLOTS_impl, NUM_UPDATES_impl, PRINT_MASK_impl, SEED);
         return true;
     }
 

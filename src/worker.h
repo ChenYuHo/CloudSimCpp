@@ -27,7 +27,6 @@ private:
     }
 
     std::string _nodename;
-    Route *route_to_tor;
 
 public:
     unsigned id;
@@ -39,7 +38,9 @@ public:
 
     void doNextEvent() override {};
 
-    void receivePacket(Packet &) override;
+    void receivePacket(Packet &) override { LOG(FATAL) << "not receiving SwitchMLPacket"; };
+
+    void receivePacket(SwitchMLPacket &pkt) override;
 
     const string &nodename() override {
         return _nodename;
@@ -72,11 +73,14 @@ public:
 
     std::unordered_map<unsigned, unsigned> rank_for_job{};
     std::unordered_map<unsigned, bool> clean_ToR_for_job{};
+    std::unordered_map<unsigned, std::vector<Tensor *>> tensors_for_job{};
 
     std::unordered_map<uint64_t, resource<SIM_UNIT> *> fp_locks{};
     std::unordered_map<uint64_t, resource<SIM_UNIT> *> allreduce_locks{};
     std::unordered_map<unsigned, std::unordered_set<unsigned>> received_pkts{};
     unsigned allreduce_counter[2]{0, 0};
+
+    Route *route_to_tor;
 
     ~Worker() override {
         delete route_to_tor;

@@ -4,7 +4,6 @@
 #include "cluster.h"
 #include "worker.h"
 #include "config.h"
-#include "topology.h"
 
 
 simcpp20::event<SIM_UNIT>
@@ -16,7 +15,7 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
         co_await sim.timeout(timeFromSec(0));
         auto job = s->choose_job_to_execute_in(cluster);
         if (job != nullptr) {
-            myprintf(0, "[%llu]\tjob %d which requires %d gpus is chosen\n", sim.now(), job->id, job->gpu);
+            myprintf(0, "[%lu]\tjob %d which requires %d gpus is chosen\n", sim.now(), job->id, job->gpu);
             auto run_config = cluster.placement->place_job_in(cluster, job);
             if (run_config.empty()) {
                 if (cluster.num_running_jobs() == 0) {
@@ -43,8 +42,7 @@ cluster_scheduler(simcpp20::simulation<SIM_UNIT> &sim,
                 }
                 str.pop_back(); // safe to do since run_config is not empty
                 str.pop_back();
-                str += "\n";
-                myprintf(3, str.c_str());
+                myprintf(3, "%s\n", str.c_str());
                 sim.timeout(0);
                 continue;
             }
